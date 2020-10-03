@@ -1,0 +1,7 @@
+dispatch:
+  - url: "openvoterid.net/*"
+    service: openvoterid
+
+  - url: "www.openvoterid.net/*"
+    service: openvoterid
+

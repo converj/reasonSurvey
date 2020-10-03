@@ -1,0 +1,41 @@
+
+    <!-- Modal popup: cookies required -->
+    <div class=modalPopupDiv id=cookiesRequiredDiv show=false>
+        <dialog class=modalPopupDialog aria-modal=true >
+            <h3 class=modalPopupTitle> Cookies required </h3>
+            <div> To login, enable cookies and reload page. </div>
+            <div class=modalPopupButtons>
+                <button class=modalPopupButton id=cookiesCancelButton> Acknowledge </button>
+            </div>
+        </dialog>
+    </div>
+
+    <!-- Modal popup: login required -->
+    <div class=modalPopupDiv id=loginRequiredDiv show=false>
+        <dialog class=modalPopupDialog aria-modal=true >
+            <h3 class=modalPopupTitle> Login required </h3>
+            <form id=loginForm action='{{LOGIN_URL}}' method=POST target=_blank >
+                <input id=applicationId name=applicationId type=hidden value='{{loginApplicationId}}' />
+                <input id=inputSignature name=inputSignature type=hidden value='' />
+                <input id=requestId name=requestId type=hidden value='' />
+                <div class=modalPopupButtons>
+                    <button class=modalPopupButton id=loginButton> Login </button>
+                    <button type=button class=modalPopupButton id=loginCancelButton> Cancel </button>
+                        <!-- Default button type=submit -->
+                </div>
+            </form>
+        </dialog>
+    </div>
+
+    <!-- Modal popup: logout -->
+    <div class=modalPopupDiv id=logoutDiv show=false>
+        <dialog class=modalPopupDialog aria-modal=true >
+            <h3 class=modalPopupTitle> Logout </h3>
+            <div class=modalPopupButtons>
+                <button class=modalPopupButton id=logoutButton> Logout </button>
+                <button class=modalPopupButton id=logoutCancelButton> Cancel </button>
+            </div>
+        </dialog>
+    </div>
+
+

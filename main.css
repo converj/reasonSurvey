@@ -1,0 +1,396 @@
+
+/**********************************************************************************/
+/* all html elements */
+
+body {  padding:0px;  margin:0px;  font-family:sans-serif;  background-color:#f8f8f8;  }
+
+    a {  text-decoration:none;  color:blue;  cursor:pointer;  }
+    a:hover , a:active {  text-decoration:underline;  }
+
+    input , textarea {  width:calc(100% - 7px);  padding:5px;  font-family:sans-serif;  font-size:16px;  box-shadow:0px 0px 10px 1px #e8e8e8 inset;  }
+    textarea {  line-height:1.5em;  }
+    input[ type=checkbox ] {  width:auto;  }
+    :invalid{ background-color:pink; }
+
+    .Button {  display:inline-block;  cursor:pointer;  }
+    .Button , button {  
+        background-color:#eeeeee;  
+        background:linear-gradient(#f8f8f8, #e8e8e8);  
+        
+        border:solid 1px #aaaaaa;  
+        border-radius:5px;
+        box-shadow:-1px -1px 2px #ccc inset;
+
+        margin:5px;  
+        padding:15px 7px 15px 7px;  
+
+        line-height:2.0em;  
+        font-size:16px;  
+    }
+    .Button:hover , button:hover {  background:rgb(206,231,256);  color:black;  }
+
+    #content {  max-width:800px;  margin:20px auto 20px auto;  word-wrap:anywhere;  }
+        #siteName {  text-align:center;  font-weight:normal;  color:#aaaaaa;  }
+        .title {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:20px;  color:#888888;  }
+
+    :focus {
+          outline:5px solid lightblue;  outline-offset:0px;
+    }
+    
+    ul {  margin:10px 0px 10px 0px;  }
+
+
+details {  margin-bottom:15px;  }
+details > summary {  cursor:pointer;  }
+
+dialog {  border:solid 1px green;  }
+dialog::backdrop {  background:rgba(255, 187, 187, 0.75);  }
+
+[role=alert] {  opacity:0.0;  transition:opacity 2.0s;  visibility:hidden;  }
+
+.Highlight {  background-color:yellow;  }
+[show=false] {  display:none;  }
+
+
+
+/**********************************************************************************/
+/* login */
+
+.modalPopupDiv {  
+    position:fixed;
+    z-index:1000;  top:0;  left:0;  width:100%;  height:100%;
+    background:rgba(187, 187, 187, 0.75);  /* Allows child with higher opacity */
+    text-align:center;
+}
+    .modalPopupDialog {
+        display:inline-block;  margin-top:50px;  min-width:200px;  max-width:300px;
+        background:rgba(255, 255, 255, 1.00);
+        border: solid 1px #ccc;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0px 0px 30px 0px #000;
+    }
+        .modalPopupTitle {  }
+        .modalPopupButtons {  }
+            .modalPopupButton {  }
+
+
+
+/**********************************************************************************/
+/* menu */
+
+#menuLink , #backLink {
+    position:fixed;
+    margin:0px;
+    z-index:9;  
+    border-radius:7px;
+    box-shadow:0px 0px 20px 0px #888, -1px -1px 2px #ccc inset;
+    color:#aaaaaa;
+    text-transform:uppercase;  
+}
+#menuLink:hover , #backLink:hover {  background:rgb(206,231,256);  color:black;  text-decoration:none;  }
+#menuLink {  top:-5px;  right:0px;  }
+#backLink {  top:-5px;  left:0px;  display:none;  }
+
+#menuMobile { }
+    .menu {
+        position:fixed;  top:0;  left:0;  bottom:0;  z-index:11;  width:155px; 
+        color:#aaaaaa;  background:#dddddd;  border-right:solid 1px #aaaaaa;  box-shadow:0px 0px 20px black;
+        overflow-y:auto;  -webkit-overflow-scrolling:touch;
+    }
+        a.menuItemLink {
+            text-decoration:none;  color:black;  display:block;
+            padding:1.25em 1.0em;  border-bottom:solid 1px #aaaaaa;  background-color:#eeeeee;  
+        }
+        .menuItemLink:hover {  background-color:rgb(206,231,256);  }
+        #backMenuItem {  display:none;  }
+        body[fromrequest='true'] #backMenuItem {  display:block;  }
+        .menuItem {  color:black;  margin:0px;  width:100%;  padding:1.25em 0.0em;  text-align:center;  }
+        button.menuItem {  margin:5px;  width:calc(100% - 10px);  }
+
+#contentCover {
+    z-index:9;  position:fixed;  top:0px;  left:0px;  width:100%;  height:100%;  background-color:rgba(100,100,100,0.5);  cursor:pointer;
+}
+
+@media (min-width:800px) {
+    .Button , button {  line-height:1.0em;  }
+    #menuLink , #backLink {  display:none;  }
+    #menuDesktop {  display:inline-block;  }
+    #menuMobile > summary {  display:none;  }
+    #contentCover {  display:none;  }
+}
+
+
+/**********************************************************************************/
+/* pages */
+
+.Page {  display:none;  }
+.Page[show='true'] {  display:block;  }
+
+.SiteList { }
+.SiteList   a.SiteListLink {  color:black;  text-decoration:none;  }
+.SiteList       .SiteListEntry {  padding:20px;  border:solid 1px #cccccc;  }
+.SiteList       .SiteListEntry:hover {  background:rgb(206,231,256);  }
+
+
+#aboutContent {  line-height:2.0em;  }
+    details#menuMobile > summary {  list-style:none;  }
+    details#menuMobile > summary::-webkit-details-marker {  display:none;  }
+    details.aboutDetails > summary {  background:#f0f0f0;  padding:10px;  }
+        details.aboutDetails > div {  padding:10px 0px 0px 22px;  }
+            details.aboutDetails > div li {  padding:0px 0px 10px 0px;  }
+
+
+
+.formNewRequest {  }
+    #newRequestInputTitle , #newProposalInputTitle {  font-weight:bold;  border:solid 1px #cccccc;  width:calc(100% - 12px);  }
+    #newRequestInputDetail , #newProposalInputDetail {  margin-top:5px;  border:solid 1px #cccccc;  width:calc(100% - 12px);  resize:vertical;  }
+    .loginRequiredDiv {  padding:20px 0px 20px 0px;  }
+        .loginRequiredLabel {  }
+        .loginRequiredCheckbox {    }
+    #newRequestSubmit , #newProposalSubmit {  text-align:center;  }
+
+@media (min-width:800px) {
+    #content {  padding-left:160px;  }
+        .formNewRequest {  }
+            #newRequestInputTitle , #newProposalInputTitle {  width:calc(100% - 20px);  }
+            #newRequestInputDetail , #newProposalInputDetail {  width:calc(100% - 20px);  }
+            #newRequestSubmit , #newProposalSubmit {  text-align:left;  }
+}
+
+
+a.recentRequestLink {  text-decoration:none;  }
+    .recentRequest {  padding:10px;  padding-bottom:20px;  border:solid 1px #dddddd;  color:black;  }
+    .recentRequest:hover {  background:rgb(206,231,256);  }
+        .recentRequestTitle {  margin-bottom:10px;  font-weight:bold;  }
+        .recentRequestDetail {  }
+        .recentRequestTime {  display:none;  }
+
+
+
+/**********************************************************************************/
+/* page pro con */
+
+/* Request */
+.ReqProp {  }
+    .RequestMessage {  color:green;  opacity:0.50;  margin:30px 10px 20px 5px;  }
+    .loginStatus {  color:grey;  margin:10px 0px 10px 5px;  }
+
+    .freezeButton {  display:none;  margin:10px 0px 30px 5px; }
+    .ReqProp[mine='true']        .freezeButton {  display:inline-block;  }
+
+    .freezeText {  display:none;  color:red;  margin:10px 0px 30px 5px;  }
+    .ReqProp[frozen='true']              .freezeText {  display:block;  }
+    .ReqProp[frozen='true'][mine='true'] .freezeText {  display:none;  }
+
+    .Request {  padding:5px;  margin-bottom:20px;  border:solid 1px #dddddd;  background-color:#f8f8f8;  }
+
+        /* TitleAndDetail */
+        .TitleAndDetail {  position:relative;  }
+            .TitleAndDetail .Title {  font-weight:bold;  background-color:transparent;  font-size:16px;  }
+            .TitleAndDetail[allowedit='true'] {  cursor:pointer;  }   /* required to make clickable on iOS */
+            
+            /* Edit icon */
+            .EditIcon {  float:right;  }
+            .TitleAndDetail .EditIcon {  display:none;  }
+            .TitleAndDetail[allowedit='true'] .EditIcon {  display:block;  }
+                .EditIconImage {  height:15px;  width:15px;  opacity:0.25;  }
+
+            /* Viewing */
+            .TitleAndDetail[editing='edit'] .TitleAndDetailViewing {  display:none;  }
+                .Request > .TitleAndDetail .Title {  font-size:22px;  }
+                .TitleAndDetail .Detail {  margin-top:10px;  line-height:1.5em;  }
+
+            /* Editing */
+            .TitleAndDetail .TitleAndDetailEditing {  display:none;  }
+            .TitleAndDetail[editing='edit'] .TitleAndDetailEditing {  display:block;  }
+                .TitleAndDetail .TitleInput {  font-weight:bold;  border:solid 1px #e0e0e0;  width:calc(100% - 13px);  }
+                .TitleAndDetail .DetailInput {  margin-top:0px;  border:solid 1px #e0e0e0;  width:calc(100% - 13px);  resize:vertical;  line-height:1.5em;  }
+                .TitleAndDetailEditButtons {  }
+                    .TitleAndDetailSaveButton {  margin:5px 10px 0px 0px;  }
+
+    .Proposals {  }
+
+        /* Proposal */
+        .Proposal {  position:relative;  padding:20px 5px 20px 5px;  }
+        
+            .ProposalMessage {  margin-bottom:15px;  opacity:0.50;  }
+
+            .Proposal[fromRequest='true'] .loginStatus {  display:none;  }
+
+            .Proposal[fromRequest='true']              .freezeButton {  display:none;  }
+            .Proposal[mine='true']                     .freezeButton {  display:inline-block;  }
+            .Proposal[fromRequest='true'][mine='true'] .freezeButton {  display:none;  }
+
+            .Proposal[frozen='true'][singleProposal='true']                                  .freezeText {  display:block;  }
+            .Proposal[frozen='true'][singleProposal='true'][mine='true']                     .freezeText {  display:none;  }
+            .Proposal[frozen='true'][singleProposal='true'][mine='true'][fromRequest='true'] .freezeText {  display:block;  }
+            .Proposal[frozen='true'][singleProposal='true'][fromRequest='true']              .freezeText {  display:block;  }
+            .ReqProp[frozen='true'] .Proposal .freezeText {  display:none;  }
+
+            .ProposalCollapseableWrapTable {  display:table;  width:100%;  }
+            .ProposalCollapseableWrapRow {  display:table-row;  }
+            .ProposalCollapseableWrapCell {  display:table-cell;  }
+            .Proposal[collapse='true'] .ProposalCollapseableWrapTable {  display:block;  }
+            .Proposal[collapse='true'] .ProposalCollapseableWrapRow {  display:block;  }
+            .Proposal[collapse='true'] .ProposalCollapseableWrapCell {  display:block;  }
+
+            .Collapseable {  }  /* Separate from the table-cell, to force the table-cell to take full width */
+            .Proposal[collapse='true']    .Collapseable {  max-height:300px;  overflow:hidden;  }
+
+                .ProposalContent {  padding-left:5px;  margin-bottom:20px;  border:solid 1px #dddddd;  }
+                .Proposal[fromRequest='true'] .ProposalContent {  border:none;  }
+                
+
+                /* Reason columns */
+                .Reasons {  display:table;  border-collapse:collapse;  background-color:#f8f8f8;
+                    width:calc(100% - 1px);  position:relative;
+                }
+                .Proposal[collapse='true'] .Reasons {  margin:0px 0px 75px 0px;  
+                    box-shadow:0px 0px 20px white, 0px 0px 20px white, 0px 0px 20px white, 0px 0px 20px white, 0px 0px 20px white;
+                }
+                .Proposal[use1column='true'] .Reasons {  display:block;  }
+                    .ReasonsPro , .ReasonsCon {  display:table-cell;  width:50%;  border:solid 1px #dddddd;  vertical-align:top;  }
+                    .Proposal[use1column='true'] .ReasonsPro {  display:block;  width:100%;  }
+                    .Proposal[use1column='true'] .ReasonsCon {  display:none;  }
+                    .Reasons[hasmatches='true'] .ReasonsPro {  vertical-align:bottom;  }
+                    .Reasons[hasmatches='true'] .ReasonsCon {  vertical-align:bottom;  }
+
+                        /* Reason */
+                        .Reason {  position:relative;  padding:5px 5px 15px 5px;  min-height:40px;  }
+                        
+                            /* Reason viewing */
+                            .ReasonViewing {  }
+                            .Reason[editing='edit'] .ReasonViewing {  display:none;  }
+
+                                .ReasonProOrCon {  float:left;  padding:4px 10px 0px 0px;  text-transform:capitalize;  font-size:14px;  color:grey;  }
+
+                                /* Reason text */
+                                .ReasonText {  line-height:1.5em;  }
+                                .Reason[allowedit='true'] .ReasonText {  cursor:pointer;  }
+                                    .ReasonText a {  overflow-wrap:break-word;  word-break:break-all;  }
+
+                                /* Reason edit icon */
+                                .Reason .EditIcon {  display:none;  float:right;  }
+                                .Reason[allowedit='true'] .EditIcon {  cursor:pointer;  display:block;  }
+                                    .Reason .EditIconImage {  }  /* Defined above */
+                                
+                                /* Reason vote */
+                                .ReasonVote {
+                                    position:relative;  float:right;  cursor:pointer;  width:36px;  height:36px;  padding-top:10px; 
+                                    text-align:center;
+                                }
+                                [frozen='true'] .ReasonVote {  cursor:default;  }
+                                    /* Reason vote arrow */
+                                    .ReasonVoteArrowHead {  position:absolute;  z-index:0;  
+                                        top:0px;  left:8px;  height:0px;  width:0px;  
+                                        border-style:solid;  border-width:0px 10px 10px 10px;  border-color:transparent transparent grey transparent;  
+                                    }
+                                    .Reason[myvote='true'] .ReasonVoteArrowHead {  border-bottom-color:#60a0ff;  }
+
+                                    .ReasonVoteArrowBody {  position:absolute;  z-index:0;  
+                                        top:10px;  left:13px;  height:10px;  width:10px;  background:grey;
+                                    }
+                                    .Reason[myvote='true'] .ReasonVoteArrowBody {  background:#60a0ff;  }
+
+                                    .Reason:hover .ReasonVoteArrowHead {  border-bottom-color:#00aa00;  }
+                                    .Reason:hover .ReasonVoteArrowBody {  background:#00aa00;  }
+                                    .Reason[myvote='true']:hover .ReasonVoteArrowHead {  border-bottom-color:#60a0ff;  }
+                                    .Reason[myvote='true']:hover .ReasonVoteArrowBody {  background:#60a0ff;  }
+                                    [frozen='true'] .Reason:hover .ReasonVoteArrowHead {  box-shadow:none;  border-bottom-color:grey;  }
+                                    [frozen='true'] .Reason:hover .ReasonVoteArrowBody {  box-shadow:none;  background:grey;  }
+                                    [frozen='true'] .Reason[myvote='true']:hover .ReasonVoteArrowHead {  box-shadow:none;  border-bottom-color:#60a0ff;  }
+                                    [frozen='true'] .Reason[myvote='true']:hover .ReasonVoteArrowBody {  box-shadow:none;  background:#60a0ff;  }
+
+                                    .ReasonVoteCount {  position:relative;  top:13px;  min-width:10px;  color:grey;  }
+                                
+                                .ReasonScore {  position:relative;  top:12px;  left:-10px;  font-size:12px;  color:#aaa;  display:none;  }
+
+                            /* Reason editing */
+                            .ReasonEditing {  display:none;  }
+                            .Reason[editing='edit'] .ReasonEditing {  display:block;  }
+                                .ReasonEditInput {  width:calc(100% - 15px);  border:solid 1px #e0e0e0;  }
+                                .ReasonEditingButtons {  }
+                                    .ReasonEditingButtons .Button {  margin:10px 10px 10px 0px;  }
+
+                /* Proposal expand bottom rail */
+                .ProposalExpandBottomRelative {  position:relative;  }
+                    .ProposalExpandBottomWrap {
+                        display:none;
+                        position:absolute;  bottom:0px;  width:calc(100% - 1px);  height:100px;  z-index:1;
+                        overflow:hidden;  background-color:rgba(0,0,0,0);
+                    }
+                    .Proposal[collapse='false'] .ProposalExpandBottomWrap {  display:none;  }
+                    .Proposal[collapse='true'] .ProposalExpandBottomWrap {  display:block;  }
+                        .ProposalExpandBottom {
+                            position:absolute;
+                            bottom:0px;  width:100%;  height:75px;  z-index:2;
+                            background-color:#f0f0f0;
+                            box-shadow:0 -10px 10px #aaaaaa;  border:solid 1px #dddddd;
+                            text-align:center;
+                            cursor:pointer;
+                        }
+                        .ProposalExpandBottom:hover .Button {  background:rgb(206,231,256);  }
+
+            /* Proposal collapse side rail */
+            .ProposalCollapseRail {
+                display:none;
+                position:relative;
+                width:20px;  border:solid 1px #dddddd;  background-image:url(arrowUp.png);  background-position: 4px 40px;
+                cursor:pointer;
+            }
+            .ProposalCollapseRail::after {
+                content:"";  position:absolute;
+                bottom:0px;  width:100%;  height:100%;
+                background-color:#e8e8e8;  opacity:0.8;
+                cursor:pointer;
+            }
+            .ProposalCollapseRail:hover::after {  background-color:rgb(206,231,256);  }
+            .Proposal[collapse='true'] .ProposalCollapseRail {  display:none;  }
+
+
+            /* New reason */
+            .NewReasonForm {  background-color:#f0f0f0;  }
+            [frozen="true"] .NewReasonForm {  display:none;  }
+                .NewReason {  padding:5px;  }
+                    .NewReasonInput {  border:solid 1px #e0e0e0;  padding:3px;  height:20px;  width:calc(100% - 12px);  
+                        resize:none;  overflow:hidden;  color:#888888;  }
+                    .ReqProp[nextinput='reason'] .Proposal[firstproposal='true'] .NewReasonInput {  color:green;  }
+                    .Proposal[nextinput='reason'][firstproposal='true'] .NewReasonInput {  color:green;  }
+                    .Proposal[editingnewreason='true'] .NewReasonInput {  
+                        padding:5px;  height:65px;  color:#000000;  resize:vertical;  overflow:visible;
+                    }
+                .NewReasonButtons {  display:none;  }
+                    .Proposal[editingnewreason='true'] .NewReasonButtons {  display:block;  }
+                    .NewReasonButton {  margin:0px 5px 10px 5px;  }
+
+    .MoreProposalsWrap {  text-align:center;  margin:0px 0px 30px 0px;  }
+    .MoreProposalsWrap:hover .Button {  background:rgb(206,231,256);  }
+
+    /* New proposal */
+    .NewProposalForm {  border-top:solid 1px #dddddd;  position:relative;  padding:25px 5px 35px 0px;  }
+    .ReqProp[frozen='true'] .NewProposalForm {  display:none;  }
+
+        .NewProposalSectionTitle {  margin:5px 0px 15px 0px;  text-align:center;  font-weight:bold;  font-size:20px;  color:#888888;  }
+
+        a.matchLink {  text-decoration:none;  color:black;  }
+            .match {  border:solid 1px #cccccc;  padding:10px;  margin:0px;  }
+            .match:hover {  background:rgb(206,231,256);  }
+
+        .NewProposalTitleLabel , .NewProposalDetailLabel , .NewProposalReasonLabel {  color:#cccccc;  font-size:12px;  margin:10px 0px 0px 0px;  }
+        .NewProposalForm .TitleInput {  font-weight:bold;  border:solid 1px #e0e0e0;  }
+        .ReqProp[nextinput='proposalTitle'] .NewProposalForm .TitleInput {  color:green;  }
+
+        .NewProposalForm .DetailInput {  margin-top:2px;  border:solid 1px #e0e0e0;  resize:vertical;  line-height:1.5em;  }
+        .ReqProp[nextinput='proposalDetail'] .NewProposalForm .DetailInput {  color:green;  }
+
+        .NewProposalForm .NewProposalInitialReasonInput {  margin-top:2px;  border:solid 1px #e0e0e0;  resize:vertical;  line-height:1.5em;  }
+        .ReqProp[nextinput='proposalInitialReason'] .NewProposalInitialReasonInput {  color:green;  }
+
+
+@media (min-width:800px) {
+    /* For desktop... shrink button heights */
+    .Proposal[collapse="true"] .Reasons {  margin: 0px 0px 60px 0px;  }
+    .ProposalExpandBottomWrap {  height:85px;  }
+        .ProposalExpandBottom {  height:60px;  }
+}

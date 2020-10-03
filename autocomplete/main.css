@@ -1,0 +1,112 @@
+
+/* HTML element styles */
+body {  }
+label {  color:black;  opacity:0.5;  font-size:12pt;  }
+input.invalid {  background-color:#ffdddd;  }
+
+::placeholder {  color:#dddddd;  opacity:1.0;  }
+::-ms-input-placeholder {  color:#dddddd;  }  /* Microsoft edge */
+ :-ms-input-placeholder {  color:#dddddd;  }  /* Internet explorer 10-11 */
+
+
+/* Page template styles */
+.subtitle {  margin:5px 0px 15px 0px;  text-align:center;  font-weight:bold;  font-size:14px;  color:#aaaaaa;  }
+
+
+
+/* Menu links */
+#menuItemLinkBack , #menuItemLinkView , #menuItemLinkEdit {  display:none;  }
+body[menuback='true'] #menuItemLinkBack {  display:block;  }
+body[menuview='true'] #menuItemLinkView {  display:block;  }
+body[menuedit='true'] #menuItemLinkEdit {  display:block;  }
+
+
+/* New survey page */
+#pageNewQuestion {  padding:2px;  }
+#pageNewQuestion        #newSurveyIntroInput {  width:calc(100% - 16px);  }
+#pageNewQuestion        #newSurveySubmitButtons {  margin-top:5px;  }
+
+
+/* Editing page */
+#pageEditQuestion   .Survey {  }
+#pageEditQuestion       .freezeButton {  display:inline-block;  }
+#pageEditQuestion        .Survey[frozen='true'] .freezeButton {  color:red;  font-weight:bold;  }
+#pageEditQuestion       .freezeMessage {  display:inline-block;  margin-left:20px;  }
+#pageEditQuestion       .SurveyEdit {  padding:2px;  }
+#pageEditQuestion           textarea.SurveyEditInput {  border:solid 1px #cccccc;  width:calc(100% - 12px);  }
+#pageEditQuestion       .Questions {  }
+#pageEditQuestion           .Question {  margin:20px 0px 40px 0px;  position:relative;  background-color:#f0f0f0;  padding:5px 2px 10px 0px;  }
+#pageEditQuestion               .QuestionEdit {  padding:2px;  }
+#pageEditQuestion                   .QuestionEdit label {  opacity:1.0;  font-weight:bold;  }
+#pageEditQuestion               input.QuestionPositionInput {  width:40px;  color:#888888;  padding:2px;  font-size:10pt;  }
+#pageEditQuestion               textarea.QuestionEditInput {  width:calc(100% - 10px);  margin:13px 0px 0px 0px;  border:solid 1px #cccccc;  }
+#pageEditQuestion                   .QuestionDeleteButton {  position:absolute;  right:-2px;  top:-2px;  padding:4px 10px 4px 10px;  }
+#pageEditQuestion               .Answers {  }
+#pageEditQuestion                   .Answer {  position:relative;  margin-top:5px;  transition:max-height 1s;  }
+#pageEditQuestion                       .AnswerEdit {  padding:2px;  }
+#pageEditQuestion                           input.AnswerContentInput {  line-height:1.25em;  height:1.5em;  width:calc(100% - 55px);  border:solid 1px #cccccc;  }
+#pageEditQuestion                           textarea.AnswerReasonInput {  line-height:1.25em;  height:1.5em;  width:calc(100% - 15px);  border:solid 1px #cccccc;  }
+#pageEditQuestion                       .AnswerEditingButtons {  position:absolute;  right:0px;  top:15px;  }
+#pageEditQuestion                           .AnswerDeleteButton {  padding:4px 10px 4px 10px;  }
+#pageEditQuestion               .NewAnswer {  margin-top:10px;  padding:2px;  }
+#pageEditQuestion                   textarea.NewAnswerInput {  width:calc(100% - 10px);  height:2.0em;  border:solid 1px #cccccc;  }
+#pageEditQuestion       .NewQuestion {  margin-top:20px;  padding:2px;  }
+#pageEditQuestion           .NewQuestion label {  opacity:1.0;  font-weight:bold;  }
+#pageEditQuestion           textarea.NewQuestionInput {  border:solid 1px #cccccc;  width:calc(100% - 12px);  }
+
+
+/* Viewing page */
+#pageViewQuestion   .Survey {  }
+#pageViewQuestion       .Survey > .Message {  padding:2px;  }
+#pageViewQuestion       .SurveyIntroduction {  margin:25px 0px 25px 0px;  padding:2px;  }
+#pageViewQuestion           .Question {  margin:20px 0px 40px 0px;  padding:10px 0px 10px 2px;  background-color:#f0f0f0;  }
+#pageViewQuestion               .Question > label {  opacity:1.0;  font-weight:bold;  }
+#pageViewQuestion               .QuestionContent {  margin:5px 0px 5px 0px;  }
+#pageViewQuestion               .Answers {  margin:0px;  }
+#pageViewQuestion               .Survey[frozen='true'] .Answers {  display:none;  }
+#pageViewQuestion                   .Answer {  margin-top:5px;  cursor:pointer;  color:#0000aa;  display:table-row;  }
+#pageViewQuestion                   .Answer:hover {  background:rgb(206,231,256);  }
+#pageViewQuestion                       .AnswerCheckbox {  width:auto;  cursor:pointer;  display:table-cell;  }
+#pageViewQuestion                       .AnswerContent {
+                                            width:padding:5px 0px 5px 0px;  opacity:1.0;  font-size:unset;  cursor:pointer;
+                                            display:table-cell;  padding:5px;
+                                        }
+#pageViewQuestion                       .suggestionReasonSeparator {  color:#888888;  font-size:10pt;  margin:0px 5px 0px 10px;  }
+#pageViewQuestion               .NewAnswer {  }
+#pageViewQuestion                   .NewAnswerInput {  width:calc(100% - 15px);  border:solid 1px #cccccc;  }
+#pageViewQuestion                    .Survey[frozen='true'] .NewAnswerInput {  color:grey;  }
+#pageViewQuestion                   textarea.NewReasonInput {  padding:5px;  line-height:1.25em;  height:2.0em;  width:calc(100% - 15px);  border:solid 1px #cccccc;  color:black;  }
+#pageViewQuestion                    .Survey[frozen='true'] textarea.NewReasonInput {  color:grey;  }
+
+/* Results page */
+#pageSurveyResults  .Survey { }
+#pageSurveyResults      .Questions { }
+#pageSurveyResults          .Question {  margin:20px 0px 40px 0px;  padding:2px;  background-color:#f0f0f0;  }
+#pageSurveyResults              .Question label {  opacity:1.0;  font-weight:bold;  }
+#pageSurveyResults              .QuestionContent {  margin:5px 0px 5px 0px;  }
+#pageSurveyResults              .Answers {  display:table;  width:calc(100% - 15px);  border-collapse:collapse;  }
+#pageSurveyResults                  .Answer {  display:table-row;  }
+#pageSurveyResults                      .AnswerCell {  display:table-cell;  border:solid 1px #dddddd;  padding:10px;  }
+#pageSurveyResults                      .AnswerCountBarBack {  width:100px;  }
+#pageSurveyResults                          .AnswerCountBar {  background-color:#8888aa;  }
+#pageSurveyResults                      .AnswerCount {  width:50px;  text-align:right;  }
+#pageSurveyResults                      .AnswerReasons {  display:table;  width:calc(100% - 15px);  border-collapse:collapse;  }
+#pageSurveyResults                          .AnswerReason {  display:table-row;  }
+#pageSurveyResults              .QuestionResultsButton {  display:none;  }
+
+/* Recent page */
+#pageRecent .Samples {  }
+/* Tab-navigation highlighting requires that link has display:block  */
+#pageRecent     a.SurveyLink {  display:block;  text-decoration: none;  padding:10px 10px 20px 10px;  border:solid 1px #dddddd;  color:black;  }
+#pageRecent     a.SurveyLink:hover {  background:rgb(206,231,256);  }
+
+/* About page */
+#pageAbout {  line-height:2.0em;  }
+#pageAbout h3 {  margin:0px;  }
+#pageAbout p {  margin:0px 0px 20px 0px;  }
+
+
+/* Overrides for wide screen */
+@media (min-width:800px) {
+}
+

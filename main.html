@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<meta charset='UTF-8'>
+<head>
+    <title>Pro/Con</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel='stylesheet' href='main.css' />
+</head>
+<body>
+<div id=content>
+
+    {% include 'loginPopups.html' %}
+
+    <!-- Menus -->
+    <button id=backLink> Back </button>
+    <details id=menuMobile open >
+        <summary tabindex=-1 aria-label=Menu><button id=menuLink> Menu </button></summary>
+        <nav class=menu role=nav role=menu>
+            <div>
+                <a class=menuItemLink id=backMenuItem> Back </a>
+                <a class=menuItemLink href='#page=recent'> Recent </a>
+                <a class=menuItemLink href='#page=newRequest'> New Request </a>
+                <a class=menuItemLink href='#page=newProposal'> New Proposal </a>
+                <a class=menuItemLink href='#page=about'> About </a>
+                <div class=menuItem id=menuItemCity></div>
+                <button class=menuItem id=menuItemLogin> Log in </button>
+                <button class=menuItem id=menuItemLogout> Log out </button>
+            </div>
+            <div id=menuLoginStatus></div>
+        </nav>
+        <div id=contentCover></div>
+    </details>
+
+    <div id=siteName>Pro/Con</div>
+
+    <!-- Pages -->
+    <div id=pages>
+        <div id=pageNewRequest class=Page>
+
+            <h1 class=title role=status> New Request For Proposals </h1>
+            <form id=formNewRequest >
+                <div>
+                     <input id=newRequestInputTitle type=text  placeholder='Enter request title'
+                        title='Enter your request title here'  aria-required=true />
+                </div>
+                <div>
+                    <textarea id=newRequestInputDetail  placeholder='Enter request content'
+                        title='Enter the content of your request here'  aria-required=true ></textarea>
+                </div>
+                <div class=loginRequiredDiv>
+                    <label class=loginRequiredLabel for=loginRequiredForRequest> Require Login </label>
+                    <input type=checkbox class=loginRequiredCheckbox name=loginRequired id=loginRequiredForRequest />
+                </div>
+                <div class=newRequestInputArea> 
+                    <div id=newRequestSubmit><button id=buttonSubmit> Request Proposals </button></div>
+                    <div id=newRequestSubmitMessage role=alert ></div>
+                </div>
+            </form>
+
+        </div><div id=pageNewProposal class=Page>
+
+            <h1 class=title role=status> New Proposal </h1>
+            <form id=formNewProposal >
+                <div>
+                     <input id=newProposalInputTitle type=text  placeholder='Enter proposal title'
+                        title='Enter your proposal title here'  aria-required=true />
+                </div>
+                <div>
+                    <textarea id=newProposalInputDetail  placeholder='Enter proposal content'
+                        title='Enter the content of your proposal here'  aria-required=true ></textarea>
+                </div>
+                <div class=loginRequiredDiv>
+                    <label class=loginRequiredLabel for=loginRequiredForProposal> Require Login </label>
+                    <input type=checkbox class=loginRequiredCheckbox name=loginRequired id=loginRequiredForProposal />
+                </div>
+                <div id=newProposalSubmit><button id=buttonSubmitNewProposal> Propose </button></div>
+                <div id=newProposalSubmitMessage role=alert ></div>
+            </form>
+
+        </div><div id=pageRequest class=Page>
+
+            <h1 class=title role=status> Request For Proposals </h1>
+            <div id=requestForProposalsContent></div>
+
+        </div><div id=pageProposal class=Page>
+
+            <h1 class=title role=status> Proposal </h1>
+            <div id=ProposalContent></div>
+
+        </div><div id=pageRecent class=Page>
+
+            <h1 class=title role=status> Recent </h1>
+            <div id=recentMessage role=alert ></div>
+            <div id=recentContent></div>
+
+        </div><div id=pageAbout class=Page>
+
+            <h1 class=title role=status> About </h1>
+            <div id=aboutContent>
+                <p>
+                    Using Pro/Con, a leader can send a request for proposals, to a group of participants.
+                    Participants can make proposals, and point out the pro's and con's of proposals.
+                <p>
+                    Pro/Con handles the most significant problem with group decision-making & participatory democracy:
+                    the high cost of organizing and evaluating participants' ideas.
+                <p>
+                    <details class=aboutDetails>
+                        <summary> Design </summary>
+                        <div>
+                            Reason-based voting
+                            <ul>
+                                <li> Users must view others' reasons before entering their own reason
+                                <li> Users must vote for a reason, rather than just voting yes or no
+                                <li> User-generated content cannot be changed once responded to
+                                <li> Users are anonymous, so reasons must stand on their own merit
+                            </ul>
+                            Minimizing the burden of knowledge
+                            <ul>
+                                <li> Proposals & reasons are ordered by votes discounted by length
+                                <li> Users only have to view the best few short proposals / reasons
+                                <li> Pro & con reasons are given equal placement, either interleaved or side-by-side
+                                <li> New proposal/reason input shows similar existing proposals/reasons
+                            </ul>
+                            Anti-abuse
+                            <ul>
+                                <li> Each user can vote for only 1 reason per proposal, to reduce the impact of coordinated voting strategies
+                                <li> Access is private, and sharable by link
+                                <li> Low-quality content is submerged by user voting
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class=aboutDetails>
+                        <summary> Accessibility </summary>
+                        <div>
+                            This website is periodically reviewed for accessibility.  The goal is to
+                            support keyboard navigation, and screen-reader navigation with:
+                            <ul>
+                                <li> VoiceOver on MacOS
+                                <li> VoiceOver on iOS
+                                <li> Talkback on Android
+                                <li> ChromeVox on ChromeOS
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class=aboutDetails>
+                        <summary> Legal documents </summary>
+                        <ul>
+                            <li> <a href=termsOfService.html target=_blank> Terms of Service </a>
+                            <li> <a href=privacyPolicy.html target=_blank> Privacy Policy </a>
+                        </ul>
+                    </details>
+
+                    <details class=aboutDetails>
+                        <summary> Open-source code </summary>
+                        <div>
+                            The source code for this site is open-source, under Apache license, at: 
+                            <br><a href='https://github.com/converj/reasonSurvey' target=_blank
+                                > https://github.com/converj/reasonSurvey </a>
+                        </div>
+                    </details>
+
+            </div>
+
+        </div>
+        <div id=pageSiteList class=Page>
+
+            <div class=title role=status> Site List </div>
+            <div class=SiteList>
+                <a class=SiteListLink href='/#page=newProposal'><div class=SiteListEntry> Pro/Con </div></a>
+                <a class=SiteListLink href='/autocomplete'><div class=SiteListEntry> Auto-Complete Survey </div></a>
+            </div>
+
+        </div>
+    </div>
+
+</div id=content>
+<div id=log></div>
+
+<script>
+    // Constants passed from server-side configuration
+    const minLengthRequest = {{minLengthRequest}};
+    const minLengthProposal = {{minLengthProposal}};
+    const minLengthReason = {{minLengthReason}};
+    const TOO_SHORT = '{{TOO_SHORT}}';
+    const REASON_TOO_SHORT = '{{REASON_TOO_SHORT}}';
+    const NO_COOKIE = '{{NO_COOKIE}}';
+    const NO_LOGIN = '{{NO_LOGIN}}';
+    const BAD_CRUMB = '{{BAD_CRUMB}}';
+    const BAD_LINK = '{{BAD_LINK}}';
+    const NOT_OWNER = '{{NOT_OWNER}}';
+    const HAS_RESPONSES = '{{HAS_RESPONSES}}';
+    const STOP_WORDS = {{ STOP_WORDS|safe }};
+    const VOTER_ID_LOGIN_SIG_LENGTH = {{VOTER_ID_LOGIN_SIG_LENGTH}};
+    const VOTER_ID_LOGIN_REQUEST_ID_LENGTH = {{VOTER_ID_LOGIN_REQUEST_ID_LENGTH}};
+    const IS_DEV = {{IS_DEV}};
+
+    // Globals passed from server
+    var crumb = '{{crumb}}';
+    
+    // Constants shared by many scripts.
+    const DIV_ID_NEW_REQUEST = 'pageNewRequest';
+    const DIV_ID_NEW_PROPOSAL = 'pageNewProposal';
+    const DIV_ID_REQUEST = 'pageRequest';
+    const DIV_ID_PROPOSAL = 'pageProposal';
+    const DIV_ID_RECENT = 'pageRecent';
+    const DIV_ID_ABOUT = 'pageAbout';
+    const DIV_ID_SITE_LIST = 'pageSiteList';
+    const SITE_TITLE = 'Pro/Con';
+    const MAX_WIDTH_1_COLUMN = 700;
+    const MAX_WIDTH_POPUP_MENU = 800;
+
+</script>
+<script src='jquery-3.4.1.min.js'></script>
+<script src='shared.js'></script>
+<script src='newRequest.js'></script>
+<script src='newProposal.js'></script>
+<script src='recent.js'></script>
+<script src='requestForProposals.js'></script>
+<script src='main.js'></script>
+
+
+</body>
+</html>
+

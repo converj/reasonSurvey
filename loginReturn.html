@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<meta charset='UTF-8'>
+<head>
+    <title>Pro/Con</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel='stylesheet' href='main.css' />
+</head>
+<body>
+<div id=content>
+
+    <div id=siteName>Pro/Con</div>
+    <h1 class=title> Login Succeeded </h1>
+    
+    <div> Logged in as anonymous user from {{city}} </div>
+    
+    <div> <button onclick='javascript:window.open("","_self").close()'> Close tab </button> </div>
+
+</div id=content>
+<div id=log></div>
+
+
+<script src='jquery-3.4.1.min.js'></script>
+<script src='shared.js'></script>
+<script>
+    var crumb = '{{crumb}}';
+
+    $(document).ready( function(){
+        requestInitialCookie( function(){  // Collect browser-fingerprint to set signed cookie
+            window.close();
+        } );
+    } );
+</script>
+
+
+</body>
+</html>
+

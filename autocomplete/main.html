@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+<meta charset='UTF-8'>
+<head>
+    <title>Auto-Complete Survey</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel='stylesheet' href='/main.css' />
+    <link rel='stylesheet' href='/autocomplete/main.css' />
+</head>
+<body>
+
+<div id=content>
+
+    {% include 'loginPopups.html' %}
+
+    <!-- Menus -->
+    <details id=menuMobile open >
+        <summary tabindex=-1 aria-label=Menu><button id=menuLink> Menu </button></summary>
+        <nav class=menu role=nav role=menu>
+            <div>
+                <a class=menuItemLink id=menuItemLinkBack tabindex=0> Back </a>
+                <a class=menuItemLink id=menuItemLinkView href='#page=question'> View </a>
+                <a class=menuItemLink id=menuItemLinkEdit href='#page=editQuestion'> Edit </a>
+                <a class=menuItemLink href='#page=recent'> Recent </a>
+                <a class=menuItemLink href='#page=newQuestion'> New Survey </a>
+                <a class=menuItemLink href='#page=about'> About </a>
+                <div class=menuItem id=menuItemCity></div>
+                <button class=menuItem id=menuItemLogin> Log in </button>
+                <button class=menuItem id=menuItemLogout> Log out </button>
+            </div>
+        </nav>
+        <div id=contentCover></div>
+    </details>
+
+    <div id=siteName> Auto-Complete Survey </div>
+
+    <!-- Pages -->
+    <div id=pages>
+
+        <div id=pageNewQuestion class=Page>
+            <h1 class=title> New Survey </h1>
+            <form id=newQuestionForm >
+                <div>
+                    <label for=newSurveyIntroInput> Survey introduction: </label>
+                    <textarea id=newSurveyIntroInput aria-required=true
+                        placeholder='This survey from ... is about ...' 
+                        title='Enter survey introduction here.'></textarea>
+                </div>
+
+                <div class=loginRequiredDiv>
+                    <label class=loginRequiredLabel for=loginRequiredCheckbox> Require Login </label>
+                    <input type=checkbox class=loginRequiredCheckbox name=loginRequired id=loginRequiredCheckbox />
+                </div>
+
+                <div id=newSurveySubmitButtons>
+                    <button id=newSurveySubmitButton> Edit survey </button>
+                </div>
+                <div id=newSurveySubmitMessage role=alert></div>
+            </form>
+        </div>
+
+        <div id=pageEditQuestion class=Page>
+            <h1 class=title> Edit Survey </h1>
+        </div>
+
+        <div id=pageViewQuestion class=Page>
+            <h1 class=title> View Survey </h1>
+        </div>
+        
+        <div id=pageSurveyResults class=Page>
+            <h1 class=title> Survey Results </h1>
+        </div>
+
+        <div id=pageRecent class=Page>
+            <h1 class=title> Recent Surveys </h1>
+        </div>
+        
+        <div id=pageAbout class=Page>
+            <h1 class=title> About </h1>
+
+            <h3> For participants: </h3>
+            <p>
+                To answer survey questions, just type.
+                You may see the answer you were thinking of, and select it.
+                Or type in a better version of a suggested answer, so that other people can select your version.
+                If you see something rude, don't click it, and it will appear less and less.
+            </p>
+
+            <h3> For surveyors: </h3>
+            <p>
+                Worry less about whether you are providing the right multiple choice options, by letting particpants add their own options.
+                But still get useful convergence to a few best answers.
+            </p>
+
+            <p>
+                <details class=aboutDetails>
+                    <summary> Design </summary>
+                    <div>
+                        Reason-based voting
+                            <ul>
+                            <li> Users must view others' answers before entering their own answer
+                            <li> Users must supply both an answer, and a reason for that answer
+                            <li> Users are anonymous, so answers & reasons must stand on their own merit
+                            </ul>
+                        Minimizing the burden of knowledge
+                            <ul>
+                            <li> Users only have to view the most popular and relevant answers
+                            <li> New answer input suggests similar existing proposals/reasons
+                            </ul>
+                        Anti-abuse
+                            <ul>
+                            <li> Each user can select only 1 answer per question, to reduce the chance of strategic answering
+                            <li> Access is private, and sharable by link
+                            <li> Low-quality content is submerged by user voting
+                            </ul>
+                    </div>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Accessibility </summary>
+                    <div>
+                        This website is periodically reviewed for accessibility.  The goal is to
+                        support keyboard navigation, and screen-reader navigation with:
+                            <ul>
+                            <li> VoiceOver on MacOS
+                            <li> VoiceOver on iOS
+                            <li> Talkback on Android
+                            <li> ChromeVox on ChromeOS
+                            </ul>
+                    </div>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Legal documents </summary>
+                    <ul>
+                        <li> <a href=termsOfService.html target=_blank> Terms of Service </a>
+                        <li> <a href=privacyPolicy.html target=_blank> Privacy Policy </a>
+                    </ul>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Open-source code </summary>
+                    <div>
+                        The source code for this site is open-source, under Apache license, at: 
+                        <br><a href='https://github.com/converj/reasonSurvey/autocomplete' target=_blank
+                            > https://github.com/converj/reasonSurvey/autocomplete </a>
+                    </div>
+                </details>
+
+        </div>
+
+    </div>
+
+</div id=content>
+<div id=log></div>
+
+<script>
+    // Constants passed from server-side configuration
+    const minLengthSurveyIntro = {{minLengthSurveyIntro}};
+    const minLengthQuestion = {{minLengthQuestion}};
+    const minLengthAnswer = {{minLengthAnswer}};
+    const TOO_SHORT = '{{TOO_SHORT}}';
+    const NO_COOKIE = '{{NO_COOKIE}}';
+    const NO_LOGIN = '{{NO_LOGIN}}';
+    const BAD_CRUMB = '{{BAD_CRUMB}}';
+    const BAD_LINK = '{{BAD_LINK}}';
+    const NOT_OWNER = '{{NOT_OWNER}}';
+    const HAS_RESPONSES = '{{HAS_RESPONSES}}';
+    const ERROR_DUPLICATE = '{{ERROR_DUPLICATE}}';
+    const STOP_WORDS = {{ STOP_WORDS|safe }};
+    const IS_DEV = {{IS_DEV}};
+   
+    // Globals passed from server
+    var crumb = '{{crumb}}';
+    
+    // Constants shared by many scripts.
+    const DIV_ID_NEW_QUESTION = 'pageNewQuestion';
+    const DIV_ID_EDIT_QUESTION = 'pageEditQuestion';
+    const DIV_ID_VIEW_QUESTION = 'pageViewQuestion';
+    const DIV_ID_SURVEY_RESULTS = 'pageSurveyResults';
+    const DIV_ID_RECENT = 'pageRecent';
+    const DIV_ID_ABOUT = 'pageAbout';
+    const SITE_TITLE = 'Auto-Complete Survey';
+    const MAX_WIDTH_POPUP_MENU = 800;
+
+</script>
+<script src='/jquery-3.4.1.min.js'></script>
+<script src='/shared.js'></script>
+<script src='/autocomplete/shared.js'></script>
+<script src='/autocomplete/newSurvey.js'></script>
+<script src='/autocomplete/editSurvey.js'></script>
+<script src='/autocomplete/viewSurvey.js'></script>
+<script src='/autocomplete/surveyResults.js'></script>
+<script src='/autocomplete/recent.js'></script>
+<script src='/autocomplete/main.js'></script>
+
+
+</body>
+</html>
+
