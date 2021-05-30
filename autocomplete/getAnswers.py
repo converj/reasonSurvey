@@ -12,17 +12,22 @@ import httpServer
 import httpServerAutocomplete
 import linkKey
 import question
+import survey
+from text import LogMessage
 import user
 
 
 class QuestionAnswersForPrefix( webapp2.RequestHandler ):
-    def get( self, linkKeyStr, questionId ):
+    # Use POST for privacy of user's answer-input
+    def post( self, linkKeyStr, questionId ):
 
-        logging.debug( 'QuestionAnswersForPrefix.get() linkKeyStr=' + str(linkKeyStr) + ' questionId=' + str(questionId) )
+        logging.debug(LogMessage('QuestionAnswersForPrefix', 'linkKeyStr=', linkKeyStr, 'questionId=', questionId))
 
-        # Collect inputs.
-        answerStart = self.request.get( 'answerStart', None )
-        logging.debug( 'QuestionAnswersForPrefix.get() answerStart=' + str(answerStart) )
+        # Collect inputs
+        inputData = json.loads( self.request.body )
+        logging.debug(LogMessage('QuestionAnswersForPrefix', 'inputData=', inputData))
+        answerStart = answer.standardizeContent( inputData.get( 'answerStart', None ) )
+        logging.debug(LogMessage('QuestionAnswersForPrefix', 'answerStart=', answerStart))
 
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
@@ -46,11 +51,15 @@ class QuestionAnswersForPrefix( webapp2.RequestHandler ):
         if questionRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='questionRecord is null' )
         if questionRecord.surveyId != surveyId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='questionRecord.surveyId != surveyId' )
 
-        # Check that survey is not frozen, to reduce the cost of abuse via search queries?
+        # Retrieve survey record
+        surveyRecord = survey.Survey.get_by_id( int(surveyId) )
+        if surveyRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='survey record not found' )
+        # Check that survey is not frozen, to reduce the cost of abuse via search queries
+        if surveyRecord.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
 
         # Retrieve best suggested answers for this question and creator.
-        answersOrdered = answer.retrieveTopAnswersAsync( surveyId, questionId, answerStart=answerStart )
-        logging.debug( 'QuestionAnswersForPrefix.get() answersOrdered=' + str(answersOrdered) )
+        answersOrdered = answer.retrieveTopAnswers( surveyId, questionId, answerStart=answerStart, hideReasons=surveyRecord.hideReasons )
+        logging.debug(LogMessage('QuestionAnswersForPrefix', 'answersOrdered=', answersOrdered))
 
         answerDisplays = [ httpServerAutocomplete.answerToDisplay(a, userId) for a in answersOrdered ]
 
@@ -62,7 +71,7 @@ class QuestionAnswersForPrefix( webapp2.RequestHandler ):
 class UserAnswer( webapp2.RequestHandler ):
     def get( self, linkKeyStr, questionId ):
 
-        logging.debug( 'UserAnswer.get() linkKeyStr=' + linkKeyStr )
+        logging.debug(LogMessage('UserAnswer', 'linkKeyStr=', linkKeyStr))
 
         # Collect inputs.
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
@@ -80,10 +89,10 @@ class UserAnswer( webapp2.RequestHandler ):
 
         # Retrieve all answers for this question and voter
         answerVoteRec = answerVote.get( questionId, userId )
-        logging.debug( 'UserAnswer.get() answerVoteRec=' + str(answerVoteRec) )
+        logging.debug(LogMessage('UserAnswer', 'answerVoteRec=', answerVoteRec))
         
         answerRecord = answer.Answer.get_by_id( answerVoteRec.answerId )
-        logging.debug( 'UserAnswer.get() answerRecord=' + str(answerRecord) )
+        logging.debug(LogMessage('UserAnswer', 'answerRecord=', answerRecord))
 
         if answerRecord.surveyId != surveyId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='answerRecord.surveyId != surveyId' )
 
@@ -98,7 +107,7 @@ class UserAnswer( webapp2.RequestHandler ):
 class UserAnswers( webapp2.RequestHandler ):
     def get( self, linkKeyStr ):
 
-        logging.debug( 'UserAnswers.get() linkKeyStr=' + linkKeyStr )
+        logging.debug(LogMessage('UserAnswers', 'linkKeyStr=', linkKeyStr))
 
         # Collect inputs.
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
@@ -116,11 +125,11 @@ class UserAnswers( webapp2.RequestHandler ):
 
         # Retrieve all answers for this survey and voter
         answerVoteRecs = answerVote.AnswerVote.query( answerVote.AnswerVote.surveyId==surveyId, answerVote.AnswerVote.userId==userId ).fetch()
-        logging.debug( 'UserAnswers.get() answerVoteRecs=' + str(answerVoteRecs) )
+        logging.debug(LogMessage('UserAnswers', 'answerVoteRecs=', answerVoteRecs))
         
         answerRecordKeys = [ ndb.Key( answer.Answer, a.answerId )  for a in answerVoteRecs  if (a is not None) and (a.answerId is not None) ]
         answerRecords = ndb.get_multi( answerRecordKeys )
-        logging.debug( 'UserAnswers.get() answerRecords=' + str(answerRecords) )
+        logging.debug(LogMessage('UserAnswers', 'answerRecords=', answerRecords))
         
         answerIdToContent = { a.key.id() : a.content  for a in answerRecords  if a }
         questionIdToAnswerContent = { v.questionId : answerIdToContent.get( v.answerId, None )  for v in answerVoteRecs }
@@ -134,7 +143,7 @@ class UserAnswers( webapp2.RequestHandler ):
 class QuestionAnswersFromCreator( webapp2.RequestHandler ):
     def get( self, linkKeyStr, questionId ):
 
-        logging.debug( 'QuestionAnswersFromCreator.get() linkKeyStr=' + str(linkKeyStr) + ' questionId=' + str(questionId) )
+        logging.debug(LogMessage('QuestionAnswersFromCreator', 'linkKeyStr=', linkKeyStr, 'questionId=', questionId))
 
         # Collect inputs.
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
@@ -164,11 +173,11 @@ class QuestionAnswersFromCreator( webapp2.RequestHandler ):
 class QuestionFrequentAnswers( webapp2.RequestHandler ):
     def get( self, linkKeyStr, questionId ):
 
-        logging.debug( 'QuestionFrequentAnswers.get() linkKeyStr=' + str(linkKeyStr) + ' questionId=' + str(questionId) )
+        logging.debug(LogMessage('QuestionFrequentAnswers', 'linkKeyStr=', linkKeyStr, 'questionId=', questionId))
 
         # Collect inputs.
         answerStart = self.request.get( 'answerStart', None )
-        logging.debug( 'QuestionFrequentAnswers.get() answerStart=' + str(answerStart) )
+        logging.debug(LogMessage('QuestionFrequentAnswers', 'answerStart=', answerStart))
         all = ( self.request.get( 'all', None ) == 'true' )
 
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
@@ -202,7 +211,7 @@ class QuestionFrequentAnswers( webapp2.RequestHandler ):
             answerRecordsTrunc = answerRecords[ 0 : maxAnswersPerQuestion ]
             hasMoreAnswers = len(answerRecordsTrunc) < len(answerRecords)
 
-        logging.debug( 'QuestionFrequentAnswers.get() answerRecordsTrunc=' + str(answerRecordsTrunc) )
+        logging.debug(LogMessage('QuestionFrequentAnswers', 'answerRecordsTrunc=', answerRecordsTrunc))
 
         answerDisplays = [ httpServerAutocomplete.answerToDisplay(a, userId) for a in answerRecordsTrunc ]
 

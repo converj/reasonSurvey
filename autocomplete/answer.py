@@ -50,8 +50,10 @@ const.MAX_ANSWER_SUGGESTIONS = 3
 const.NUM_FREQ_ANSWER_SUGGESTIONS = min( 1, const.MAX_ANSWER_SUGGESTIONS - 1 )  # Should be less than MAX_ANSWER_SUGGESTIONS
 const.SEARCH_INDEX_NAME = 'answersearchindex'
 const.MAX_SEARCH_RESULTS = 100
-const.USE_SEARCH_INDEX = True
+const.USE_SEARCH_INDEX = False
 const.MAX_SEARCH_QUERY_WORDS = 10
+
+conf.ANSWER_REASON_DELIMITER = '\t'
 
 
 
@@ -59,6 +61,14 @@ def standardizeContent( content ):
     content = text.formTextToStored( content ) if content  else None
     content = content.strip(' \n\r\x0b\x0c') if content  else None    # For now keep TAB to delimit answer from reason
     return content if content  else None
+
+
+# Returns [answer, reason]
+def parseAnswerAndReason( answerAndReasonStr ):
+    if not answerAndReasonStr:  return None, None
+    delimIndex = answerAndReasonStr.find( conf.ANSWER_REASON_DELIMITER )
+    if ( delimIndex < 0 ):  return answerAndReasonStr, None
+    return answerAndReasonStr[0 : delimIndex] , answerAndReasonStr[ (delimIndex + len(conf.ANSWER_REASON_DELIMITER)) : ]
 
 
 
@@ -74,6 +84,24 @@ class Answer(ndb.Model):
     voteCount = ndb.IntegerProperty( default=0 )
     score = ndb.FloatProperty( default=0 )
 
+    # For matching input-words to make suggestions
+    words = ndb.StringProperty( repeated=True )
+
+    def setContent( self, content ):
+        self.content = content
+        words = text.uniqueInOrder(  text.removeStopWords( text.tokenize(content) )  )
+        words = words[ 0 : 20 ]  # Limit number of words indexed
+        self.words = text.tuples( words, maxSize=2 )
+
+    def hasAnswer( self ):
+        answer, reason = parseAnswerAndReason( self.content )
+        return answer and answer.strip()
+
+    def hasAnswerAndReason( self ):
+        answer, reason = parseAnswerAndReason( self.content )
+        return answer and answer.strip() and reason and reason.strip()
+
+
 
 def __voteCountToScore( voteCount, content ):
     contentLen = len(content)
@@ -82,97 +110,42 @@ def __voteCountToScore( voteCount, content ):
     return float(voteCount) / float(unitsUsed)
 
 
-class AnswerMatch:
-    def __init__( self, answerRecord=None, content=None, wordSeq=None ):
-        self.answerRecord = answerRecord
-        self.content = content
-        self.wordSeq = wordSeq
-        self.score = 0.0
-
-
-# Returns series[ answer future ]
-def retrieveTopAnswersAsync( surveyId, questionId, answerStart=None ):
+# Returns series[ answer-record ]
+#
+# Cannot query for matching all input words, because nothing will match
+# Cannot query for matching any input word, because too many irrelevant answers will match
+# Cannot query for flexible number of matching words, because it requires an expensive search-index
+# Ideally, query for answers that match a specific concept or logical-proposition
+# So match 2 consecutive words as an approximation to a concept, which is usually low-frequency (high inverse-document-frequency-weight)
+#
+# Server-side match last input word, because that retrieves a spanning set of answers
+# Client-side apply inverse-document-frequency weighting to score collected matches
+def retrieveTopAnswers( surveyId, questionId, answerStart=None, hideReasons=False ):
     questionIdStr = str( questionId )
+    logging.debug(('retrieveTopAnswers()', 'answerStart=', answerStart))
 
-    logging.debug( 'retrieveTopAnswersAsync() answerStart=' + str(answerStart) )
+    answerRecords = []
 
-    if answerStart:
-
+    # Require user-input to suggest answers, to force some user thought
+    inputWords = text.uniqueInOrder(  text.removeStopWords( text.tokenize(answerStart) )  )
+    logging.debug(('retrieveTopAnswers()', 'inputWords=', inputWords))
+    if inputWords and (0 < len(inputWords)):
         # Retrieve answer records
-        answerRecords = []
-        # Try to use search index, which may fail if query words do not match any answers
-        if const.USE_SEARCH_INDEX:
-            # Retrieve a limited number of answers that match answerStart words
-            answerRecords = __getAnswersFromSearchIndex( surveyId, questionId, answerStart )
-        # Fall-back to retrieving all answers
-        if len(answerRecords) == 0:
-            # Retrieve all answers
-            answerRecords = Answer.query( Answer.surveyId==surveyId, Answer.questionId==questionIdStr ).fetch( const.MAX_SEARCH_RESULTS )
+        answerRecords = Answer.query( Answer.surveyId==surveyId, Answer.questionId==questionIdStr, Answer.words==inputWords[-1]
+            ).order( -Answer.score ).fetch( 1 )
+        if ( 2 <= len(inputWords) ):
+            tuple = ' '.join( inputWords[-2:-1] )
+            answerRecords += Answer.query( Answer.surveyId==surveyId, Answer.questionId==questionIdStr, Answer.words==tuple
+                ).order( -Answer.score ).fetch( 1 )
+        logging.debug(('retrieveTopAnswers()', 'answerRecords=', answerRecords))
 
-            # Maybe limit number of query words to first N, or top N by TF-IDF (which is not available at this point).
+    # Filter out empty answer/reason
+    # Answers missing required-reason should not be saveable.  Nor should empty answers.
+    if hideReasons:  answerRecords = filter( lambda a: a.hasAnswer() , answerRecords )
+    else:            answerRecords = filter( lambda a: a.hasAnswerAndReason() , answerRecords )
 
-            # TF/IDF weighting -- apply in code to keyword-matching answers?
-            # Cheaper to batch-retrieve all answer records, match keywords with TF/IDF weighting, sort by score, return top N?
+    return answerRecords
 
-            # But computing inv-doc-freq only on keyword matching documents has sparse data.
-            # And we want inv-doc-freq available to help sample query words used for search index match.
-
-            # concat intro questions answers up to n characters, store, for word frequency sample?
-            # better, store json word->count map up to n entries?
-            #  map record becomes a transaction bottleneck, unless it is allowed to lose updates.
-            #   But losing decrements + increments could mean negative counts, very incorrect data even for a sample.
-            #   Could store each word&count separately, and only update a few on each answer update. 
-            #    Still has negative count problem.  Plus no good way to get the whole count map.
-            #  Just use first 10 query words, first 100 matching answers?
-            #   May miss high-vote answers, but those are always shown for empty query.
-            #  Ideally want inv-doc-freq per question.
-            # 
-            # Pipeline: retrieve keyword-matching answers, sum inverse-document-frequency keyword weights, weight by vote count.
-            # Randomly sample 10 keywords from the answer input, compute inverse-document-frequency on 100 first retrieved answers.
-            #  Random sampling on subsequent queries ensures wide retrieval coverage as user types their answer.
-            # 
-            # Don't query too often.  Don't query for each word, because user is not likely to pay attention to suggestions at word boundary.
-            #  Only query if user pauses typing for a second, possibly looking at suggestions?
-
-
-        # Compute inverse-document-frequency weights for query words, across retrieved answer records
-        answerMatches = [ AnswerMatch( answerRecord=a, content=a.content, wordSeq=__tokenize(a.content) ) for a in answerRecords ]
-        
-        queryWords = set( __tokenize(answerStart) )
-        logging.debug( 'retrieveTopAnswersAsync() queryWords=' + str(queryWords) )
-
-        wordToInvDocFreq = stats.computeInvDocFreq( answerMatches, queryWords )
-        logging.debug( 'retrieveTopAnswersAsync() wordToInvDocFreq=' + str(wordToInvDocFreq) )
-
-        # for each answer... compute match score from word-match weights, and from answer score from number of votes and content length.
-        for answerMatch in answerMatches:
-            weightSum = 0.0
-            # for each term in query and in doc...
-            for word in answerMatch.wordSeq:
-                wordIdfWeight = wordToInvDocFreq.get( word, None )
-                # Sum IDF weight
-                if wordIdfWeight:
-                    weightSum += wordIdfWeight
-            # Combine match score and answer score (plus 1 to avoid zero-vote problems)
-            answerMatch.score = weightSum * ( 1.0 + answerMatch.answerRecord.score )
-
-        # sort answers by score
-        matchesByScore = sorted( answerMatches, key=lambda a:a.score, reverse=True )
-        # return top N scores
-        topMatches = matchesByScore[ 0 : const.MAX_ANSWER_SUGGESTIONS - const.NUM_FREQ_ANSWER_SUGGESTIONS ]
-        topMatchesRecords = [ m.answerRecord for m in topMatches ]
-        answerRecordsWithRemoval = [ a for a in answerRecords  if a not in topMatchesRecords ]
-        answerRecsFreq = stats.weightedRandom( answerRecordsWithRemoval, const.NUM_FREQ_ANSWER_SUGGESTIONS, lambda r: r.voteCount )
-        suggestions = topMatchesRecords + answerRecsFreq
-        suggestionsOrdered = sorted( suggestions, key=lambda a:a.score, reverse=True )
-        return suggestionsOrdered
-
-    # No answer start text, so get most frequent answers
-    else:
-        answerRecords = Answer.query( Answer.surveyId==surveyId, Answer.questionId==questionIdStr ).fetch()
-        answerRecsFreq = stats.weightedRandom( answerRecords, const.MAX_ANSWER_SUGGESTIONS, lambda r: r.voteCount )
-        suggestionsOrdered = sorted( answerRecsFreq, key=lambda a:a.voteCount, reverse=True )
-        return suggestionsOrdered
 
 
 def __getAnswersFromSearchIndex( surveyId, questionId, answerStart ):
@@ -228,16 +201,13 @@ def __getAnswersFromSearchIndex( surveyId, questionId, answerStart ):
         return []
 
 
-def __tokenize( text ):
-    return re.split( r'[^a-z0-9\-]+' , text.lower() )
-
 
 
 # Key answers by questionId+hash(content), to prevent duplicates.
 # Prevents problem of voting for answer that was deleted (down-voted) between display & vote
 def toKeyId( questionId, answerContent ):
     hasher = hashlib.md5()
-    hasher.update( answerContent )
+    hasher.update( text.utf8(answerContent) )
     return "{}:{}".format( questionId, hasher.hexdigest() )
 
 
@@ -247,12 +217,13 @@ def toKeyId( questionId, answerContent ):
 @ndb.transactional(xg=True, retries=const.MAX_VOTE_RETRY)   # Cross-table is ok because vote record (user x answer) is not contended, and answer vote count record is locking anyway.
 def vote( questionId, surveyId, answerContent, userId, questionCreator ):
 
-    logging.debug( 'vote() answerContent=' + str(answerContent) )
+    logging.debug(('vote()', 'answerContent=', answerContent))
 
     answerRecord = None
     answerId = None
     isNewAnswer = False
-    if (answerContent is not None) and (answerContent != ''):
+    # If answer is non-empty (disregarding tab-delimiter)...
+    if (answerContent is not None) and (answerContent.strip() != ''):
         # If answer record does not exist... create answer record
         answerRecKey = toKeyId( questionId, answerContent )
         answerRecord = Answer.get_by_id( answerRecKey )
@@ -328,8 +299,8 @@ def __incrementVoteCount( amount, questionCreator, answerRecord ):
 
 def newAnswer( questionId, surveyId, answerContent, userId, voteCount=0, fromEditPage=False ):
     answerRecKey = toKeyId( questionId, answerContent )
-    answerRecord = Answer( id=answerRecKey, questionId=questionId, surveyId=surveyId, creator=userId, 
-        content=answerContent, voteCount=voteCount, fromEditPage=fromEditPage )
+    answerRecord = Answer( id=answerRecKey, questionId=questionId, surveyId=surveyId, creator=userId, voteCount=voteCount, fromEditPage=fromEditPage )
+    answerRecord.setContent( answerContent )
 
     if conf.isDev:  logging.debug( 'newAnswer() answerRecord=' + str(answerRecord) )
 

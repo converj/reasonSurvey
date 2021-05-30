@@ -13,6 +13,7 @@ import reason
 import requestForProposals
 import user
 import text
+from text import LogMessage
 
 
 
@@ -20,12 +21,12 @@ class SubmitNewReason(webapp2.RequestHandler):
 
     def post(self):
 
-        logging.debug( 'SubmitNewReason.post() request.body=' + self.request.body )
+        logging.debug(LogMessage('SubmitNewReason', 'request.body=', self.request.body))
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         inputData = json.loads( self.request.body )
-        logging.debug( 'SubmitNewReason.post() inputData=' + str(inputData) )
+        logging.debug(LogMessage('SubmitNewReason', 'inputData=', inputData))
 
         linkKeyStr = inputData.get( 'linkKey', None )
         proposalId = str( int( inputData.get( 'proposalId', None ) ) )
@@ -33,9 +34,8 @@ class SubmitNewReason(webapp2.RequestHandler):
         reasonContent = text.formTextToStored( inputData.get('reasonContent', '') )
         browserCrumb = inputData.get( 'crumb', '' )
         loginCrumb = inputData.get( 'crumbForLogin', '' )
-        logging.debug( 'SubmitNewReason.post() linkKeyStr=' + str(linkKeyStr) + ' proposalId=' + str(proposalId) 
-            + ' proOrCon=' + str(proOrCon) + ' reasonContent=' + str(reasonContent) 
-            + ' browserCrumb=' + str(browserCrumb) + loginCrumb + str(loginCrumb) )
+        logging.debug(LogMessage('SubmitNewReason', 'linkKeyStr=', linkKeyStr, 'proposalId=', proposalId,
+            'proOrCon=', proOrCon, 'reasonContent=', reasonContent, 'browserCrumb=', browserCrumb, 'loginCrumb=', loginCrumb))
 
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
@@ -49,19 +49,20 @@ class SubmitNewReason(webapp2.RequestHandler):
         # Retrieve link-key record
         linkKeyRec = linkKey.LinkKey.get_by_id( linkKeyStr )
         if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
-        logging.debug( 'SubmitNewReason.post() linkKeyRec=' + str(linkKeyRec) )
+        logging.debug(LogMessage('SubmitNewReason', 'linkKeyRec=', linkKeyRec))
 
         if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
 
         # Retrieve proposal record
         proposalRec = proposal.Proposal.get_by_id( int(proposalId) )
         if proposalRec is None:  return httpServer.outputJson( cookieDataresponseData, self.response, errorMessage='proposal not found' )
-        logging.debug( 'SubmitNewReason.post() proposalRec=' + str(proposalRec) )
+        logging.debug(LogMessage('SubmitNewReason', 'proposalRec=', proposalRec))
 
         # Verify that reason belongs to linkKey's request/proposal, and check whether frozen
         requestId = None
         if linkKeyRec.destinationType == conf.PROPOSAL_CLASS_NAME:
             if proposalId != linkKeyRec.destinationId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='proposalId != linkKeyRec.destinationId' )
+            if proposalRec.hideReasons:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='reasons hidden' )
             if proposalRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
 
         elif linkKeyRec.destinationType == conf.REQUEST_CLASS_NAME:
@@ -70,23 +71,23 @@ class SubmitNewReason(webapp2.RequestHandler):
             # Retrieve request-for-proposals, and check whether frozen
             requestRec = requestForProposals.RequestForProposals.get_by_id( int(requestId) )
             if not requestRec:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='requestRec is null' )
+            if requestRec.hideReasons:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='reasons hidden' )
             if requestRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
 
         else:
             return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + linkKeyRec.destinationType )
+
+        # Retrieve any existing identical reason, to prevent duplicates
+        existingReasons = reason.Reason.query( reason.Reason.requestId==requestId , reason.Reason.proposalId==proposalId ,
+            reason.Reason.proOrCon==proOrCon , reason.Reason.content==reasonContent ).fetch( 1 )
+        if existingReasons:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.DUPLICATE )
         
         # Construct new reason record
-        reasonRecord = reason.Reason(
-            requestId=requestId,
-            proposalId=proposalId,
-            creator=userId,
-            proOrCon=proOrCon,
-            content=reasonContent,
-            allowEdit=True
-        )
+        reasonRecord = reason.Reason( requestId=requestId, proposalId=proposalId, creator=userId, proOrCon=proOrCon, allowEdit=True )
+        reasonRecord.setContent( reasonContent )
         # Store reason record
         reasonRecordKey = reasonRecord.put()
-        logging.debug( 'reasonRecordKey={}'.format(reasonRecordKey) )
+        logging.debug(LogMessage('SubmitNewReason', 'reasonRecordKey=', reasonRecordKey))
 
         # Display reason
         reasonDisplay = httpServer.reasonToDisplay( reasonRecord, userId )
@@ -102,20 +103,20 @@ class SubmitNewReason(webapp2.RequestHandler):
 class SubmitEditReason(webapp2.RequestHandler):
 
     def post(self):
-        logging.debug( 'SubmitEditReason.post() request.body=' + self.request.body )
+        logging.debug(LogMessage('SubmitEditReason', 'request.body=', self.request.body))
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         inputData = json.loads( self.request.body )
-        logging.debug( 'SubmitEditReason.post() inputData=' + str(inputData) )
+        logging.debug(LogMessage('SubmitEditReason', 'inputData=', inputData))
 
         linkKeyStr = inputData.get( 'linkKey', None )
         reasonId = str( int( inputData.get( 'reasonId', None ) ) )
         reasonContent = text.formTextToStored( inputData.get('inputContent', '') )
         browserCrumb = inputData.get( 'crumb', '' )
         loginCrumb = inputData.get( 'crumbForLogin', '' )
-        logging.debug( 'SubmitEditReason.post() linkKeyStr=' + str(linkKeyStr) + ' reasonId=' + str(reasonId)
-            + ' reasonContent=' + str(reasonContent) + ' browserCrumb=' + str(browserCrumb) + ' loginCrumb=' + str(loginCrumb) )
+        logging.debug(LogMessage('SubmitEditReason', 'linkKeyStr=', linkKeyStr, 'reasonId=', reasonId,
+            'reasonContent=', reasonContent, 'browserCrumb=', browserCrumb, 'loginCrumb=', loginCrumb))
 
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
@@ -129,14 +130,14 @@ class SubmitEditReason(webapp2.RequestHandler):
         # Retrieve link-key record
         linkKeyRec = linkKey.LinkKey.get_by_id( linkKeyStr )
         if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
-        logging.debug( 'SubmitEditReason.post() linkKeyRec=' + str(linkKeyRec) )
+        logging.debug(LogMessage('SubmitEditReason', 'linkKeyRec=', linkKeyRec))
 
         if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
 
         # Retrieve reason record
         reasonRec = reason.Reason.get_by_id( int(reasonId) )
         if reasonRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='reason not found' )
-        logging.debug( 'SubmitEditReason.post() reasonRec=' + str(reasonRec) )
+        logging.debug(LogMessage('SubmitEditReason', 'reasonRec=', reasonRec))
 
         # Verify that reason belongs to linkKey's request/proposal
         if linkKeyRec.destinationType == conf.PROPOSAL_CLASS_NAME:
@@ -154,14 +155,20 @@ class SubmitEditReason(webapp2.RequestHandler):
             if requestRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
 
         else:
-            httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + linkKeyRec.destinationType )
+            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + linkKeyRec.destinationType )
 
         # Verify that proposal is editable
         if userId != reasonRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
-        if not reasonRec.allowEdit:  httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.HAS_RESPONSES )
+        if not reasonRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.HAS_RESPONSES )
 
-        # Update reason record.
-        reasonRec.content = reasonContent
+        # Retrieve any existing identical reason, to prevent duplicates
+        existingReasons = reason.Reason.query( reason.Reason.requestId==reasonRec.requestId ,
+            reason.Reason.proposalId==reasonRec.proposalId ,
+            reason.Reason.proOrCon==reasonRec.proOrCon , reason.Reason.content==reasonContent ).fetch( 1 )
+        if existingReasons:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.DUPLICATE )
+        
+        # Update reason record
+        reasonRec.setContent( reasonContent )
         reasonRec.put()
         
         # Display reason.

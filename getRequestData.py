@@ -1,6 +1,7 @@
 # Get all data associated with a request-for-proposals, including proposals, reasons, and votes.
 
 # Import external modules
+from google.appengine.datastore.datastore_query import Cursor
 from google.appengine.ext import ndb
 import json
 import logging
@@ -15,6 +16,7 @@ import proposal
 import reason
 import reasonVote
 import requestForProposals
+import text
 import user
 
 
@@ -26,10 +28,9 @@ class GetRequestData(webapp2.RequestHandler):
     def get( self, linkKeyStr ):
         logging.debug( 'linkKeyStr=' + linkKeyStr )
 
-        # Collect inputs.
-        maxProposals = int( self.request.get( 'maxProposals', const.INITIAL_MAX_PROPOSALS ) )
-        logging.debug( 'maxProposals=' + str(maxProposals) )
-
+        # Collect inputs
+        cursor = self.request.get( 'cursor', None )
+        cursor = Cursor( urlsafe=cursor )  if cursor  else None
         getReasons = ( self.request.get( 'getReasons', 'true' ) == 'true' )
         logging.debug( 'getReasons=' + str(getReasons) )
 
@@ -60,44 +61,33 @@ class GetRequestData(webapp2.RequestHandler):
             voteRecordsFuture = reasonVote.ReasonVote.query( 
                 reasonVote.ReasonVote.requestId==requestId, reasonVote.ReasonVote.userId==userId ).fetch_async()
 
-        # Retrieve Proposals by KeyProperty requestId.
+        # Retrieve Proposals by KeyProperty requestId
         # Get all data up to current page maximum length.  + Refreshes earlier proposal data.
-        proposalRecords = proposal.Proposal.query( proposal.Proposal.requestId==requestId 
-            ).order( -proposal.Proposal.netPros ).fetch( maxProposals )
-        # Ensure records are sorted, since datastore may not return them in order
-        proposalRecords = sorted( proposalRecords , key=lambda r:-r.netPros )
+        maxProposals = const.INITIAL_MAX_PROPOSALS
+        proposalRecords, cursor, hasMore = proposal.retrieveTopProposals( requestId, maxProposals, cursor=cursor )
+        cursor = cursor.urlsafe()  if cursor  else None
 
-        # Async-retrieve top N reasons per proposal, equal number of pro/con reasons.
-        # Requires waiting to retrieve all proposals.
-        # Replace with reason.retrieveTopReasonsAsync()
+        # Async-retrieve top N reasons per proposal, equal number of pro/con reasons
         reasonRecordsFutures = []
         if getReasons:
             for proposalRec in proposalRecords:
-                proposalId = str( proposalRec.key.id() )
+                maxReasonsPerType = conf.MAX_TOP_REASONS / 2
+                proRecordsFuture, conRecordsFuture = reason.retrieveTopReasonsAsync( proposalRec.key.id() , maxReasonsPerType )
+                reasonRecordsFutures.append( proRecordsFuture )
+                reasonRecordsFutures.append( conRecordsFuture )
 
-                reasonRecordsFuture = reason.Reason.query( reason.Reason.proposalId==proposalId,
-                    reason.Reason.proOrCon==conf.PRO ).order( -reason.Reason.score ).fetch_async( conf.MAX_TOP_REASONS / 2 )
-                reasonRecordsFutures.append( reasonRecordsFuture )
-
-                reasonRecordsFuture = reason.Reason.query( reason.Reason.proposalId==proposalId,
-                    reason.Reason.proOrCon==conf.CON ).order( -reason.Reason.score ).fetch_async( conf.MAX_TOP_REASONS / 2 )
-                reasonRecordsFutures.append( reasonRecordsFuture )
-
-        # Wait for parallel retrievals.
-        # Replace with reason.fetchReasonRecordsFutures()
+        # Wait for parallel retrievals
         logging.debug( 'GetRequestData.get() requestRecord=' + str(requestRecord) )
 
         reasonRecords = []
         for reasonRecordsFuture in reasonRecordsFutures:
-            reasonRecordsForProp = reasonRecordsFuture.get_result()
+            reasonRecordsForProp, cursor, hasMore = reasonRecordsFuture.get_result()
             logging.debug( 'GetRequestData.get() reasonRecordsForProp=' + str(reasonRecordsForProp) )
             reasonRecords.extend( reasonRecordsForProp )
         reasonRecords = sorted( reasonRecords , key=lambda r:-r.score )
         logging.debug( 'GetRequestData.get() reasonRecords=' + str(reasonRecords) )
 
-        voteRecords = []
-        if getReasons:
-            voteRecords = voteRecordsFuture.get_result() if voteRecordsFuture  else None
+        voteRecords =  voteRecordsFuture.get_result()  if voteRecordsFuture  else []
         logging.debug( 'GetRequestData.get() voteRecords=' + str(voteRecords) )
         
         # Transform records for display.
@@ -107,7 +97,7 @@ class GetRequestData(webapp2.RequestHandler):
         requestDisp = httpServer.requestToDisplay( requestRecord, userId )
         logging.debug( 'GetRequestData.get() requestDisp=' + str(requestDisp) )
         
-        proposalDisps = [ httpServer.proposalToDisplay(p, userId)  for p in proposalRecords ]
+        proposalDisps = [ httpServer.proposalToDisplay(p, userId, requestRecord=requestRecord)  for p in proposalRecords ]
         logging.debug( 'GetRequestData.get() proposalDisps=' + str(proposalDisps) )
 
         reasonDisps = [ httpServer.reasonToDisplay(r, userId)  for r in reasonRecords ]
@@ -132,15 +122,58 @@ class GetRequestData(webapp2.RequestHandler):
             'proposals':proposalDisps,
             'reasons':reasonDisps,
             'maxProposals': maxProposals,
+            'cursor': cursor ,
         }
         logging.debug( 'GetRequestData.get() responseData=' + json.dumps(responseData, indent=4, separators=(', ' , ':')) )
         httpServer.outputJson( cookieData, responseData, self.response )
 
 
 
+class SuggestProposals( webapp2.RequestHandler ):
+
+    # Use POST to keep user-input private
+    def post( self, linkKeyStr ):
+        logging.debug( 'linkKeyStr=' + linkKeyStr )
+
+        # Collect inputs
+        inputData = json.loads( self.request.body )
+        if conf.isDev:  logging.debug( 'SuggestReasons.post() inputData=' + str(inputData) )
+        content = text.formTextToStored( inputData.get('content', '') )
+
+        httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
+        responseData = { 'success':False, 'httpRequestId':httpRequestId }
+        
+        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, idRequired=False )
+        userId = cookieData.id()
+
+        if not content:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='Empty input' )
+
+        # Retrieve link-record
+        linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
+        if (linkKeyRecord == None) or (linkKeyRecord.destinationType != conf.REQUEST_CLASS_NAME):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+        requestId = linkKeyRecord.destinationId
+
+        # Retrieve RequestForProposal
+        requestRecord = requestForProposals.RequestForProposals.get_by_id( int(requestId) )
+        if requestRecord and ( requestRecord.freezeUserInput ):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
+
+        # Retrieve Proposals
+        proposalRecords = proposal.retrieveTopProposalsForStart( requestRecord.key.id() , content )
+
+        linkKeyDisp = httpServer.linkKeyToDisplay( linkKeyRecord )
+        requestDisp = httpServer.requestToDisplay( requestRecord, userId )
+        proposalDisps = [ httpServer.proposalToDisplay(p, userId, requestRecord=requestRecord)  for p in proposalRecords ]
+
+        # Display
+        responseData = { 'success':True , 'linkKey':linkKeyDisp , 'request':requestDisp , 'proposals':proposalDisps }
+        httpServer.outputJson( cookieData, responseData, self.response )
+
+
+
 # Route HTTP request
 app = webapp2.WSGIApplication( [
-    webapp2.Route( r'/getRequestData/<linkKeyStr:[0-9A-Za-z]+>' , handler=GetRequestData )
+    webapp2.Route( r'/getRequestData/<linkKeyStr:[0-9A-Za-z]+>' , handler=GetRequestData ) ,
+    webapp2.Route( r'/suggestProposals/<linkKeyStr:[0-9A-Za-z]+>' , handler=SuggestProposals )
 ] )
 
 

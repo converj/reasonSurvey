@@ -26,7 +26,7 @@ import user
 def retrieveSurveyIdFromLinkKey( cookieData, linkKeyString, responseData, httpResponse ):
     # Retrieve link-key
     linkKeyRec = linkKey.LinkKey.get_by_id( linkKeyString )
-    logging.debug( 'retrieveSurveyIdFromLinkKey() linkKeyRec=' + str(linkKeyRec) )
+    logging.debug(('retrieveSurveyIdFromLinkKey()', 'linkKeyRec=', linkKeyRec))
 
     if linkKeyRec is None:
         httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
@@ -46,12 +46,12 @@ def retrieveSurveyIdFromLinkKey( cookieData, linkKeyString, responseData, httpRe
 class EditAnswer(webapp2.RequestHandler):
 
     def post(self):
-        logging.debug( 'EditAnswer.post() request.body=' + self.request.body )
+        logging.debug(('EditAnswer', 'request.body=', self.request.body))
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         inputData = json.loads( self.request.body )
-        logging.debug( 'EditAnswer.post() inputData=' + str(inputData) )
+        logging.debug(('EditAnswer', 'inputData=', inputData))
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
 
@@ -59,13 +59,12 @@ class EditAnswer(webapp2.RequestHandler):
         if not cookieData.valid():  return
         userId = cookieData.id()
 
-        content = answer.standardizeContent( text.formTextToStored( inputData['content'] ) )
+        content = answer.standardizeContent( inputData.get('content', None) )  # Calls formTextToStored()
         linkKeyString = inputData['linkKey']
         answerId = inputData['answerId']
         questionId = str( int( inputData['questionId'] ) )
         browserCrumb = inputData.get( 'crumb', None )
-        logging.debug( 'EditAnswer.post() content=' + str(content) + ' browserCrumb=' + str(browserCrumb) 
-            + ' linkKeyString=' + str(linkKeyString) + ' answerId=' + str(answerId) )
+        logging.debug(('EditAnswer', 'content=', content, 'browserCrumb=', browserCrumb, 'linkKeyString=', linkKeyString, 'answerId=', answerId))
 
         surveyId, loginRequired = retrieveSurveyIdFromLinkKey( cookieData, linkKeyString, responseData, self.response )
         if surveyId is None:  return
@@ -80,12 +79,19 @@ class EditAnswer(webapp2.RequestHandler):
         # For each non-empty answer...
         answerDisplays = []
         for contentLine in contentLines:
-            logging.debug( 'EditAnswer.post() contentLine=' + str(contentLine) )
+            logging.debug(('EditAnswer', 'contentLine=', contentLine))
             if not contentLine:  continue
 
             # Check answer length
             if not httpServer.isLengthOk( contentLine, '', conf.minLengthAnswer ):
                 return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+
+            # Require that answer is non-empty
+            answerStr, reason = answer.parseAnswerAndReason( content )
+            if surveyRec.hideReasons and reason:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='reasons hidden' )
+            if (not answerStr) and reason:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+            if answerStr and (not reason) and (not surveyRec.hideReasons):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.REASON_TOO_SHORT )
+            if not answerStr:  continue
 
             # If new answer value already exists... error.  If new answer is same as old answer value... no problem?
             newAnswerId = answer.toKeyId( questionId, contentLine )
@@ -108,21 +114,21 @@ class EditAnswer(webapp2.RequestHandler):
         httpServer.outputJson( cookieData, responseData, self.response )
 
 
+
 class DeleteAnswer(webapp2.RequestHandler):
 
     def post(self):
-        logging.debug( 'DeleteAnswer.post() request.body=' + self.request.body )
+        logging.debug(('DeleteAnswer', 'request.body=', self.request.body))
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         inputData = json.loads( self.request.body )
-        logging.debug( 'DeleteAnswer.post() inputData=' + str(inputData) )
+        logging.debug(('DeleteAnswer', 'inputData=', inputData))
 
         linkKeyString = inputData['linkKey']
         answerId = inputData['answerId']
         browserCrumb = inputData.get( 'crumb', None )
-        logging.debug( 'DeleteAnswer.post() browserCrumb=' + str(browserCrumb) 
-            + ' linkKeyString=' + str(linkKeyString) + ' answerId=' + str(answerId) )
+        logging.debug(('DeleteAnswer', 'browserCrumb=', browserCrumb, 'linkKeyString=', linkKeyString, 'answerId=', answerId))
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
         cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
@@ -153,19 +159,18 @@ class DeleteAnswer(webapp2.RequestHandler):
 class SetAnswer(webapp2.RequestHandler):
 
     def post(self):
-        logging.debug( 'SetAnswer.post() request.body=' + self.request.body )
+        logging.debug(('SetAnswer', 'request.body=', self.request.body))
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         inputData = json.loads( self.request.body )
-        logging.debug( 'SetAnswer.post() inputData=' + str(inputData) )
+        logging.debug(('SetAnswer', 'inputData=', inputData))
 
         content = answer.standardizeContent( inputData.get( 'content', None ) )
         linkKeyString = inputData['linkKey']
         questionId = str( int( inputData['questionId'] ) )
         browserCrumb = inputData.get( 'crumb', None )
-        logging.debug( 'SetAnswer.post() content=' + str(content) + ' browserCrumb=' + str(browserCrumb) 
-            + ' linkKeyString=' + str(linkKeyString) )
+        logging.debug(('SetAnswer', 'content=', content, 'browserCrumb=', browserCrumb, 'linkKeyString=', linkKeyString))
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
         cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
@@ -183,12 +188,17 @@ class SetAnswer(webapp2.RequestHandler):
         # Retrieve survey record to check whether survey is frozen
         surveyRec = survey.Survey.get_by_id( int(surveyId) )
         if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='survey record not found' )
-        if surveyRec.creator != userId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='surveyRec.creator != userId' )
         if surveyRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
+
+        # Require that answer and reason both exist, or both can be empty
+        answerStr, reason = answer.parseAnswerAndReason( content )
+        if surveyRec.hideReasons and reason:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='reasons hidden' )
+        if (not answerStr) and reason:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+        if answerStr and (not reason) and (not surveyRec.hideReasons):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.REASON_TOO_SHORT )
 
         # Retrieve question record.
         questionRec = question.Question.get_by_id( int(questionId) )
-        logging.debug( 'SetAnswer.post() questionRec=' + str(questionRec) )
+        logging.debug(('SetAnswer', 'questionRec=', questionRec))
 
         if questionRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='question not found' )
         if questionRec.surveyId != surveyId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='questionRec.surveyId != surveyId' )

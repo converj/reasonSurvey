@@ -1,7 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 // Constants
 
-const EVENT_NAMES = ['click', 'focus', 'blur', 'keydown', 'keyup', 'paste', 'input', 'invalid', 'mousedown'];
+const EDIT = 'edit';
+const TRUE = 'true';
+const FALSE = 'false';
+
+const EVENT_NAMES = ['click', 'focus', 'blur', 'keydown', 'keyup', 'paste', 'input', 'invalid', 'mousedown', 'mouseup'];
 const RED = 'red';
 const BLACK = 'black';
 const GREEN = 'green';
@@ -10,9 +14,98 @@ const GREY = 'grey';
 const MESSAGE_NO_COOKIE = 'No user identity found. Try reloading the page.';
 const MESSAGE_BAD_CRUMB = 'User action unverified. Please retry.';
 
+const KEY_CODE_ENTER = 13;
 const KEY_NAME_ENTER = 'Enter'
 const KEY_NAME_ESCAPE = 'Escape'
 const KEY_NAME_SPACE = ' '
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Data structures
+
+    function 
+incrementMapValue( map, key, increment ){
+    let oldCount = map[ key ];
+    let newCount = ( oldCount )?  oldCount + increment  :  increment;
+    map[ key ] = newCount;
+    return newCount;
+}
+
+    function 
+getOrInsert( map, key, defaultValue ){
+    let value = map[ key ];
+    if ( value === undefined ){
+        map[ key ] = defaultValue;
+        return defaultValue;
+    }
+    return value;
+}
+
+    function
+unique( arrayValues ){
+    // Maintains original order
+    if ( ! arrayValues ){  return [];  }
+    let valueSet = { };
+    uniqueValues = [ ];
+    for ( let i = 0;  i < arrayValues.length;  ++i ){
+        let value = arrayValues[ i ];
+        if ( !(value in valueSet) ){
+            uniqueValues.push( value );
+            valueSet[ value ] = true;
+        }
+    }
+    return uniqueValues;
+}
+
+    function
+defaultTo( value, defaultValue ){  return value ? value : defaultValue;  }
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Logging
+
+// Useful for viewing logs without debugger, such as on mobile
+    function
+logOnScreen( ...arguments ){
+    let argsJson = arguments.map( JSON.stringify );
+    document.getElementById('log').appendChild( html('div').innerHtml(argsJson.join(' ')).build() );
+}
+
+    function
+logOnScreenReplace( ...arguments ){
+    clearChildren( document.getElementById('log') );
+    let argsJson = arguments.map( JSON.stringify );
+    document.getElementById('log').appendChild( html('div').innerHtml(argsJson.join(' ')).build() );
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Html element changes
+
+        function
+    fitTextAreaToText( textArea ){
+        textArea.style.height = '15px';
+        textArea.style.height = textArea.scrollHeight + 'px';
+    }
+
+
+        function
+    addAndAppear( element, parentElement ){
+        var elementJquery = jQuery( element ).hide();
+        var parentJquery = jQuery( parentElement ).append( elementJquery );
+        elementJquery.slideToggle();
+    }
+
+
+        function
+    scrollToHtmlElement( htmlElement ){
+        var elementJquery = jQuery( htmlElement );
+        jQuery('html, body').animate( {
+            scrollTop: ( elementJquery.offset().top - 20 ) + 'px'
+        }, 'fast' );
+    }
+
 
 
 
@@ -113,7 +206,7 @@ objectsEqual( obj1, obj2, ignoreKeys ){
     HtmlBuilder.prototype.id = function( id ){  this.element.id = id;  return this;  };
 
     HtmlBuilder.prototype.class = function( className ){
-        this.element.classList.add( className );
+        if ( className ){  this.element.classList.add( className );  }
         return this;
     };
 
@@ -122,11 +215,18 @@ objectsEqual( obj1, obj2, ignoreKeys ){
         return this;
     };
 
+    HtmlBuilder.prototype.property = function( name, value ){
+        this.element[ name ] = value;
+        return this;
+    };
+
     HtmlBuilder.prototype.innerHtml = function( innerHtml ){  this.element.innerHTML = innerHtml;  return this;  };
 
     HtmlBuilder.prototype.children = function( childVarArgs ){
         for ( var c = 0;  c < arguments.length;  ++c ) {
-            this.element.appendChild( arguments[c] );
+            if ( arguments[c] ){
+                this.element.appendChild( arguments[c] );
+            }
         }
         return this;
     };
@@ -155,10 +255,13 @@ htmlToElement( html ){
 applyIdSuffix( element, suffix ){
     if ( element.id ){  element.id = toId( element.id, suffix );  }
 
-    // Point labels to correct html-element within same element-object
+    // Point labels/etc to correct html-element-id within same element-object
     if ( element.htmlFor ){  element.htmlFor = toId( element.htmlFor, suffix );  }
 
-    var ariaControls = element.getAttribute ?  element.getAttribute('aria-controls')  :  null;
+    let inputDatalist = element.getAttribute ?  element.getAttribute('list')  :  null;
+    if ( inputDatalist ){  element.setAttribute( 'list', toId(inputDatalist, suffix) );  }
+
+    let ariaControls = element.getAttribute ?  element.getAttribute('aria-controls')  :  null;
     if ( ariaControls ){  element.setAttribute( 'aria-controls', toId(ariaControls, suffix) );  }
 
     for ( var c = 0;  c < element.childNodes.length;  ++c ){
@@ -290,23 +393,22 @@ ElementWrap.prototype.indexIds = function( htmlElement, prefix ){
 // Replace element event-handler function names from literal HTML, with ElementWrap functions.
 ElementWrap.prototype.attachHandlers = function( htmlElement ){
 
-    var thisDisp = this;  // Copy for closure of handler functions created below.
+    let thisCopy = this;  // Copy for closure of handler functions created below
 
     // For each event type... if DOM element specifies handler name... replace handler name with handler function from object.
     // for-loop over event names, creating callbacks, requires closure on handlerFunc.
     EVENT_NAMES.map(  function( eventName ){
-        eventName = 'on' + eventName;
-        var handlerName = htmlElement.getAttribute( eventName );
-        if ( handlerName ){
-            var handlerFunc = thisDisp[ handlerName ];  // Copy for closure of handler function created below.
+        let handlerFieldName = 'on' + eventName;
+        let handlerFunctionName = htmlElement.getAttribute( handlerFieldName );
+        if ( handlerFunctionName ){
+            let handlerFunction = thisCopy[ handlerFunctionName ];  // Copy for closure of handler function created below
             // Assign event handler to callback that assigns "this" to display.
-            htmlElement[ eventName ] = function(event){
-                handlerFunc.call(thisDisp, event);
-            };
+            // Could attach with htmlElement.addEventListener(), but still have to replace 'onevent' field with null
+            htmlElement[ handlerFieldName ] =  (event) => handlerFunction.call(thisCopy, event);
         }
     } );
     // Recurse on children.
-    for ( var c = 0;  c < htmlElement.children.length;  ++c ){
+    for ( let c = 0;  c < htmlElement.children.length;  ++c ){
         this.attachHandlers( htmlElement.children[c] );
     }
 };
@@ -332,7 +434,7 @@ ElementWrap.prototype.dataUpdated = null;  // Abstract method
 ///////////////////////////////////////////////////////////////////////////////////////
 // Transitory message display
 
-const MESSAGE_TRANSITION_MS = 2000;  // Match CSS for role=alert
+const MESSAGE_TRANSITION_MS = 2000;  // Match CSS-transition-time for CSS-rule for class=Message
 
 // Returns updated value of struct 
     function
@@ -351,48 +453,37 @@ showMessage( text, color, disappearMs, element, textDefault ){
     // If new message is unchanged... do nothing
     if ( element.innerHTML == text ){  return;  }
 
-    // If new text is empty... transition to hide message
+    // If new text is empty... clear message
     if ( ! text ){
-        if ( textDefault ){
-            // Reset text to default
-            element.innerHTML = textDefault;
-            element.style.color = null;
-        }
-        else {
-            hideMessage( element );
-            return;
-        }
+        clearMessage( element, textDefault );
+        return;
     }
 
-    // If old text was empty... start message as hidden
-    var elementJquery = jQuery( element );
-    var wasHidden = isHidden( element );
-    if ( ! textDefault ){
-        if ( wasHidden ){  elementJquery.hide();  }
-    }
-    
     // Set text
     element.innerHTML = text;
     element.style.color = color;
 
     // Show message
-    wasHidden |= elementJquery.is(':hidden');
-    if ( wasHidden ){  elementJquery.slideToggle( MESSAGE_TRANSITION_MS / 4 );  }  // Slide before fade-in
     element.style.opacity = 1.0;  // Requires MESSAGE_TRANSITION_MS
-    element.style.visibility = 'visible';
+    element.style.height = Math.max( element.scrollHeight, element.offsetHeight ) + 'px';  // scrollHeight may omit borders, and offsetHeight may be zero for plain-text
 
     // Start to hide message after delay.  Store timer in html-element itself, to ensure 1-to-1 relation.
     if ( disappearMs ){
-        element.hideTimer = setTimeout( function(){ 
-            if ( textDefault ){
-                // Reset text to default
-                element.innerHTML = textDefault;
-                element.style.color = null;
-            }
-            else {
-                hideMessage(element);
-            }
-        } , disappearMs );
+        element.hideTimer = setTimeout(
+            function(){ clearMessage(element, textDefault); } ,
+            disappearMs
+        );
+    }
+}
+
+    function
+clearMessage( element, textDefault ){
+    if ( textDefault ){
+        element.innerHTML = textDefault;
+        element.style.color = null;
+    }
+    else {
+        hideMessage( element );
     }
 }
 
@@ -403,11 +494,11 @@ hideMessage( element ){
 
     // Start transition
     element.style.opacity = 0.0;  // Requires MESSAGE_TRANSITION_MS
-    var elementJquery = jQuery( element );
-    elementJquery.slideToggle( MESSAGE_TRANSITION_MS );
+    element.style.height = '0px';
     // Finish hiding message after transition.  Store timer in html-element, to ensure 1-to-1 relation.
+    // Could change innerHTML without delay, because transitioning line-height is enough prevent visual jerk
+    // Empty the inner-html, to allow re-showing the same message
     element.hideTimer = setTimeout( function(){
-        element.style.visibility = 'hidden';  // So that screen readers do not read empty alert
         element.innerHTML = '';
     } , MESSAGE_TRANSITION_MS );
 }
@@ -425,9 +516,6 @@ stopMessageTimer( element ){
         element.hideTimer = null;
     }
 }
-
-    function
-defaultTo( value, defaultValue ){  return value ? value : defaultValue;  }
 
 // Prevents multiple delayed-calls to f()
 // Stores f() delayed-call handle, inside f() itself.
@@ -565,6 +653,7 @@ setClickHandler( elementId, handler ){
 
 // Cookies-required dialog buttons
 setClickHandler( 'cookiesRequiredDiv', function(event){
+    // If click is not inside modelPopupDiv... hide dialog, uncheck login-required-checkbox
     if ( ! $(event.target).parents('.modalPopupDiv').length ){ hide('cookiesRequiredDiv'); uncheckLoginRequired(); }  
 } );
 setClickHandler( 'cookiesCancelButton', function(){ hide('cookiesRequiredDiv'); uncheckLoginRequired(); } );
@@ -592,8 +681,10 @@ setClickHandler( 'menuItemLogout', function(){
 
     function
 uncheckLoginRequired(){
-    var loginRequiredCheckbox = elementWithId('loginRequiredCheckbox');
-    if ( loginRequiredCheckbox ){  loginRequiredCheckbox.checked = false;  }
+    let loginRequiredCheckboxes = document.getElementsByClassName('loginRequiredCheckbox');
+    for ( let l = 0;  l < loginRequiredCheckboxes.length;  ++l ){
+        loginRequiredCheckboxes[l].checked = false;
+    }
 }
 
 
@@ -601,7 +692,8 @@ uncheckLoginRequired(){
     function
 requireLogin( ){
     // Returns loggedIn:boolean
-    // Optional callback:f( loggedIn:boolean )
+    // Optional callback:f( loggedIn:boolean ) , not yet implemented nor used
+    //     callback() would have to be invoked on tab-focus, so stored globally or in login-dialog-div
     
     // If login-cookie does not exist...
     //     Pop up login-required dialog, which opens login-tab, retrieves login-request-id & signature, posts to login-site.
@@ -661,11 +753,10 @@ openLoginPage( ){
 
 
     function
-updateWaitingLogin( callback ){
+updateWaitingLogin( callback=null ){
     // Called on page-focus, to dismiss login-dialog, and try to retrieve login crumb 
-    // Runs callback when logged in 
-    updateLoginDialog();
-    if ( callback ){  callback();  }
+    let loggedIn = updateLoginDialog();
+    if ( callback ){  callback( loggedIn );  }
 }
 
     function
@@ -678,8 +769,10 @@ showingLoginDialog( ){
     function
 updateLoginDialog( ){
     // Will show/hide dialog, but will not try to retrieve login data
-    if ( haveLoginCookie() ){  showLoggedInControls();  }
-    else                    {  showLoggedOutControls();  }
+    let loggedIn = haveLoginCookie();
+    if ( loggedIn ){  showLoggedInControls();  }
+    else           {  showLoggedOutControls();  }
+    return loggedIn;
 }
 
     function
@@ -721,24 +814,21 @@ parseCookie( logAll ){
     // For each cookie...
     var cookies = document.cookie.split(';');
     var cookieDataForJavascript = null;
-    for ( var c = 0;  c < cookies.length;  ++c ){
-        var cookie = cookies[c];
+    for ( let c = 0;  c < cookies.length;  ++c ){
+        let cookie = cookies[c];
         // Parse cookie base-64-encoded JSON
-        var cookieNameAndValue = cookie.split('=');
-        var cookieName = cookieNameAndValue[0];
-        cookieName =  cookieName ?  cookieName.trim()  :  null;
-        var cookieValue = cookieNameAndValue[1];
+        let cookieNameAndValue = cookie.split('=');
+        let cookieName = cookieNameAndValue[0];
+        cookieName =  ( cookieName )?  cookieName.trim()  :  null;
+        let cookieValue = cookieNameAndValue[1];
         // Skip cookie from login-site, when both sites live in the same server
-        if ( cookieName == 'L' ){
-            console.log( 'parseCookie() cookieName=', cookieName, 'cookieValue=', cookieValue );
-            continue;
-        }
-        var cookieValue64 = cookieValue.replace( /"/g, '' ).replace( /\\075/g , '=' );
-        var cookieValueJson = atob( cookieValue64 );
-        console.log( 'parseCookie() cookieName=', cookieName, 'cookieValueJson=', cookieValueJson );
-        var cookieData = ( cookieValueJson )?  JSON.parse( cookieValueJson )  :  null;
+        if ( cookieName == 'L' ){  continue;  }
+        let cookieValue64 = ( cookieValue )?  cookieValue.replace( /"/g, '' ).replace( /\\075/g , '=' )  :  null;
+        let cookieValueJson = ( cookieValue64 )?  atob( cookieValue64 )  :  null;
+        if ( logAll ){  console.log( 'parseCookie() cookieName=', cookieName, 'cookieValueJson=', cookieValueJson );  }
+        let cookieData = ( cookieValueJson )?  JSON.parse( cookieValueJson )  :  null;
         // Only return data from cookie that is intended to be visible to javascript
-        if ( cookieName == 'J' ){  
+        if ( cookieName == 'J' ){
             cookieDataForJavascript = cookieData;
             if ( ! logAll ){  break;  }
         }
@@ -773,16 +863,38 @@ hide( elementId ){
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// Highlighting spans
+// Text matching
 
-    function 
-unique( arrayValues ){ 
-    var valueSet = { }; 
-    for ( var i = 0;  i < arrayValues.length;  ++i ){  valueSet[ arrayValues[i] ] = true;  } 
-    uniqueValues = [ ]; 
-    for ( value in valueSet ){  uniqueValues.push( value );  } 
-    return uniqueValues; 
-} 
+
+    function
+incrementWordCounts( text, wordToCount ){
+    let words = removeStopWords(   unique(  removeStems( tokenize(text) )  )   ); 
+    words = tuples( words, 2 ); 
+ 
+    // For each unique word/tuple in text... increment word-count 
+    for ( let w = 0;  w < words.length;  ++w ){ 
+        incrementMapValue( wordToCount, words[w], 1 ); 
+    } 
+}
+ 
+    function
+wordMatchScore( text1, text2, wordToCount ){ 
+    if ( ! wordToCount ){  return 0;  } 
+    let words1 =  new Set(   tuples(  removeStopWords( unique( removeStems( tokenize(text1) ) ) ) ,  2  )   );
+    let words2 =  new Set(   tuples(  removeStopWords( unique( removeStems( tokenize(text2) ) ) ) ,  2  )   );
+ 
+    // For each unique word/tuple in both texts... increment match-score by inverse-document-frequency
+    let score = 0;
+    for ( let word of words1 ){
+        if ( ! words2.has(word) ){  continue;  }
+        let count = wordToCount[ word ];
+        if ( ! count ){  continue;  }
+        score += 1.0 / ( 1 + count );
+    }
+
+    return score;
+}
+
 
     function
 keywordsToHighlightSpans( keywordsString, text ){
@@ -792,28 +904,21 @@ keywordsToHighlightSpans( keywordsString, text ){
 
     function
 intervalsToHighlightSpans( intervals, text ){
-    var spans = [];
-    for ( var i = 0;  i < intervals.length;  ++i ){
-        var interval = intervals[i];
-        var matchText = text.substring( interval.start, interval.end );
-        var spanClass = ( interval.match )? 'Highlight' : null;
-        spans.push(  makeSpan( spanClass, matchText )  );
+    let spans = [];
+    for ( let i = 0;  i < intervals.length;  ++i ){
+        let interval = intervals[i];
+        let matchText = text.substring( interval.start, interval.end );
+        let spanClass = ( interval.match )? 'Highlight' : null;
+        spans.push( html('span').class(spanClass).innerHtml(matchText).build() );
     }
     return spans;
-}
-
-    function
-makeSpan( className, innerText ){ 
-    var span = document.createElement('span'); 
-    if ( className ){  span.classList.add( className );  }
-    span.innerHTML = innerText;
-    return span;
 }
 
     function
 keywordMatchIntervals( keywordsString, text ){
 
     var intervals = [];
+    if ( ! text ){  return intervals;  }
 
     // Collect matching words, dropping suffixes
     // Ignore case, stop-words, suffixes ("ed", "s", "ing")
@@ -855,39 +960,80 @@ keywordMatchIntervals( keywordsString, text ){
 }
 
     function
+firstTokens( text, charLimit ){
+    let tokens = tokenize( text );
+    let keptTokens = [ ];
+    let charCount = 0;
+    for ( let t = 0;  (t < tokens.length) && (charCount < charLimit);  ++t ){
+        let token = tokens[t];
+        keptTokens.push( token );
+        charCount += token.length;
+    }
+    return keptTokens;
+}
+
+    function
 tokenize( text ){
     if ( ! text ){  return [];  }
-    return text.toLowerCase().split( /[^a-z0-9\-]+/ );
+    let ascii = false;
+    let tokens = null;
+    if ( ascii ){  tokens = text.toLowerCase().split( /[^a-z0-9\-]+/ );  }  // Handles ASCII/english only
+    else        {  tokens = text.toLowerCase().split( /[^\p{L}\p{N}]+/u );  }    // Split at unicode non-letters non-numbers
+    return tokens.filter( Boolean );  // Remove empty tokens
+}
+
+    function
+removeStem( word ){  return ( word )?  word.replace( /(s|ed|ing)$/ , '' )  :  '';  }
+
+    function
+removeStems( words ){  return ( words )?  words.map( removeStem )  :  [];  }
+
+    function
+removeStopWords( words ){  return ( words )?  words.filter(  function(w){ return w && !(w in STOP_WORDS); }  )  :  [];  }
+
+    function
+tuples( words, maxSize=2 ){
+    let tuples = [];
+    if ( (words == null) || (maxSize < 1) ){  return tuples;  }
+    // For each word x tuple-length... collect word-sub-sequence
+    for ( let w = 0;  w < words.length;  ++w ){
+        for ( let s = 0;  s < Math.min( maxSize, words.length - w );  ++s ){
+            tuples.push(  words.slice( w, w+s+1 ).join(' ')  );
+        }
+    }
+    return tuples;
 }
 
 
 
 
 const AUTO_LINK_URL_HOSTS = [
-    'ballotpedia.org' ,
-    'votesmart.org' ,
-    'medium.com' ,
-    'nymag.com' ,
-    'publicintegrity.org' ,
-    'reason.com' ,
-    'votersedge.org' ,
     'axios.com' ,
+    'ballotpedia.org' ,
     'bostonglobe.com' ,
     'cbsnews.com' ,
     'kansan.com' ,
     'latimes.com' ,
+    'medium.com' ,
     'mosieboyd.com' ,
     'nbcnews.com' ,
+    'nymag.com' ,
     'nytimes.com' ,
-    'reddit.com' ,
+    'publicintegrity.org' ,
+    'reason.com' ,
     'sacbee.com' ,
     'sandiegouniontribune.com' ,
+    'statista.com' ,
+    'thebalance.com' ,
     'thedartmouth.com' ,
     'theguardian.com' ,
     'usatoday.com' ,
+    'votersedge.org' ,
+    'votesmart.org' ,
     'vox.com' ,
     'washingtonpost.com' ,
     'washingtontimes.com' ,
+    'en.wikipedia.org' ,
     'wired.com'
 ];
 
@@ -902,7 +1048,7 @@ storedTextToHtml( storedText ){
         // Turn whitelisted urls into links
         if ( e.match(urlRegex) ){  
             var url = new URL( e );
-            var host = url.host.replace( /^www\./ , '' );
+            var host = url.host.replace( /^www\./ , '' );  // Strip default sub-domain from host
             if ( AUTO_LINK_URL_HOSTS.indexOf( host ) >= 0 ) {
                 return '<a href="'+e+'" target="_blank">'+e+'</a>';
             }
@@ -932,20 +1078,6 @@ storedTextToHtml( storedText ){
 
     return newElements.join('');
 }
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////
-// Statistics
-
-    function 
-incrementMapValue( map, key, increment ){
-    var oldCount = map[ key ];
-    var newCount = ( oldCount )?  oldCount + increment  :  increment;
-    map[ key ] = newCount;
-    return newCount;
-}
-
 
 
 

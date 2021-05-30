@@ -34,19 +34,19 @@
         this.setAttribute( 'AnswerCheckbox', 'checked', (this.answer.selected ? 'checked' : null) );
 
         // Highlight matching words from question answer input.
-        var answerSuggestion = this.answer.content;
-        var answerContentDiv = this.getSubElement('AnswerContent');
-        var answerInput = this.questionDisplay.answerInput;
+        let answerSuggestion = this.answer.content;
+        let answerContentDiv = this.getSubElement('AnswerContent');
+        let answerInput = this.questionDisplay.getAnswerInput();
 
         // Split answer and reason, highlight each, append with delimiter
-        var suggestionAndReasonArray = parseAnswerAndReason( answerSuggestion );
-        var spanElements = keywordsToHighlightSpans( answerInput, suggestionAndReasonArray[0] );
-        for ( var s = 0;  s < spanElements.length;  ++s ){
+        let suggestionAndReasonArray = parseAnswerAndReason( answerSuggestion );
+        let spanElements = keywordsToHighlightSpans( answerInput, suggestionAndReasonArray[0] );
+        for ( let s = 0;  s < spanElements.length;  ++s ){
             answerContentDiv.appendChild( spanElements[s] );
         }
-        answerContentDiv.appendChild( makeSpan('suggestionReasonSeparator', 'Reason:') );
+        answerContentDiv.appendChild( html('span').class('suggestionReasonSeparator').innerHtml('Reason:').build() );
         spanElements = keywordsToHighlightSpans( answerInput, suggestionAndReasonArray[1] );
-        for ( var s = 0;  s < spanElements.length;  ++s ){
+        for ( let s = 0;  s < spanElements.length;  ++s ){
             answerContentDiv.appendChild( spanElements[s] );
         }
     };
@@ -76,18 +76,18 @@
 
         this.createFromHtml( questionId, '\n\n' + [
             '<form class=Question id=Question>',
-            '    <div id=Message role=alert></div>',
-            '    <label for=QuestionContent id=QuestionPosition> Question </label>',
+            '    <div class=Message id=Message aria-live=polite></div>',
+            '    <h2 for=QuestionContent id=QuestionPosition> Question </h2>',
             '    <div class=QuestionContent id=QuestionContent></div>',
             '    <ul class=Answers id=Answers></ul>',
-            '    <div id=suggestionsMessage role=alert></div>',
+            '    <div class=Message id=suggestionsMessage aria-live=polite></div>',
             // Answer input
-            '   <div class=NewAnswerMessage id=NewAnswerMessage role=alert></div>',
+            '   <div class="Message NewAnswerMessage" id=NewAnswerMessage aria-live=polite></div>',
             '   <div class=NewAnswer>',
             '       <label for=NewAnswerInput> Answer </label>',
             '       <input class=NewAnswerInput id=NewAnswerInput placeholder="Type your answer, or choose a suggested answer" ',
             '           oninput=handleInput onkeydown=handleNewAnswerKey onblur=handleInputBlur />',
-            '       <label for=NewReasonInput> Reason </label>',
+            '       <label class=NewReasonLabel for=NewReasonInput> Reason </label>',
             '       <textarea class=NewReasonInput id=NewReasonInput placeholder="Type your reason, or choose a suggested answer and reason" ',
             '           oninput=handleInput onkeydown=handleNewReasonKey onblur=handleInputBlur ></textarea>',
             '    </div>',
@@ -106,9 +106,8 @@
     };
     
         QuestionViewDisplay.prototype.
-    setUserAnswer = function( answerContent ){
+    setAnswerData = function( answerContent ){
         this.userAnswer = answerContent;
-        this.answerInput = this.userAnswer;
     };
 
     
@@ -121,40 +120,41 @@
         this.suggestionsMessage = showMessageStruct( this.suggestionsMessage, this.getSubElement('suggestionsMessage') );
         this.newAnswerMessage = showMessageStruct( this.newAnswerMessage, this.getSubElement('NewAnswerMessage') );
         this.getSubElement('NewAnswerInput').setCustomValidity( this.answerValidity ? this.answerValidity : '' );
-        this.getSubElement('NewReasonInput').setCustomValidity( this.answerValidity ? this.answerValidity : '' );
+        this.getSubElement('NewReasonInput').setCustomValidity( this.reasonValidity ? this.reasonValidity : '' );
 
         // Set attributes
         this.setAttribute( 'NewAnswerInput', 'disabled', (topDisp.isFrozen() ? TRUE : null) );
         this.setAttribute( 'NewReasonInput', 'disabled', (topDisp.isFrozen() ? TRUE : null) );
 
         // Set HTML content
-        this.setInnerHtml( 'QuestionContent', this.question.content );
+        this.setInnerHtml( 'QuestionContent', storedTextToHtml(this.question.content) );
         this.setInnerHtml( 'QuestionPosition', 'Question ' + (this.question.positionInSurvey + 1) );
+        let answerAndReasonArray = parseAnswerAndReason( this.userAnswer );
+        this.setProperty( 'NewAnswerInput', 'defaultValue', answerAndReasonArray[0] );
+        this.setProperty( 'NewReasonInput', 'defaultValue', answerAndReasonArray[1] );
 
-        var answerInputValue = ( this.answerInput )?  this.answerInput  :  this.userAnswer;
-        this.setAnswer( answerInputValue );
-
-        var reasonInput = this.getSubElement('NewReasonInput');
+        let reasonInput = this.getSubElement('NewReasonInput');
         setTimeout(  function(){ fitTextAreaToText( reasonInput ); }  );
 
         // For each answer data... re-create answer display
-        var answersDiv = this.getSubElement('Answers');
+        let answerInputValue = this.getAnswerInput();
+        let answersDiv = this.getSubElement('Answers');
         clearChildren( answersDiv );
         this.answerDisplays = [];
-        for ( var r = this.answers.length - 1;  r >= 0;  --r ) { 
-            var answerData = this.answers[r];
+        for ( let r = this.answers.length - 1;  r >= 0;  --r ) { 
+            let answerData = this.answers[r];
             answerData.selected = ( answerData.content == answerInputValue );
             this.addAnswerDisp( answerData );
         }
     };
 
         QuestionViewDisplay.prototype.
-    setAnswer = function( answerAndReasonStr ){
-        var answerAndReasonArray = parseAnswerAndReason( answerAndReasonStr );
-        this.setProperty( 'NewAnswerInput', 'value', answerAndReasonArray[0] );
-        this.setProperty( 'NewReasonInput', 'value', answerAndReasonArray[1] );
+    getAnswerInput = function( answerAndReasonStr ){
+        let newAnswerInput = this.getSubElement('NewAnswerInput');
+        let newReasonInput = this.getSubElement('NewReasonInput');
+        return serializeAnswerAndReason( newAnswerInput.value, newReasonInput.value );
     };
-    
+
         QuestionViewDisplay.prototype.
     addAnswerDisp = function( answerData ){   // returns AnswerDisplay
         // Create display
@@ -168,35 +168,41 @@
     };
     
         QuestionViewDisplay.prototype.
-    handleInput = function( ){
+    handleInput = function( event ){
 
         if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
 
-        // Update copy of input value
-        var newAnswerInput = this.getSubElement('NewAnswerInput');
-        var newReasonInput = this.getSubElement('NewReasonInput');
-        var answerInputValue = serializeAnswerAndReason( newAnswerInput.value, newReasonInput.value );
-        this.answerInput = answerInputValue;
+        let newAnswerInput = this.getSubElement('NewAnswerInput');
+        let newReasonInput = this.getSubElement('NewReasonInput');
+        let answerInputValue = serializeAnswerAndReason( newAnswerInput.value, newReasonInput.value );
 
         fitTextAreaToText( newReasonInput );
 
-        // Delay retrieve, so that retrieve happens only for last keystroke in sequence.
-        clearTimeout( this.retrieveAnswersTimer );
-        var thisCopy = this;
-        this.retrieveAnswersTimer = setTimeout( function(){
+        // Clear too-short messages
+        if ( this.answerTooShort  &&  (minLengthAnswer <= newAnswerInput.value.length) ){
+            this.newAnswerMessage = { text:'' };
+            this.answerValidity = '';
+            this.answerTooShort = false;
+            this.dataUpdated();
+        }
+        if ( this.reasonTooShort  &&  (0 < newReasonInput.value.length) ){
+            this.newAnswerMessage = { text:'' };
+            this.reasonValidity = '';
+            this.reasonTooShort = false;
+            this.dataUpdated();
+        }
 
-            // Suggest only if answer input is long enough
-            if ( answerInputValue == null  ||  answerInputValue.length < 3 + ANSWER_REASON_DELIMITER.length ){
-                return;
-            }
-            // Suggest only if answer input is changed since last suggestion
-            if ( answerInputValue == thisCopy.lastAnswerStartRetrieved ){
-                return;
-            }
-            // Retrieve top matching answers
-            thisCopy.retrieveAnswers( answerInputValue );
-            thisCopy.lastAnswerStartRetrieved = answerInputValue;
-        } , 1000 );
+        // Suggest only if answer+reason has at least 3 words, and just finished a word
+        let words = removeStopWords( tokenize(answerInputValue) ).slice( 0, MAX_WORDS_INDEXED );
+        if ( !words  ||  words.length < 1  ||  MAX_WORDS_INDEXED < words.length ){  return;  }
+        if ( !event  ||  !event.data  ||  ! event.data.match( /[\s\p{P}]/u ) ){  return;  }  // Require that current input is whitespace or punctuation
+
+        // Suggest only if answer input is changed since last suggestion
+        let answerInputValueTrimmed = words.join(' ');
+        if ( answerInputValueTrimmed == this.lastAnswerStartRetrieved ){  return;   }
+        this.lastAnswerStartRetrieved = answerInputValueTrimmed;
+        // Retrieve top matching answers
+        this.retrieveAnswers( answerInputValue );
     };
 
         QuestionViewDisplay.prototype.
@@ -245,8 +251,9 @@
 
         if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
 
-        this.setAnswer( answerContent );
-        this.answerInput = answerContent;
+        let answerAndReasonArray = parseAnswerAndReason( answerContent );
+        this.setProperty( 'NewAnswerInput', 'value', answerAndReasonArray[0] );
+        this.setProperty( 'NewReasonInput', 'value', answerAndReasonArray[1] );
         this.handleAnswer();
     };
 
@@ -255,35 +262,66 @@
 
         if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
 
-        var newAnswerInput = this.getSubElement('NewAnswerInput');
-        var newReasonInput = this.getSubElement('NewReasonInput');
-        var answerInputValue = serializeAnswerAndReason( newAnswerInput.value, newReasonInput.value );
+        let newAnswerInput = this.getSubElement('NewAnswerInput');
+        let newReasonInput = this.getSubElement('NewReasonInput');
+        let answerInputValue = serializeAnswerAndReason( newAnswerInput.value, newReasonInput.value );
+
         // If answer unchanged... do nothing
         if ( this.userAnswer == answerInputValue ){  return;  }
+
+        // Require that answer exists if reason exists
+        if ( (newAnswerInput.value.length < minLengthAnswer)  &&  (0 < newReasonInput.value.length) ){
+            this.newAnswerMessage = { color:RED, text:ANSWER_TOO_SHORT_MESSAGE };
+            this.answerValidity = ANSWER_TOO_SHORT_MESSAGE;
+            this.answerTooShort = true;
+            this.dataUpdated();
+            return;
+        }
+        // Require that answer has reason
+        if ( (0 < newAnswerInput.value.length)  &&  (newReasonInput.value.length <= 0)  &&  (! this.topDisp.areReasonsHidden()) ){
+            this.newAnswerMessage = { color:RED, text:REASON_TOO_SHORT_MESSAGE };
+            this.reasonValidity = REASON_TOO_SHORT_MESSAGE;
+            this.reasonTooShort = true;
+            this.dataUpdated();
+            return;
+        }
 
         // save via ajax
         this.newAnswerMessage = { color:GREY, text:'Saving answer...' };
         this.answerValidity = '';
+        this.reasonValidity = '';
         this.dataUpdated();
-        var thisCopy = this;
-        var sendData = {
+        let thisCopy = this;
+        let sendData = {
             crumb:crumb , fingerprint:fingerprint ,
             questionId:this.question.id , content:answerInputValue , linkKey:this.topDisp.linkKey.id 
         };
-        var url = '/autocomplete/setAnswer';
+        let url = '/autocomplete/setAnswer';
         ajaxPost( sendData, url, function(error, status, receiveData){
             if ( !error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.userAnswer = ( receiveData.answerContent )?  receiveData.answerContent  :  '';
-                thisCopy.answerInput = null;  // Prevent answer input getting re-filled after empty answer submitted
                 thisCopy.newAnswerMessage = { color:GREEN, text:'Saved answer', ms:3000 };
                 thisCopy.answerValidity = '';
+                thisCopy.reasonValidity = '';
                 thisCopy.dataUpdated();
                 thisCopy.topDisp.answerUpdated();
             }
             else {
-                var message = 'Failed to save answer.';
+                let message = 'Failed to save answer.';
+                if ( receiveData  &&  receiveData.message == TOO_SHORT ){
+                    message = 'Answer is too short.';
+                    thisCopy.answerValidity = message;
+                    thisCopy.answerTooShort = true;
+                }
+                else if ( receiveData  &&  receiveData.message == REASON_TOO_SHORT ){
+                    message = 'Reason is too short.';
+                    thisCopy.reasonValidity = message;
+                    thisCopy.reasonTooShort = true;
+                }
+                else {
+                    thisCopy.answerValidity = message;
+                }
                 thisCopy.newAnswerMessage = { color:RED, text:message };
-                thisCopy.answerValidity = message;
                 thisCopy.dataUpdated();
             }
         } );
@@ -291,27 +329,44 @@
 
         QuestionViewDisplay.prototype.
     retrieveAnswers = function( answerStart ){
-
-        // request via ajax
-        var thisCopy = this;
-        var sendData = { answerStart:answerStart };
-        var url = '/autocomplete/getQuestionAnswersForPrefix/' + this.topDisp.linkKey.id + '/' + this.question.id;
-        ajaxGet( sendData, url, function(error, status, receiveData){
-            if ( receiveData ){
+        // Request via ajax
+        let thisCopy = this;
+        let sendData = { answerStart:answerStart };
+        let url = '/autocomplete/getQuestionAnswersForPrefix/' + this.topDisp.linkKey.id + '/' + this.question.id;
+        ajaxPost( sendData, url, function(error, status, receiveData){
+            if ( !error  &&  receiveData ){
                 if ( receiveData.success ){
                     thisCopy.question.linkOk = true;
-                    // update each answer
 
-                    var suggestionsChanged = false;
+                    // Update answer suggestions
+                    let suggestionsChanged = false;
                     if ( receiveData.answers ){
-
-                        suggestionsChanged |= ( ! thisCopy.answers  ||  thisCopy.answers.length != receiveData.answers.length );
-                        for ( var a = 0;  a < thisCopy.answers.length;  a++ ){
-                            var oldAnswer = thisCopy.answers[a].content;
-                            suggestionsChanged |=  ! receiveData.answers.find(  function(newAnswer){ return (newAnswer.content == oldAnswer); }  );
+                        // Collect new suggestion & increment stats
+                        if ( ! thisCopy.suggestionToData ){  thisCopy.suggestionToData = { };  }  // { suggestionText:{ voteScore:? , score:? , ... } }
+                        let suggestionToData = thisCopy.suggestionToData;  // For readability
+                        for ( let s = 0;  s < receiveData.answers.length;  ++s ){
+                            let suggestionNew = receiveData.answers[s];
+                            if ( ! suggestionNew.content ){  continue;  }
+                            if ( !(suggestionNew.content in suggestionToData) ){
+                                thisCopy.topDisp.incrementWordCounts( suggestionNew.content );
+                            }
+                            suggestionToData[ suggestionNew.content ] = suggestionNew;
                         }
+                        // Recompute all suggestion-scores in this question, with new IDF-weights
+                        // Store scores inside suggestion-objects
+                        for ( const suggestion in suggestionToData ){
+                            let suggestionData = suggestionToData[ suggestion ];
+                            suggestionData.scoreMatch = thisCopy.topDisp.wordMatchScore( answerStart, suggestion );
+                            suggestionData.scoreTotal =  suggestionData.score * suggestionData.scoreMatch;  // Vote-score * match-score
+                        }
+                        // Find top-scored suggestions
+                        let topSuggestions = Object.values( suggestionToData ).sort( (a,b) => (b.scoreTotal - a.scoreTotal) ).slice( 0, 3 );
 
-                        thisCopy.answers = receiveData.answers;
+                        // Check whether top-suggestions changed: old-answer not found in new-suggestions
+                        suggestionsChanged = ( thisCopy.answers.length != topSuggestions.length );
+                        thisCopy.answers.map(  a  =>  ( suggestionsChanged |=  ! topSuggestions.find(s => (s.content == a.content)) )  );
+
+                        thisCopy.answers = topSuggestions;
                     }
 
                     // Alert screen-reader user that answers updated
@@ -329,7 +384,7 @@
         } );
     };
 
-    
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Survey viewing display
@@ -342,12 +397,14 @@
         this.createFromHtml( surveyId, '\n\n' + [
             '<h1 class=title> View Survey </h1>',
             '<div class=Survey id=Survey>',
-            '    <div class=Message id=Message role=alert></div>',
-            '    <div class=Message id=freezeMessage role=alert></div>' ,
+            '    <div class=Message id=Message aria-live=polite></div>' ,
+            '    <div class=Message id=freezeMessage aria-live=polite></div>' ,
+            '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
             '    <div class=loginStatus id=loginStatus></div>',
+            '    <h2 class=SurveyTitle id=SurveyTitle></h2>',
             '    <div class=SurveyIntroduction id=SurveyIntroduction></div>',
             '    <div class=Questions id=Questions></div>',
-            '    <div class=Message id=bottomMessage role=alert></div>',
+            '    <div class=Message id=bottomMessage aria-live=polite></div>' ,
             '    <button class=SurveyResultsButton id=SurveyResultsButton onclick=onSurveyResults> Survey Results </button>',
             '</div>'
         ].join('\n') );
@@ -369,14 +426,13 @@
         SurveyViewDisplay.prototype.
     dataUpdated = function( ){
 
-        var surveyIntroStart = ( this.survey && this.survey.introduction )?  ': ' + this.survey.introduction.substr(0, 50)  :  '';
-        document.title = SITE_TITLE + ': View Survey' + surveyIntroStart;
+        document.title = SITE_TITLE + ': ' + this.survey.title;
 
         // Edit link in menu
         if ( this.survey.allowEdit ){  document.body.setAttribute( 'menuedit', 'true' );  }
         else                        {  document.body.removeAttribute( 'menuedit' );  }
 
-        // Message
+        // Set messages
         if ( this.survey  &&  this.survey.linkOk ) {
             // If link message ok not already shown... show link ok message
             if ( this.survey.mine  &&  ( ! this.linkMessage  ||  ! this.linkMessage.okShown )  ){
@@ -393,6 +449,10 @@
         this.bottomMessage = { color:GREEN, text:bottomMessageText };
         this.bottomMessage = showMessageStruct( this.bottomMessage, this.getSubElement('bottomMessage') );
 
+        // Set html-element attributes
+        this.setAttribute( 'Survey', 'mine', (this.survey.mine ? TRUE : null) );
+        this.setAttribute( 'Survey', 'hidereasons', (this.survey.hideReasons ? TRUE : null) );
+
         if ( this.topDisp.linkKey.loginRequired ){
             this.setInnerHtml( 'loginStatus', 'Voter login required' );
         }
@@ -404,8 +464,11 @@
         this.freezeMessage = {  color:RED , text:(this.isFrozen() ? 'Frozen' : null)  };
         this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeMessage') );
         this.setAttribute( 'Survey', 'frozen', (this.isFrozen() ? TRUE : null) );
+        this.setInnerHtml( 'hideReasonsStatus', (this.survey.hideReasons ? 'Reasons hidden' : null) );
 
-        this.setInnerHtml( 'SurveyIntroduction', this.survey.introduction );
+        // Set content
+        this.setInnerHtml( 'SurveyTitle', this.survey.title );
+        this.setInnerHtml( 'SurveyIntroduction', storedTextToHtml(this.survey.introduction) );
 
         // For each question data... ensure question display exists, only for questions with data
         var questionsDiv = this.getSubElement('Questions');
@@ -415,7 +478,6 @@
                 // Create display
                 question.display = new QuestionViewDisplay( question.data.id );
                 question.display.setAllData( question.data, this.topDisp, this );
-                question.display.retrieveAnswers();
                 // Add to webpage
                 addAndAppear( question.display.element, questionsDiv );
             }
@@ -426,6 +488,10 @@
             }
         }
     };
+
+
+        SurveyViewDisplay.prototype.
+    areReasonsHidden = function(){  return this.survey.hideReasons;  }
 
 
         SurveyViewDisplay.prototype.
@@ -448,6 +514,19 @@
 
 
         SurveyViewDisplay.prototype.
+    incrementWordCounts = function( suggestion ){  
+        if ( ! this.wordToCount ){  this.wordToCount = { };  }
+        incrementWordCounts( suggestion, this.wordToCount );
+    };
+
+        SurveyViewDisplay.prototype.
+    wordMatchScore = function( answerStart, suggestion ){
+        if ( ! this.wordToCount ){  return 0;  }
+        return wordMatchScore( answerStart, suggestion, this.wordToCount );
+    };
+
+    
+        SurveyViewDisplay.prototype.
     answerUpdated = function( ){
         // Check whether all questions are answered
         var allAnswered = true;
@@ -463,7 +542,14 @@
         this.allQuestionsAnswered = allAnswered;
         if ( changed ){  this.dataUpdated();  }
     };
+
     
+        SurveyViewDisplay.prototype.
+    retrieveDataUpdate = function( ){
+        console.log('SurveyViewDisplay.retrieveDataUpdate()');
+        return this.retrieveData();
+    };
+
         SurveyViewDisplay.prototype.
     retrieveData = function( ){
 
@@ -477,11 +563,13 @@
                     thisCopy.survey.linkOk = true;
                     if ( receiveData.survey ){
                         // Update survey fields
+                        thisCopy.survey.title = receiveData.survey.title;
                         thisCopy.survey.introduction = receiveData.survey.introduction;
                         thisCopy.survey.allowEdit = receiveData.survey.allowEdit;
                         thisCopy.survey.freezeUserInput = receiveData.survey.freezeUserInput;
                         thisCopy.survey.id = receiveData.survey.id;
                         thisCopy.survey.mine = receiveData.survey.mine;
+                        thisCopy.survey.hideReasons = receiveData.survey.hideReasons;
                     }
                     if ( receiveData.linkKey ){
                         thisCopy.linkKey.loginRequired = receiveData.linkKey.loginRequired;
@@ -574,7 +662,7 @@
                             // Update question display's user answer
                             var question = thisCopy.questions[ questionId ];
                             if ( question  &&  question.display ){
-                                question.display.setUserAnswer( receivedAnswer );
+                                question.display.setAnswerData( receivedAnswer );
                                 question.display.dataUpdated();
                             }
                         }
@@ -587,7 +675,7 @@
 
         SurveyViewDisplay.prototype.
     onSurveyResults = function( ){
-        setFragmentFields( {page:FRAG_PAGE_SURVEY_RESULTS} );
+        setFragmentFields( {page:FRAG_PAGE_AUTOCOMPLETE_RESULTS} );
     };
 
     

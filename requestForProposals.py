@@ -16,20 +16,15 @@ class RequestForProposals(ndb.Model):
     detail = ndb.StringProperty()
     creator = ndb.StringProperty()
     allowEdit = ndb.BooleanProperty()
+
+    # Store frozen-flag in request-for-proposals record, because storing frozen-flag in link-key-record
+    # may be inconsistent if multiple link-keys exist, and link-key-record is designed to be constant.
     freezeUserInput = ndb.BooleanProperty( default=False )
-        # Storing frozen-flag in request-for-proposals record
-            # + Retrieving request-for-proposals can sometimes be done in parallel
-            # - Writes (rare) to request-for-proposal lock a single frequently-read record
-        # Storing frozen-flag in link-key record
-            # + Convenient for many calls to check flag in 1 place unconditionally
-            # + Reduces retrieving records: link-key, request, proposal, reason...
-            # - Potentially inconsistent if multiple link-keys exist
-            # - Link-key-record is not intended to be modified
-            # - Writes (rare) to link-key lock a single frequently-read record
+
+    # Experimental
+    hideReasons = ndb.BooleanProperty( default=False )
 
 
-# @ndb.transactional_async( retries=const.MAX_RETRY )
-# @ndb.tasklet
 @ndb.transactional( retries=const.MAX_RETRY )
 def setEditable( requestId, editable ):
     logging.debug( 'setEditable() editable={}'.format(editable) )

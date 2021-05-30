@@ -1,70 +1,10 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Constants
 
-    const EDIT = 'edit';
     const PRO = 'pro';
     const CON = 'con';
     const PROPOSAL_COLLAPSE_HEIGHT = 200;  // Must match css max-height for class Collapseable
-    const TRUE = 'true';
-    const FALSE = 'false';
     const LOAD_INCREMENTAL = true;
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// Data initialization
-
-
-    // Not used, because data comes sorted by server
-
-        function
-    initializeProposals( reqPropData ) {
-        // modifies reqPropData
-        
-        if ( reqPropData.initialized ){  return;  }
-        
-        // proposals:series[proposal] , modified
-        // reasons:series[reason] , modified
-        var request = reqPropData.request;
-        var proposals = reqPropData.proposals;
-        var reasons = reqPropData.reasons;
-        
-        // group reasons under proposals
-        proposals.map(  function(p){ p.reasons = []; }  );
-        for ( var r = 0;  r < reasons.length;  ++r ){
-            var reason = reasons[r];
-            var proposal = proposals.find( function(p){ return (p.id == reason.proposalId); } );
-            if ( proposal ){
-                proposal.reasons.push( reason );
-                if ( ! reason.voteCount ) {  reason.voteCount = 0;  }
-                if ( ! reason.score ) {  reason.score = 0;  }
-            }
-        }
-
-        // join votes to reasons
-        joinReasonVotes( reqPropData.reasonVotes, reqPropData.myVotes, reqPropData );
-        
-        // order reasons by score
-        for ( var p = 0;  p < proposals.length;  ++p ) { 
-            var proposal = proposals[p];
-            if ( ! proposal.reasons ){  proposal.reasons = [];  }
-            proposal.reasons.sort(  function(a,b){ return (b.score - a.score); }  );
-        }
-
-        // order proposals by pro votes - con votes
-        proposals.map( function(p){
-            p.numPros = 0;
-            p.numCons = 0;
-            p.reasons.map( function(r){ 
-                if ( r.proOrCon == PRO ){  p.numPros += r.voteCount;  }
-                else if ( r.proOrCon == CON ){  p.numCons += r.voteCount;  }
-            } );
-        } );
-        proposals.sort(  function(a,b){ return ((b.numPros-b.numCons) - (a.numPros-a.numCons)); }  );
-
-        reqPropData.initialized = true;
-    }
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +28,7 @@
             // Viewing
             '   <div class=ReasonViewing>',
             '       <div class=ReasonProOrCon id=ReasonProOrConViewing></div>',
-            '       <div class=ReasonVote id=Vote onclick=handleVoteClick title="Click to vote" ',
+            '       <div class=ReasonVote id=Vote onclick=handleVoteClick title="Vote" ',
             '           role=button title=Vote tabindex=0 onkeyup=handleVoteKeyUp ',
             '           aria-controls=ReasonEditing >',
             '           <div class=ReasonVoteArrowBody></div>',
@@ -96,7 +36,7 @@
             '           <div class=ReasonVoteCount id=ReasonVoteCount></div>',
             '           <div class=ReasonScore id=score></div>',
             '       </div>',
-            '       <div class=EditIcon id=EditIcon role=button title="Click to edit" tabindex=0 onkeyup=onEditReasonKeyUp ',
+            '       <div class=EditIcon id=EditIcon role=button title="Edit" tabindex=0 onkeyup=onEditReasonKeyUp ',
             '           onclick=handleEditReasonClick aria-controls=ReasonEditing ',
             '           ><img class=EditIconImage role=button src="edit.png" alt="edit" /></div>',
             '       <div class=ReasonText id=ReasonText onclick=handleEditReasonClick aria-controls=ReasonEditing ></div>',
@@ -115,7 +55,7 @@
             '               onblur=handleEditReasonBlur onkeyup=onEditReasonCancelKeyUp> Cancel </button>',
             '        </div>',
             '    </div>',
-            '    <div class="Message ReasonEditMessage" id=ReasonEditMessage role=alert ></div>',
+            '    <div class="Message ReasonEditMessage" id=ReasonEditMessage aria-live=polite></div>' ,
             '</div>'
         ].join('\n') );
     };
@@ -138,24 +78,26 @@
         ReasonDisplay.prototype.
     dataUpdated = function( ){
 
-        this.setInnerHtml( 'ReasonProOrConViewing', this.data.proOrCon );
-        this.setInnerHtml( 'ReasonProOrConEditing', this.data.proOrCon );
+        let reasonType = ( this.data.proOrCon == PRO )? 'agree' : 'disagree';
+        this.setInnerHtml( 'ReasonProOrConViewing', reasonType );
+        this.setInnerHtml( 'ReasonProOrConEditing', reasonType );
+
         // Message
         this.message = showMessageStruct( this.message, this.getSubElement('ReasonEditMessage') );
-        var contentInput = this.getSubElement('Content');
+        let contentInput = this.getSubElement('Content');
         contentInput.setCustomValidity( defaultTo(this.contentValidity, '') );
 
         // Editing vs viewing
         this.setAttribute( 'Reason', 'editing', this.editing );
         this.setAttribute( 'Reason', 'frozen', this.topDisp.isFrozen() );
         // Editing aria state
-        var ariaExpanded = null;
+        let ariaExpanded = null;
         if ( this.editable() ){  ariaExpanded = ( this.editing == EDIT ) ? TRUE : FALSE;  }
         this.setAttribute( 'EditIcon', 'aria-expanded', ariaExpanded );
         this.setAttribute( 'ReasonText', 'aria-expanded', ariaExpanded );
         // Editing onClick handler: For screen reader, if not editable, remove onClick handler
         if ( this.editHandlerHide == null ){  this.editHandlerHide = this.getSubElement('EditIcon').onclick;  }
-        var clickHandler = ( this.editable() )?  this.editHandlerHide  :  null;
+        let clickHandler = ( this.editable() )?  this.editHandlerHide  :  null;
         this.setRequiredMember( 'EditIcon', 'onclick', clickHandler );
         this.setRequiredMember( 'ReasonText', 'onclick', clickHandler );
 
@@ -164,48 +106,53 @@
         this.setRequiredMember( 'Vote', 'onclick', (this.topDisp.isFrozen() ? null : this.voteHandlerHide) );
 
         // Editing
-        var content = ( this.inputValue )?  this.inputValue  :  this.data.content;
-        this.setProperty( 'Content', 'value', content );
+        contentInput.defaultValue = this.data.content;
         // Viewing
         this.setAttribute( 'Reason', 'allowedit', (this.editable() ? TRUE : null) );
         this.setAttribute( 'Reason', 'highlight', this.data.highlight );
         this.setAttribute( 'Reason', 'firstreason', this.data.isFirstReason );
         this.setAttribute( 'Reason', 'myvote', (this.data.myVote ? TRUE : FALSE) );
         this.setInnerHtml( 'ReasonVoteCount', this.data.voteCount );
+        this.setAttribute( 'Vote', 'aria-pressed', (this.data.myVote ? TRUE : FALSE) );
         this.setAttribute( 'Vote', 'aria-label', 
             this.data.voteCount + (this.data.voteCount == 1 ? ' vote' : ' votes') );
         this.setInnerHtml( 'score', 'score='+ this.data.score );
 
         // Viewing: content, possibly highlighted
-        var match = displayHighlightedContent( storedTextToHtml(this.data.content), this.highlightWords, this.getSubElement('ReasonText') );
+        let match = displayHighlightedContent( storedTextToHtml(this.data.content), this.highlightWords, this.getSubElement('ReasonText') );
         this.setAttribute( 'Reason', 'show', (match? TRUE : FALSE) );
     };
 
         ReasonDisplay.prototype.
-    editable = function(){  return this.data.allowEdit && !this.topDisp.isFrozen();  }
+    editable = function(){  return this.data.allowEdit && !this.topDisp.isFrozen();  };
 
         ReasonDisplay.prototype.
     onInput = function( ){
-        // Save input edited value in a display variable to prevent dataUpdated() from resetting input value.
-        // Have to save before any event when display might update -- everything -- so save after every input event.
-        var contentInput = this.getSubElement('Content');
-        this.inputValue = contentInput.value;
+        // Reset validity if reason is long enough now
+        let contentInput = this.getSubElement('Content');
+        if ( this.tooShort  &&  minLengthReason <= contentInput.value.length ){
+            this.tooShort = false;
+            this.contentValidity = '';
+            this.message = {  text:''  };
+            this.dataUpdated();
+        }
+
         this.topDisp.topInputHandler();
     };
 
         ReasonDisplay.prototype.
     handleVoteClick = function( ){
-        var reasonData = this.data;
-        var proposalDisplay = this.proposalDisplay;
-        var proposalData = this.proposalDisplay.proposal;
+        let reasonData = this.data;
+        let proposalDisplay = this.proposalDisplay;
+        let proposalData = this.proposalDisplay.proposal;
 
         if ( this.proposalDisplay.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
         // presume vote succeeds, and show vote result
-        var myNewVote = (reasonData.myVote === true)? false : true;
+        let myNewVote = (reasonData.myVote === true)? false : true;
         // save old vote state
-        var oldReasonVoteCounts = proposalData.reasons.map( function(r){ return r.voteCount; } );
-        var oldMyVotes = proposalData.reasons.map( function(r){ return r.myVote; } );
+        let oldReasonVoteCounts = proposalData.reasons.map( function(r){ return r.voteCount; } );
+        let oldMyVotes = proposalData.reasons.map( function(r){ return r.myVote; } );
         // clear my votes for all reasons of proposal
         proposalData.reasons.map( function(r){
             if ( r.myVote === true  &&  r.voteCount >= 1 ){  r.voteCount -= 1;  }
@@ -221,16 +168,17 @@
         // save via ajax
         this.message = { text:'Saving vote...' , color:GREY, };
         this.dataUpdated()
-        var thisCopy = this;
-        var sendData = { crumb:crumb , fingerprint:fingerprint ,
+        let thisCopy = this;
+        let sendData = { crumb:crumb , fingerprint:fingerprint ,
             reasonId:reasonData.id , vote:reasonData.myVote , 
             linkKey:this.proposalDisplay.linkKey.id };
-        var url = 'submitVote';
+        let url = 'submitVote';
         ajaxSendAndUpdate( sendData, url, this.topDisp, function(error, status, receiveData){
             if ( receiveData  &&  receiveData.success ){
-                thisCopy.message = { text:'Saved vote', color:GREEN, ms:3000 };
+                let message = 'Saved vote' + ( myNewVote?  '. (Limit 1 vote per proposal.)'  :  '' );  // Hint about vote-limit
+                thisCopy.message = { text:message, color:GREEN, ms:3000 };
                 // update vote count (includes votes from other users since last data refresh)
-                var newVoteCount = ( receiveData.reason && receiveData.reason.voteCount )?  parseInt( receiveData.reason.voteCount )  :  0;
+                let newVoteCount = ( receiveData.reason && receiveData.reason.voteCount )?  parseInt( receiveData.reason.voteCount )  :  0;
                 reasonData.voteCount = newVoteCount;
                 reasonData.score = ( receiveData.reason )?  receiveData.reason.score  :  null;
                 reasonData.allowEdit = receiveData.reason.allowEdit;
@@ -291,62 +239,64 @@
     handleEditReasonSave = function(e){ 
         if ( this.proposalDisplay.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
-        var contentInput = this.getSubElement('Content');
-        var inputValue = contentInput.value;
-        var reasonData = this.data;
+        let contentInput = this.getSubElement('Content');
+        let inputValue = contentInput.value;
+        let reasonData = this.data;
+
+        // Check reason length
+        if ( inputValue.length < minLengthReason ){
+            this.tooShort = true;
+            this.contentValidity = 'Reason is too short';
+            this.message = {  text:this.contentValidity , color:RED  };
+            this.dataUpdated();
+            return;
+        }
+
         // save via ajax
         this.message = { text:'Saving changes...', color:GREY };
         this.contentValidity = '';
         this.dataUpdated();
-        var sendData = { crumb:crumb , fingerprint:fingerprint ,
+        let sendData = { crumb:crumb , fingerprint:fingerprint ,
             reasonId:reasonData.id , inputContent:inputValue , 
             linkKey:this.proposalDisplay.linkKey.id };
-        var url = 'editReason';
-        var thisCopy = this;
+        let url = 'editReason';
+        let thisCopy = this;
         ajaxSendAndUpdate( sendData, url, this.topDisp, function(error, status, receiveData){
-            if ( error ){
-                var message = 'Error saving';
-                thisCopy.message = { text:message, color:RED };
-                thisCopy.contentValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.success ){
+            if ( !error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.message = { text:'Saved reason', color:GREEN, ms:3000 };
-                thisCopy.contentValidity = '';
-                thisCopy.dataUpdated();
-                // update data
+                // Update data
                 reasonData.content = receiveData.reason.content;
                 reasonData.allowEdit = receiveData.reason.allowEdit;
-                thisCopy.stopEditing();
-            }
-            else if ( receiveData  &&  receiveData.message == TOO_SHORT ){  
-                var message = 'Reason is too short.'
-                thisCopy.message = { text:message, color:RED, ms:10000 };
-                thisCopy.contentValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.message == NOT_OWNER ){  
-                thisCopy.handleEditReasonCancel();
-                var message = 'Cannot edit reason created by someone else.';
-                thisCopy.message = { text:message, color:RED, ms:10000 };
-                thisCopy.contentValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.message == HAS_RESPONSES ){  
-                thisCopy.handleEditReasonCancel();
-                var message = 'Cannot edit reason that already has votes.';
-                thisCopy.message = { text:message, color:RED, ms:10000 };
-                thisCopy.contentValidity = message;
-                thisCopy.dataUpdated();
+                thisCopy.stopEditing();  // calls dataUpdated()
             }
             else {
-                var message = 'Error saving';
-                thisCopy.message = { text:message, color:RED };
-                thisCopy.contentValidity = message;
+                let message = null;
+                let millisec = null;
+                if ( receiveData ){
+                    if ( receiveData.message == TOO_SHORT ){  message = 'Reason is too short.';  thisCopy.tooShort = true;  }
+                    else if ( receiveData.message == REASON_TOO_SHORT ){  message = 'Reason is too short.';  thisCopy.tooShort = true;  }
+                    else if ( receiveData.message == DUPLICATE ){  message = 'Reason already exists.';  }
+                }
+                if ( message ){  thisCopy.contentValidity = message;  }
+
+                if ( receiveData ){
+                    if ( receiveData.message == NOT_OWNER ){  
+                        thisCopy.handleEditReasonCancel();
+                        message = 'Cannot edit reason created by someone else.';
+                    }
+                    else if ( receiveData.message == HAS_RESPONSES ){  
+                        thisCopy.handleEditReasonCancel();
+                        message = 'Cannot edit reason that already has votes.';
+                    }
+                }
+                if ( message ){  millisec = 10000;  }
+                else {  message == 'Error saving';  }
+
+                thisCopy.message = { text:message, color:RED, ms:millisec };
                 thisCopy.dataUpdated();
             }
         } );
-    } , 
+    };
 
         ReasonDisplay.prototype.
     handleEditReasonCancel = function( ){ 
@@ -356,7 +306,6 @@
         ReasonDisplay.prototype.
     stopEditing = function( ){ 
         this.editing = FALSE;
-        this.inputValue = null;
         this.wordToCount = null;
         this.dataUpdated();
         this.proposalDisplay.expandOrCollapseForEditing();
@@ -387,7 +336,7 @@
             '       <div class=EditIcon id=EditIcon onclick=handleEditTitleClick tabindex=0 onkeyup=onEditKeyUp ',
             '           aria-controls=TitleAndDetailEditing',
             '           ><img class=EditIconImage role=button src="edit.png" alt="edit" /></div>',
-            '       <h1 class=Title id=Title onclick=handleEditTitleClick aria-controls=TitleAndDetailEditing ></h1>',
+            '       <h2 class=Title id=Title onclick=handleEditTitleClick aria-controls=TitleAndDetailEditing ></h2>',
             '       <div class=Detail id=Detail onclick=handleEditDetailClick aria-controls=TitleAndDetailEditing ></div>',
             '   </div>',
             // Editing
@@ -408,7 +357,7 @@
             '       </div>',
             '   </div>',
             // Message
-            '   <div class=TitleAndDetailMessage id=Message role=alert ></div>',
+            '   <div class="Message TitleAndDetailMessage" id=Message aria-live=polite></div>' ,
             '</div>'
         ].join('\n') );
     };
@@ -426,39 +375,37 @@
         // Set editing state on element
         this.setAttribute( 'TitleAndDetail', 'editing', this.editing );
         // Set editing aria expand/collapse state
-        var ariaExpanded = null;
+        let ariaExpanded = null;
         if ( this.editable() ){  ariaExpanded = ( this.editing == EDIT ) ? TRUE : FALSE;  }
         this.setAttribute( 'EditIcon', 'aria-expanded', ariaExpanded );
         this.setAttribute( 'Title', 'aria-expanded', ariaExpanded );
         this.setAttribute( 'Detail', 'aria-expanded', ariaExpanded );
         // Set editing click-handler: For screen reader, if not editable, remove onClick handler
         if ( this.onClickHide == null ){  this.onClickHide = this.getSubElement('Title').onclick;  }
-        var clickHandler = this.editable() ?  this.onClickHide  :  null;
+        let clickHandler = this.editable() ?  this.onClickHide  :  null;
         this.setRequiredMember( 'EditIcon', 'onclick', clickHandler );
         this.setRequiredMember( 'Title', 'onclick', clickHandler );
         this.setRequiredMember( 'Detail', 'onclick', clickHandler );
 
         // Set editable state on edit icon.
         this.setAttribute( 'TitleAndDetail', 'allowedit', (this.editable() ? TRUE : null) );
-        var titleClickToEdit = this.editable() ?  'Click to edit'  :  null;
+        let titleClickToEdit = this.editable() ?  'Edit'  :  null;
         this.setProperty( 'EditIcon', 'title', titleClickToEdit );
         // Title
-        var titleInputContent = ( this.titleInputValue )?  this.titleInputValue  :  this.data.title;  // Title from data or from current editing text input.
-        this.setProperty( 'TitleInput', 'value', titleInputContent );
+        this.setProperty( 'TitleInput', 'defaultValue', this.data.title );
         this.setProperty( 'Title', 'placeholder', this.data.titlePlaceholder );
         this.setInnerHtml( 'Title', this.data.title );
         this.setProperty( 'Title', 'title', titleClickToEdit );
         // Detail
         // Do not set title because it overrides content for screen-reader.
         // Do not set aria-label, because it stops screen-reader traversal inside.
-        var detailInputContent = ( this.detailInputValue )?  this.detailInputValue  :  this.data.detail;  // Detail from data or from current editing text input.
-        this.setProperty( 'DetailInput', 'value', detailInputContent );
+        this.setProperty( 'DetailInput', 'defaultValue', this.data.detail );
         this.setProperty( 'DetailInput', 'placeholder', this.data.detailPlaceholder );
         this.setInnerHtml( 'Detail', storedTextToHtml(this.data.detail) );
         // Message
         this.message = showMessageStruct( this.message, this.getSubElement('Message') );
-        var titleInput = this.getSubElement('TitleInput');
-        var detailInput = this.getSubElement('DetailInput');
+        let titleInput = this.getSubElement('TitleInput');
+        let detailInput = this.getSubElement('DetailInput');
         titleInput.setCustomValidity( defaultTo(this.contentValidity, '') );
         detailInput.setCustomValidity( defaultTo(this.contentValidity, '') );
 
@@ -524,14 +471,15 @@
 
         TitleAndDetailDisplay.prototype.
     onInput = function( ){
-        // Save editing contents in case display updates before save completes, or in case save fails.
-        // Example: TitleAndDetailDisplayForReqProposal.handleEditBlur() calls handleCollapse() calls dataUpdated(),
-        // which wipes input values before save-click.
-        // Have to save before any event when display might update -- everything.  So save after every input event.
-        var titleInput = this.getSubElement('TitleInput');
-        var detailInput = this.getSubElement('DetailInput');
-        this.titleInputValue = titleInput.value;
-        this.detailInputValue = detailInput.value;
+        // Check title/detail length
+        let titleInput = this.getSubElement('TitleInput');
+        let detailInput = this.getSubElement('DetailInput');
+        if ( !this.data.minLength  ||  (this.data.minLength <= titleInput.value.length + detailInput.value.length) ){
+            this.contentValidity = '';
+            this.message = {  text:''  };
+            this.dataUpdated();
+        }
+
         this.topDisp.topInputHandler();
     };
 
@@ -576,8 +524,6 @@
         TitleAndDetailDisplay.prototype.
     stopEditing = function( ){ 
         this.editing = FALSE;
-        this.titleInputValue = null;
-        this.detailInputValue = null;
         this.message = '';
         this.contentValidity = '';
         this.dataUpdated();
@@ -610,6 +556,15 @@
 
         TitleAndDetailDisplay.prototype.
     handleSave = function( ){
+        // Check title/detail length
+        let titleInput = this.getSubElement('TitleInput');
+        let detailInput = this.getSubElement('DetailInput');
+        let minLengthMessage = defaultTo( this.data.minLengthMessage, 'Too short' );
+        if ( this.data.minLength  &&  (titleInput.value.length + detailInput.value.length < this.data.minLength) ){
+            this.setMessageAndUpdate( minLengthMessage, false );
+            return;
+        }
+
         this.data.onSave();
     };
 
@@ -668,11 +623,11 @@
         function
     ProposalDisplay( proposalId ){
         // User-interface state variables (not persistent data)
-        ElementWrap.call( this );  // Inherit member data from ElementWrap.
+        ElementWrap.call( this );  // Inherit member data
         this.messageColor = GREY;
         this.create( proposalId );
     }
-    ProposalDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods from ElementWrap.
+    ProposalDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
 
     // Create html element object, store it in this.element
         ProposalDisplay.prototype.
@@ -687,50 +642,46 @@
 
         this.createFromHtml( proposalId, '\n\n' + [
             '<div class=Proposal id=Proposal>',
-            '    <div id=Message class=ProposalMessage role=alert ></div>',
+            '    <h1 class=title id=PageTitle role=status> Proposal </h1>' ,
+            '    <div id=Message class="Message ProposalMessage" aria-live=polite></div>' ,
             '    <div class=loginStatus id=loginStatus></div>' ,
-            '    <button class=freezeButton id=freezeButton onclick=clickFreezeButton></button>' ,
-            '    <div class=freezeText id=freezeText>Frozen</div>' ,
-            // Collapseable
-            '    <div class=ProposalCollapseableWrapTable id=ProposalCollapseableWrapTable>',
-            '        <div class=ProposalCollapseableWrapRow>',
-            '            <div class=ProposalCollapseRail onclick=handleCollapseAndScrollToProposal></div>',
-            '            <div class=ProposalCollapseableWrapCell>',
-            '                <div class=Collapseable id=Collapseable>',
+            '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
+            '    <div class=freezeText id=freezeText>Frozen</div>' ,  // Shown for single-proposal-from-request, and shown to participants
+            '    <button class=freezeButton id=freezeButton onclick=clickFreezeButton aria-live=polite></button>' ,
+            '    <div class=ProposalContentReasonsNew id=ProposalContentReasonsNew>' ,
+            '       <div class=Collapseable id=Collapseable>' ,
             // Title and detail
-            '                   <div class=ProposalContent id=ProposalContent subdisplay=titleAndDetailDisp></div>',
+            '           <div class=ProposalContent id=ProposalContent subdisplay=titleAndDetailDisp></div>' ,
             // Reasons
-            '                   <div class=Reasons id=reasons>',
-            '                       <div class=ReasonsPro id=ReasonsPro></div>',
-            '                       <div class=ReasonsCon id=ReasonsCon></div>',
-            '                   </div>',
-            '                </div>',
-            '            </div>',
-            '        </div>',
-            '    </div>',
-            '    <div class=ProposalExpandBottomRelative>',   // relative-absolute positioning for enclosed elements
-            '        <div class=ProposalExpandBottomWrap>',  // crop shadow overflow
-            '            <div class=ProposalExpandBottom onclick=handleExpandSeparatePage>',  // generates shadow, has hover-highlight and background arrows
-            '                <button> More reasons </button>',
-            '            </div>',
-            '        </div>',
-            '    </div>',
+            '           <div class=Reasons id=reasons>' ,
+            '               <div class=ReasonsPro id=ReasonsPro></div>' ,
+            '               <div class=ReasonsCon id=ReasonsCon></div>' ,
+            '           </div>' ,
+            '       </div>' ,
+            '       <div class=ProposalExpandBottomRelative>' ,   // relative-absolute positioning for enclosed elements
+            '           <div class=ProposalExpandBottomWrap>' ,  // crop shadow overflow
+            '               <div class=ProposalExpandBottom onclick=handleExpandSeparatePage>' ,  // generates shadow, has hover-highlight and background arrows
+            '                   <button id=expandButton> More reasons </button>' ,
+            '               </div>' ,
+            '           </div>' ,
+            '       </div>' ,
+            '       <div class=moreReasonsDiv><button id=moreReasonsButton aria-live=polite onclick=retrieveMoreReasons> More reasons </button></div>' ,
             // New reason form
-            '    <div class=NewReasonForm id=NewReasonForm role=form >',
-            '        <div class=NewReason>',
-            '           <textarea class=NewReasonInput id=NewReasonInput placeholder="new reason pro or con" ',
-            '               oninput=onInput onfocus=handleNewReasonClick onblur=handleNewReasonBlur ',
-            '               aria-expanded=false aria-controls=NewReasonButtons ></textarea>',
-            '        </div>',
-            '        <div class=NewReasonButtons id=NewReasonButtons>',
-            '            <button class=NewReasonButton id=NewReasonButtonPro onclick=handleNewPro ',
-            '               onblur=handleNewReasonBlur> Save Pro </button>',
-            '            <button class=NewReasonButton id=NewReasonButtonCon onclick=handleNewCon ',
-            '               onblur=handleNewReasonBlur> Save Con </button>',
-            '        </div>',
-            '        <div class=NewReasonMessage id=NewReasonMessage role=alert ></div>',
-            '    </div>',
-            '</div>'
+            '       <div class=NewReasonForm id=NewReasonForm role=form >' ,
+            '           <div class="Message NewReasonMessage" id=NewReasonMessage aria-live=polite></div>' ,
+            '           <div class=NewReason>' ,
+            '               <textarea class=NewReasonInput id=NewReasonInput placeholder="New reason to agree (pro) or disagree (con) with the proposal above" ' ,
+            '                   oninput=onInput onfocus=handleNewReasonClick onblur=handleNewReasonBlur ' ,
+            '                   aria-expanded=false aria-controls=NewReasonButtons ></textarea>' ,
+            '           </div>' ,
+            '           <div class=NewReasonButtons id=NewReasonButtons>' ,
+            '               <button class=NewReasonButton id=NewReasonButtonPro onclick=handleNewPro onblur=handleNewReasonBlur> Agree </button>' ,
+            '               <button class=NewReasonButton id=NewReasonButtonCon onclick=handleNewCon onblur=handleNewReasonBlur> Disagree </button>' ,
+            '           </div>' ,
+            '       </div>' ,
+            '   </div>' ,  // ProposalContentReasonsNew
+            '   <div class=backButtonDiv><button class=backButton id=backButton onclick=onClickBack onkeyup=onKeyUpBack> Back to proposals </button></div>' ,
+            '</div>' ,
         ].join('\n') );
     };
 
@@ -743,17 +694,21 @@
         this.linkKey = linkKey;
 
         // Update title and detail.
-        var thisCopy = this;
-        var titleAndDetailData = {
+        let thisCopy = this;
+        let titleAndDetailData = {
             title: proposalData.title,
             detail: proposalData.detail,
-            titlePlaceholder: "new proposal title",
-            detailPlaceholder: "new proposal detail",
+            minLength: minLengthProposal,
+            minLengthMessage: 'Proposal is too short',
+            titlePlaceholder: 'I suggest...' ,
+            detailPlaceholder: 'More details of my suggestion...' ,
             allowEdit: proposalData.allowEdit,
             loginRequired: linkKey.loginRequired,
             onSave: function(){ thisCopy.handleEditProposalSave(); }
         };
         this.titleAndDetailDisp.setAllData( titleAndDetailData, topDisp );
+
+        this.setStyle( 'PageTitle', 'display', (this.proposal.fromRequest? 'none' : 'block') );
 
         // If single-proposal page... this proposal is always first and only proposal.
         if ( this.proposal.singleProposal ){
@@ -768,9 +723,9 @@
     // Update html from data.
         ProposalDisplay.prototype.
     dataUpdated = function( ){
-        var width = jQuery(window).width();
-        var use1Column = ( width <= MAX_WIDTH_1_COLUMN );
-        var columnsChanged = ( use1Column !== this.use1Column );
+        let width = jQuery(window).width();
+        let use1Column = ( width <= MAX_WIDTH_1_COLUMN ) && ( ! this.proposal.hideReasons );
+        let columnsChanged = ( use1Column !== this.use1Column );
         this.use1Column = use1Column;
 
         // Set page title
@@ -784,12 +739,12 @@
                 this.message = { color:GREEN, text:(this.proposal.mine ? 'Your proposal is created.  You can email this webpage\'s link to participants.' : '') };
                 if ( this.messageShown ){  this.message = null;  }
                 if ( this.message  &&  this.message.text ){  this.messageShown = true;  }
-                this.setStyle( 'ProposalCollapseableWrapTable', 'display', null );
+                this.setStyle( 'ProposalContentReasonsNew', 'display', null );
                 this.setStyle( 'NewReasonForm', 'display', null );
             }
             else {
                 this.message = { color:RED, text:'Invalid link.' };
-                this.setStyle( 'ProposalCollapseableWrapTable', 'display', 'none' );
+                this.setStyle( 'ProposalContentReasonsNew', 'display', 'none' );
                 this.setStyle( 'NewReasonForm', 'display', 'none' );
             }
         }
@@ -797,8 +752,10 @@
         // Message
         this.message = showMessageStruct( this.message, this.getSubElement('Message') );
         this.newReasonMessage = showMessageStruct( this.newReasonMessage, this.getSubElement('NewReasonMessage') );
-        var reasonInput = this.getSubElement('NewReasonInput');
+        let reasonInput = this.getSubElement('NewReasonInput');
         reasonInput.setCustomValidity( defaultTo(this.newReasonValidity, '') );
+        this.setInnerHtml( 'hideReasonsStatus', ((this.proposal.singleProposal && this.proposal.hideReasons) ? 'Reasons hidden' : null) );
+        this.moreReasonsMessage = showMessageStruct( this.moreReasonsMessage, this.getSubElement('moreReasonsButton') );
 
         // Set attributes
         this.setAttribute( 'Proposal', 'editingnewreason', (this.editingNewReason == EDIT ? TRUE : null) );
@@ -807,9 +764,11 @@
         this.setAttribute( 'Proposal', 'hasfirstreason', this.proposal.firstProposalWithReasons );
         this.setAttribute( 'Proposal', 'use1column', (this.use1Column ? TRUE : FALSE) );
         this.setAttribute( 'Proposal', 'frozen', (this.isFrozen() ? TRUE : null) );
-        this.setAttribute( 'Proposal', 'fromRequest', (this.proposal.fromRequest ? TRUE : null) );
+        this.setAttribute( 'Proposal', 'fromRequest', (this.proposal.fromRequest ? TRUE : FALSE) );
         this.setAttribute( 'Proposal', 'singleProposal', (this.proposal.singleProposal ? TRUE : null) );
         this.setAttribute( 'Proposal', 'mine', (this.proposal.mine ? TRUE : null) );
+        this.setAttribute( 'Proposal', 'hidereasons', (this.proposal.hideReasons ? TRUE : FALSE) );
+        this.setInnerHtml( 'expandButton', (this.proposal.hideReasons ? 'More proposal details' : 'More reasons') );
 
         // Show freeze-message in freeze button
         // Freeze-message text display (next to button) may be better for accessibility and maintainability
@@ -833,17 +792,20 @@
             this.setInnerHtml( 'loginStatus', (this.proposal.mine ? 'Browser login only' : null) );
         }
 
-        // Find first reason
-        var propReasons = this.proposal.reasons;
-        var pros = propReasons.filter( function(r){ return r.proOrCon=='pro'; } );
-        var firstReason = ( pros.length > 0 )?  pros[0]  :  propReasons[0];
-        propReasons.map(  function(r){ r.isFirstReason = (r == firstReason)? TRUE : FALSE; }  );
+        // Either display suggested-reasons or top-reasons
+        let hasMatches =  this.suggestions  &&  ( 0 < this.suggestions.length );
+        this.reasonsToShow =  hasMatches ?  this.suggestions  :  this.proposal.reasons;
+
+        // Mark first reason
+        let pros = this.reasonsToShow.filter( r => (r.proOrCon == PRO) );
+        let firstReason = ( pros.length > 0 )?  pros[0]  :  this.reasonsToShow[0];
+        this.reasonsToShow.map(  r => ( r.isFirstReason = (r == firstReason)? TRUE : FALSE )  );
 
         // For each reason data...
-        for ( var r = 0;  r < this.proposal.reasons.length;  ++r ) { 
+        for ( let r = 0;  r < this.reasonsToShow.length;  ++r ) { 
+            let reason = this.reasonsToShow[ r ];
             // Try to find reason in existing reason displays.
-            var reason = this.proposal.reasons[r];
-            var reasonDisp = this.reasonIdToDisp[ reason.id ];
+            let reasonDisp = this.reasonIdToDisp[ reason.id ];
             // If reason display exists... update reason display... else... create reason display.
             if ( reasonDisp ){
                 reasonDisp.setAllData( reason, this.topDisp, this );
@@ -854,33 +816,33 @@
             }
         }
 
-        this.setAttribute( 'reasons', 'hasmatches', (this.hasMatches ? TRUE : null) );
+        this.setAttribute( 'reasons', 'hasmatches', (hasMatches ? TRUE : null) );
+        if ( ! hasMatches ){  this.highlightReasonMatches( null );  }
 
         // If reason matches changed... re-sort reasons
         // Keep reasons before input, for mobile.  Put best match closest to new-reason input, sorting matches by match-score ascending.
         // Only re-sort reasons if necessary.  dataUpdated() may run many times between ordering by vote-score vs by match-score.
-        if ( this.hasMatches ){  this.sortReasonsByMatchScore();  columnsChanged = true;  }
+        if ( hasMatches ){  this.sortReasonsByMatchScore();  columnsChanged = true;  }
         else if ( this.hadMatches ) {  this.sortReasonsByVoteScore();  columnsChanged = true;  }
-        console.log( 'dataUpdated() this.hasMatches=', this.hasMatches, 'this.hadMatches=', this.hadMatches, 'columnsChanged=', columnsChanged );
-        this.hadMatches = this.hasMatches;
+        this.hadMatches = hasMatches;
 
         // Rearrange reason displays in columns.
         if ( columnsChanged ){
-            var reasonsProDiv = this.getSubElement('ReasonsPro');
-            var reasonsConDiv = this.getSubElement('ReasonsCon');
+            let reasonsProDiv = this.getSubElement('ReasonsPro');
+            let reasonsConDiv = this.getSubElement('ReasonsCon');
             if ( use1Column ) {
                 // interleave pros/cons in single column
-                for ( var r = 0;  r < Math.max( this.proDisplays.length, this.conDisplays.length );  ++r ){
+                for ( let r = 0;  r < Math.max( this.proDisplays.length, this.conDisplays.length );  ++r ){
                     if ( r < this.proDisplays.length ){  reasonsProDiv.appendChild( this.proDisplays[r].element );  }
                     if ( r < this.conDisplays.length ){  reasonsProDiv.appendChild( this.conDisplays[r].element );  }
                 }
             }
             else {
                 // separate columns for pros/cons
-                for ( var r = 0;  r < this.proDisplays.length;  ++r ){
+                for ( let r = 0;  r < this.proDisplays.length;  ++r ){
                     reasonsProDiv.appendChild( this.proDisplays[r].element );
                 }
-                for ( var r = 0;  r < this.conDisplays.length;  ++r ){
+                for ( let r = 0;  r < this.conDisplays.length;  ++r ){
                     reasonsConDiv.appendChild( this.conDisplays[r].element );
                 }
             }
@@ -896,15 +858,27 @@
         this.setAttribute( 'Proposal', 'collapse', this.collapse );
     };
 
+
         ProposalDisplay.prototype.
-    editable = function(){  return this.proposal.allowEdit && !this.topDisp.isFrozen();  }
+    onClickBack = function( e ){  e.preventDefault();  window.history.back();  };
+
+        ProposalDisplay.prototype.
+    onKeyUpBack = enterToClick;
+
+
+        ProposalDisplay.prototype.
+    editable = function(){  return this.proposal.allowEdit && !this.topDisp.isFrozen();  };
+
+        ProposalDisplay.prototype.
+    areReasonsHidden = function(){  return this.proposal.hideReasons;  };
 
         ProposalDisplay.prototype.
     isFrozen = function(){
         // How can we know that proposal-from-request is frozen, when request-display is not present?
         // Need to retrieve frozen-flag with proposal?
         return this.proposal.freezeUserInput  ||  (reqPropData && reqPropData.request && reqPropData.request.freezeUserInput);
-    }
+    };
+
 
         ProposalDisplay.prototype.
     clickFreezeButton = function( ){
@@ -928,12 +902,11 @@
                 thisCopy.freezeMessage = { color:RED , text:'Failed to ' + (freeze ? 'freeze' : 'unfreeze') , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
             }
             else if ( receiveData &&  receiveData.success ){
-                // update data
-                thisCopy.proposal.title = receiveData.proposal.title;  // Dont overwrite thisCopy.proposal because receiveData is missing proposal.reasons
-                thisCopy.proposal.detail = receiveData.proposal.detail;
+                // Update data
                 thisCopy.proposal.freezeUserInput = receiveData.proposal.freezeUserInput;
-                var freezeLabel = thisCopy.proposal.freezeUserInput ? 'Frozen' : 'Unfrozen';
-                thisCopy.freezeMessage = { color:GREEN , text:freezeLabel , textDefault:freezeLabel , ms:freezeMessageMillisec };
+                let freezeLabel = thisCopy.proposal.freezeUserInput ? 'Frozen' : 'Unfrozen';
+                let color = thisCopy.proposal.freezeUserInput ? RED : GREEN;
+                thisCopy.freezeMessage = { color:color , text:freezeLabel , textDefault:freezeLabel , ms:freezeMessageMillisec };
             }
             else if ( receiveData  &&  receiveData.message == NOT_OWNER ){
                 thisCopy.freezeMessage = { color:RED , text:'Cannot un/freeze proposal created by someone else.' , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
@@ -944,7 +917,7 @@
             thisCopy.dataUpdated();
         } );
 
-    }
+    };
 
         ProposalDisplay.prototype.
     sortReasonsByVoteScore = function( ){
@@ -1007,7 +980,7 @@
         this.handleCollapse();
         // Scroll proposal onto screen (because long proposal may become off-screen when collapsed).
         this.scrollToProposal();
-    }
+    };
 
         ProposalDisplay.prototype.
     handleCollapse = function( ){
@@ -1017,6 +990,12 @@
         this.maxPropHeight = Math.max(PROPOSAL_COLLAPSE_HEIGHT/2, PROPOSAL_COLLAPSE_HEIGHT - reasonsHeight) + 'px';
         this.collapse = TRUE;
         this.dataUpdated();
+    };
+
+        ProposalDisplay.prototype.
+    refreshCollapse = function( ){
+        // Recollapse because of new reasons
+        if ( this.collapse == TRUE ){  this.handleCollapse();  }
     };
 
         ProposalDisplay.prototype.
@@ -1039,21 +1018,18 @@
 
         if ( this.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
-        var titleInput = this.titleAndDetailDisp.getSubElement('TitleInput');
-        var detailInput = this.titleAndDetailDisp.getSubElement('DetailInput');
+        let titleInput = this.titleAndDetailDisp.getSubElement('TitleInput');
+        let detailInput = this.titleAndDetailDisp.getSubElement('DetailInput');
 
         // save via ajax
         this.titleAndDetailDisp.setMessageAndUpdate( 'Saving changes...', null, null );
-        var sendData = { crumb:crumb , fingerprint:fingerprint ,
+        let sendData = { crumb:crumb , fingerprint:fingerprint ,
             proposalId:this.proposal.id , linkKey:this.linkKey.id , 
             title:titleInput.value , detail:detailInput.value };
-        var url = 'editProposal';
-        var thisCopy = this;
+        let url = 'editProposal';
+        let thisCopy = this;
         ajaxSendAndUpdate( sendData, url, this.topDisp, function(error, status, receiveData){
-            if ( error ){
-                thisCopy.titleAndDetailDisp.setMessageAndUpdate( 'Failed to save', false, null );
-            }
-            else if ( receiveData  &&  receiveData.success ){
+            if ( !error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.titleAndDetailDisp.setMessageAndUpdate( 'Saved proposal', true, 3000 );
                 // update data
                 thisCopy.proposal.title = receiveData.proposal.title;  // Dont overwrite thisCopy.proposal because receiveData is missing proposal.reasons
@@ -1064,6 +1040,9 @@
             }
             else if ( receiveData  &&  receiveData.message == TOO_SHORT ){
                 thisCopy.titleAndDetailDisp.setMessageAndUpdate( 'Proposal is too short.', false, 10000 );
+            }
+            else if ( receiveData  &&  receiveData.message == DUPLICATE ){
+                thisCopy.titleAndDetailDisp.setMessageAndUpdate( 'Identical proposal already exists', false, 10000 );
             }
             else if ( receiveData  &&  receiveData.message == NOT_OWNER ){
                 thisCopy.titleAndDetailDisp.setMessageAndUpdate( 'Cannot edit proposal created by someone else.', false, 10000 );
@@ -1114,38 +1093,38 @@
 
         if ( this.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
-        var reasonInput = this.getSubElement('NewReasonInput');
+        let reasonInput = this.getSubElement('NewReasonInput');
         if ( reasonInput.value == '' ){
             this.newReasonValidity = '';
             this.dataUpdated();
             return;
         }
 
+        // Check new-reason length
+        if ( reasonInput.value.length < minLengthReason ){
+            this.newReasonValidity = 'Reason is too short';
+            this.newReasonMessage = {  color:RED , text:this.newReasonValidity  };
+            this.dataUpdated();
+            return;
+        }
+
         // save via ajax
-        var proposalData = this.proposal;
+        let proposalData = this.proposal;
         this.newReasonMessage = { color:GREY, text:'Saving changes...' };
         this.newReasonValidity = '';
         this.dataUpdated();
-        var sendData = {
+        let sendData = {
             crumb:crumb , fingerprint:fingerprint ,
             linkKey:this.linkKey.id ,
             proposalId:proposalData.id , proOrCon:proOrCon , reasonContent:reasonInput.value
         };
-        var url = 'newReason';
-        var thisCopy = this;
+        let url = 'newReason';
+        let thisCopy = this;
         ajaxSendAndUpdate( sendData, url, this.topDisp, function(error, status, receiveData){
-            if ( error ){  
-                var message = 'Error saving';
-                thisCopy.newReasonMessage = { color:RED, text:message };  
-                thisCopy.newReasonValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.success ){
+            if ( !error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.newReasonMessage = { color:GREEN, text:'Saved reason', ms:3000 };
-                thisCopy.newReasonValidity = '';
-                thisCopy.dataUpdated();
-                // update data
-                var newReason = receiveData.reason;
+                // Update data
+                let newReason = receiveData.reason;
                 if ( ! newReason.voteCount ) {  newReason.voteCount = 0;  }
                 proposalData.reasons.push( newReason );
                 if ( thisCopy.allReasons ){
@@ -1153,6 +1132,7 @@
                 }
                 // clear form, stop editing
                 reasonInput.value = '';
+                this.suggestions = [ ];
                 thisCopy.editingNewReason = FALSE;
                 thisCopy.onInput();  // Clear keyword match highlights
                 thisCopy.dataUpdated();
@@ -1160,16 +1140,19 @@
                     thisCopy.handleExpandSeparatePage();
                 }
             }
-            else if ( receiveData  &&  receiveData.message == TOO_SHORT ){
-                var message = 'Reason is too short.';
-                thisCopy.newReasonMessage = { color:RED, text:message, ms:10000 };
-                thisCopy.newReasonValidity = message;
-                thisCopy.dataUpdated();
-            }
             else {
-                var message = 'Error saving';
-                thisCopy.newReasonMessage = { color:RED, text:message };
-                thisCopy.newReasonValidity = message;
+                let message = null;
+                let millisec = null;
+                if ( receiveData ){
+                    if ( receiveData.message == TOO_SHORT ){  message = 'Reason is too short';  }
+                    else if ( receiveData.message == REASON_TOO_SHORT ){  message = 'Reason is too short';  }
+                    else if ( receiveData.message == DUPLICATE ){  message = 'Identical reason already exists';  }
+                }
+
+                if ( message ){  thisCopy.newReasonValidity = message;  millisec = 10000;  }
+                else {  message = 'Error saving';  }
+
+                thisCopy.newReasonMessage = { color:RED, text:message, ms:millisec };  
                 thisCopy.dataUpdated();
             }
         } );
@@ -1182,9 +1165,110 @@
 
 
         ProposalDisplay.prototype.
-    onInput = function( ){
-        deduplicate( 300, this, this.onInputDeduplicated );
+    onInput = function( event ){
+        // Remove new-reason length-error
+        let reasonInput = this.getSubElement('NewReasonInput');
+        if ( minLengthReason <= reasonInput.value.length ){
+            this.newReasonValidity = '';
+            this.newReasonMessage = {  text:''  };
+            this.dataUpdated();
+        }
+
+        // If no user-input... hide suggested-proposals, show top-proposals
+        if ( ! reasonInput.value.trim() ){  this.suggestions = [ ];  this.dataUpdated();  }
+
+        // Suggest proposal only for first N words, and only if just finished a word
+        let words = removeStopWords( tokenize( reasonInput.value ) ).slice( 0, MAX_WORDS_INDEXED );
+        if ( !words  ||  words.length < 1  ||  MAX_WORDS_INDEXED < words.length ){  return;  }
+        if ( !event  ||  !event.data  ||  ! event.data.match( /[\s\p{P}]/u ) ){  return;  }  // Require that current input is whitespace or punctuation
+
+        // Suggest only if input is changed since last suggestion
+        let contentStart = words.join(' ');
+        if ( contentStart == this.lastContentStartRetrieved ){  return;   }
+        this.lastContentStartRetrieved = contentStart;
+
+        // Retrieve top matching titles 
+        this.retrieveReasonSuggestions( words, contentStart );
     };
+
+
+        ProposalDisplay.prototype.
+    retrieveReasonSuggestions = function( words, contentStart ){
+        // Request via ajax
+        let thisCopy = this;
+        let sendData = { content:contentStart };
+        let url = '/suggestReasons/' + this.linkKey.id;
+        if ( this.proposal.fromRequest ){  url += '/' + this.proposal.id;  }
+        ajaxPost( sendData, url, function(error, status, receiveData){
+
+            if ( !error  &&  receiveData  &&  receiveData.success ){
+                // Update reason suggestions
+                let suggestionsChanged = false;
+                if ( receiveData.reasons ){
+
+                    // Collect new suggestion & increment stats 
+                    if ( ! thisCopy.suggestionToData ){  thisCopy.suggestionToData = { };  }  // { suggestionText:{ matchScore:? , totalScore:? , ... } }
+                    for ( let s = 0;  s < receiveData.reasons.length;  ++s ){
+                        let suggestionNew = receiveData.reasons[ s ];
+                        if ( ! suggestionNew.content ){  continue;  }
+                        if ( !(suggestionNew.content in thisCopy.suggestionToData) ){
+                            thisCopy.topDisp.incrementWordCounts( suggestionNew.content );
+                        }
+                        thisCopy.suggestionToData[ suggestionNew.content ] = suggestionNew;
+                    }
+                    // Find top-scored suggestions
+                    thisCopy.scoreMatches( contentStart );
+                    let topSuggestions = Object.values( thisCopy.suggestionToData ).filter( s => (0 < s.scoreMatch) )
+                        .sort( (a,b) => (b.scoreTotal - a.scoreTotal) ).slice( 0, 3 );
+
+                    // Check whether top-suggestions changed: old-suggestion not found in new-suggestions
+                    suggestionsChanged = ( thisCopy.suggestions == null ) ^ ( topSuggestions == null );
+                    if ( thisCopy.suggestions  &&  topSuggestions ){
+                        suggestionsChanged |= ( thisCopy.suggestions.length != topSuggestions.length );
+                        thisCopy.suggestions.map(  suggestionOld  =>  ( 
+                            suggestionsChanged |=  ! topSuggestions.find( suggestionNew => (suggestionNew.content == suggestionOld.content) )  )   );
+                    }
+                    thisCopy.suggestions = topSuggestions;
+                }
+
+                // Alert screen-reader user that suggestions updated
+                let hasMatches =  thisCopy.suggestions  &&  ( 0 < thisCopy.suggestions.length );
+                if ( suggestionsChanged  &&  hasMatches ){
+                    thisCopy.newReasonMessage = { text:'' + thisCopy.suggestions.length + ' matches' , color:GREY , ms:5000 };
+                }
+                // Update which reasons are displayed
+                thisCopy.dataUpdated();
+                // Highlight matches in displayed reasons
+                let highlightWords = ( hasMatches )?  contentStart  :  null;
+                thisCopy.highlightReasonMatches( highlightWords );
+                thisCopy.dataUpdated();
+            }
+        } );
+    };
+
+
+        ProposalDisplay.prototype.
+    scoreMatches = function( contentStart ){
+        // Update suggestion-scores, with new IDF-weights and new user-input
+        for ( const suggestion in this.suggestionToData ){
+            let suggestionData = this.suggestionToData[ suggestion ];
+            suggestionData.scoreMatch = this.topDisp.wordMatchScore( contentStart, suggestion );
+            suggestionData.scoreTotal =  suggestionData.score * suggestionData.scoreMatch;  // Vote-score * match-score
+        }
+    };
+
+        ProposalDisplay.prototype.
+    incrementWordCounts = function( suggestion ){  
+        if ( ! this.wordToCount ){  this.wordToCount = { };  }
+        return incrementWordCounts( suggestion, this.wordToCount );
+    };
+
+        ProposalDisplay.prototype.
+    wordMatchScore = function( input, suggestion ){
+        if ( ! this.wordToCount ){  return 0;  }
+        return wordMatchScore( input, suggestion, this.wordToCount );
+    };
+
 
     // Interface function for top-level proposal and request displays
         ProposalDisplay.prototype.
@@ -1192,58 +1276,13 @@
         this.colorNextInput();
     };
     
+
         ProposalDisplay.prototype.
-    onInputDeduplicated = function( ){
-
-        // For each reason-display... find new-reason keyword matches
-        var newReasonInput = this.getSubElement('NewReasonInput');
-        var numMatchingReasonDisplays = 0;
-        if ( newReasonInput.value ){
-            numMatchingReasonDisplays = this.reasonDisplays.reduce( function(count, reasonDisp){
-                var matchIntervals = keywordMatchIntervals( newReasonInput.value, reasonDisp.data.content );
-                var matches = matchIntervals.filter( function(i){return i.match} );
-                return ( matches  &&  matches.length > 0 )?  count+1  :  count;
-            } , 0 );
-        }
-        this.hasMatches = ( numMatchingReasonDisplays > 0 );
-
-        // Display match count
-        this.newReasonMessage = { color:GREY, text:''+numMatchingReasonDisplays+' matches' };
-
+    highlightReasonMatches = function( highlightWords ){
         // For each reason-display... de/highlight new-reason keyword matches
-        var highlightWords = this.hasMatches ?  newReasonInput.value  :  null;
-        for ( var r = 0;  r < this.reasonDisplays.length;  ++r ){
-            var reasonDisp = this.reasonDisplays[r];
+        for ( let r = 0;  r < this.reasonDisplays.length;  ++r ){
+            let reasonDisp = this.reasonDisplays[r];
             reasonDisp.highlightWords = highlightWords;
-            reasonDisp.dataUpdated();
-        }
-
-        // Compute reason match score with new-reason input.
-        // Dont want to re-count all document words for each input character typed.
-        // Store word->count inside each reasonDisplay.
-        // Clear counts when reason edited or retrieved.
-        // Recompute counts when new reason character typed if counts are null.
-        // Store invDocFreq weights in topDisp, and force update when data retrieved.
-
-        // Compute word frequencies, then match scores
-        var updated = this.updateWordCounts();
-        if ( updated ){
-            topDisp.wordToInvDocFrequency = wordCountsToInvDocFreq( this.wordToDocCount ); 
-        }
-
-        computeMatchScores( newReasonInput.value , topDisp.wordToInvDocFrequency, this.reasonDisplays , function(r){return r.data.score} );
-
-        this.dataUpdated();
-        this.colorNextInput();
-    };
-
-        ProposalDisplay.prototype.
-    setHighlightWords = function( highlightWords ){
-        this.highlightWords = highlightWords;
-        // For each reason-display... de-highlight new-reason keyword matches
-        for ( var r = 0;  r < this.reasonDisplays.length;  ++r ){
-            var reasonDisp = this.reasonDisplays[r];
-            reasonDisp.highlightWords = null;
             reasonDisp.dataUpdated();
         }
     };
@@ -1306,14 +1345,25 @@
 
         ProposalDisplay.prototype.
     retrieveDataUpdate = function(){
-        var onlyTopReasons = false;
+        // Do not update, because re-ordering is confusing, and updating votes/counts is not important in a single browser-login
+    };
+
+        ProposalDisplay.prototype.
+    retrieveData = function( onlyTopReasons=false ){
         retrieveProposalReasons( this, onlyTopReasons );
     };
 
         ProposalDisplay.prototype.
-    retrieveData = function( onlyTopReasons ){
-        retrieveProposalReasons( this, onlyTopReasons );
+    retrieveMoreReasons = function( ){
+        this.moreReasonsMessage = { color:GREY, text:'Loading reasons...' };
+        this.dataUpdated();
+
+        let onlyTopReasons = false;
+        let nextPage = true;
+        retrieveProposalReasons( this, onlyTopReasons, nextPage );
     };
+
+
 
         ProposalDisplay.prototype.
     voteScore = function( ){
@@ -1331,11 +1381,11 @@
         function
     RequestForProposalsDisplay( requestId ){
         // User-interface state variables (not persistent data)
-        ElementWrap.call( this );  // Inherit member data from ElementWrap.
+        ElementWrap.call( this );  // Inherit member data
         this.messageColor = GREY;
         this.create( requestId );
     }
-    RequestForProposalsDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods from ElementWrap.
+    RequestForProposalsDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
 
     // Create html element object, store it in this.element
         RequestForProposalsDisplay.prototype.
@@ -1349,57 +1399,61 @@
         this.createFromHtml( requestId, '\n' + [
             '<div class=ReqProp id=RequestForProposals>',
             // Status messages
-            '    <div class=RequestMessage id=RequestMessage role=alert ></div>',
+            '    <h1 class=title role=status> Request For Proposals </h1>' ,
+            '    <div class="Message RequestMessage" id=RequestMessage aria-live=polite></div>' ,
             '    <div class=loginStatus id=loginStatus></div>',
+            '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
+            '    <div class=freezeText id=freezeText aria-live=polite>Frozen</div>' ,  // Shown to participants
             '    <button class=freezeButton id=freezeButton onclick=clickFreezeButton></button>' ,
-            '    <div class=freezeText id=freezeText>Frozen</div>' ,
             // Request and proposals
             '    <div class=Request id=Request subdisplay=titleAndDetailDisp></div>',
             '    <div class=Proposals id=Proposals></div>',
             '    <div class=MoreProposalsWrap>',
-            '        <button id=MoreProposals onclick=clickMoreProposals> More proposals </button>',
+            '        <button id=MoreProposals onclick=clickMoreProposals aria-live=polite> More proposals </button>',
             '    </div>',
             //   New proposal form.  Do not use TitleAndDetailDisplay because need customizations like initial reasons.
             '    <div class=NewProposalForm id=NewProposalForm>',
             '        <div class=NewProposalSectionTitle> New Proposal </div>',
             //       Insert a few new-proposal match summary snippets before new-proposal input, because
             //       filtered proposals are too distant from new-proposal input (because of reasons).
-            '        <div id=matches class=matches></div>',
-            '        <div id=matchesMessage></div>',
+            '        <div id=matches class="Matches matches" aria-live=polite></div>',
+            '        <div class=Message id=matchesMessage></div>',
             '        <label class=NewProposalTitleLabel for=NewProposalTitle>Title</label>',
             '        <div class=Title>',
             '            <input class=TitleInput id=NewProposalTitle',
-            '                onclick=startEditingNewProposal onblur=handleEditBlur oninput=onInput',
-            '                placeholder="new proposal title" aria-required=true />',
+            '                onclick=startEditingNewProposal onblur=handleEditBlur oninput=onInput onkeyup=onNewProposalKey',
+            '                placeholder="I suggest..." aria-required=true />',
             '        </div>',
             '        <label class=NewProposalDetailLabel for=NewProposalDetail>Detail</label>',
+            //      Use focus-handler, because screen-reader cannot focus this textarea with click-handler
+            //      Attaching click-handler to parent-div also works
             '        <div class=Detail>',
             '            <textarea class=DetailInput id=NewProposalDetail',
-            '                onclick=startEditingNewProposal onblur=handleEditBlur oninput=onInput',
-            '                placeholder="new proposal detail" aria-required=true ></textarea>',
+            '               onfocus=startEditingNewProposal onblur=handleEditBlur oninput=onInput' ,
+            '                placeholder="More details of my suggestion..." aria-required=true ></textarea>',
             '        </div>',
             '        <label class=NewProposalReasonLabel for=NewProposalInitialReasonInput1> Supporting Reasons </label>',
             '        <div class=NewProposalInitialReasons>',
             '            <div class=NewProposalInitialReasonDiv>',
             '                <textarea class=NewProposalInitialReasonInput id=NewProposalInitialReasonInput1',
-            '                    onclick=startEditingNewProposal onblur=handleEditBlur oninput=onInput',
-            '                    placeholder="supporting reason"></textarea>',
+            '                   onfocus=startEditingNewProposal onblur=handleEditBlur oninput=onInput' ,
+            '                    placeholder="Because..."></textarea>',
             '            </div>',
             '            <div class=NewProposalInitialReasonDiv>',
             '                <textarea class=NewProposalInitialReasonInput id=NewProposalInitialReasonInput2',
-            '                    onclick=startEditingNewProposal onblur=handleEditBlur oninput=onInput',
-            '                    placeholder="more supporting reasons"></textarea>',
+            '                   onfocus=startEditingNewProposal onblur=handleEditBlur oninput=onInput' ,
+            '                    placeholder="More reasons to agree... (optional)"></textarea>',
             '            </div>',
             '            <div class=NewProposalInitialReasonDiv>',
             '                <textarea class=NewProposalInitialReasonInput id=NewProposalInitialReasonInput3',
-            '                    onclick=startEditingNewProposal onblur=handleEditBlur oninput=onInput',
-            '                    placeholder="more supporting reasons"></textarea>',
+            '                   onfocus=startEditingNewProposal onblur=handleEditBlur oninput=onInput' ,
+            '                    placeholder="More reasons to agree... (optional)"></textarea>',
             '            </div>',
             '        </div>',
             '        <div class=TitleAndDetailEditButtons>',
             '            <button type=button class=TitleAndDetailSaveButton onclick=handleSaveNewProposal> Save </button>',
             '        </div>',
-            '        <div class=TitleAndDetailMessage id=newProposalMessage role=alert ></div>',
+            '        <div class="Message TitleAndDetailMessage" id=newProposalMessage aria-live=polite></div>' ,
             '    </div>',
             '</div>'
         ].join('\n') );
@@ -1418,6 +1472,8 @@
         var titleAndDetailData = {
             title: reqPropData.request.title,
             detail: reqPropData.request.detail,
+            minLength: minLengthRequest,
+            minLengthMessage: 'Request is too short',
             titlePlaceholder: 'request for proposals title',
             detailPlaceholder: 'request for proposals detail',
             allowEdit: reqPropData.request.allowEdit,
@@ -1433,7 +1489,7 @@
     
     // Update html from data.
         RequestForProposalsDisplay.prototype.
-    dataUpdated = function( retrieveReasons ){
+    dataUpdated = function( retrieveReasons=false ){
         // retrieveReasons:boolean, default false
 
         document.title = SITE_TITLE + ': Request for Proposals: ' + this.reqPropData.request.title;
@@ -1453,11 +1509,6 @@
             this.setStyle( 'Proposals', 'display', 'none' );
             this.setStyle( 'NewProposalForm', 'display', 'none' );
         }
-        this.setProperty( 'NewProposalTitle', 'defaultValue', this.title );
-        this.setProperty( 'NewProposalDetail', 'defaultValue', this.detail );
-        this.setProperty( 'NewProposalInitialReasonInput1', 'defaultValue', '' );
-        this.setProperty( 'NewProposalInitialReasonInput2', 'defaultValue', '' );
-        this.setProperty( 'NewProposalInitialReasonInput3', 'defaultValue', '' );
         
         // Show request-message
         this.message = showMessageStruct( this.message, this.getSubElement('RequestMessage') );
@@ -1466,6 +1517,13 @@
         this.matchesMessage = showMessageStruct( this.matchesMessage, this.getSubElement('matchesMessage') );
         this.getSubElement('NewProposalTitle').setCustomValidity( defaultTo(this.newProposalValidity, '') );
         this.getSubElement('NewProposalDetail').setCustomValidity( defaultTo(this.newProposalValidity, '') );
+        let newProposalInitialReasonInput1 = this.getSubElement('NewProposalInitialReasonInput1');
+        let newProposalInitialReasonInput2 = this.getSubElement('NewProposalInitialReasonInput2');
+        let newProposalInitialReasonInput3 = this.getSubElement('NewProposalInitialReasonInput3');
+        this.newProposalValidity = defaultTo( this.newProposalValidity, '' );
+        newProposalInitialReasonInput1.setCustomValidity( newProposalInitialReasonInput1.value ? this.newProposalValidity : '' );
+        newProposalInitialReasonInput2.setCustomValidity( newProposalInitialReasonInput2.value ? this.newProposalValidity : '' );
+        newProposalInitialReasonInput3.setCustomValidity( newProposalInitialReasonInput3.value ? this.newProposalValidity : '' );
 
         // Show title and detail.
         this.titleAndDetailDisp.data.title = this.reqPropData.request.title;
@@ -1484,18 +1542,21 @@
         // Set request-for-proposals attributes
         this.setAttribute( 'RequestForProposals', 'frozen', (this.reqPropData.request.freezeUserInput ? TRUE : null) );
         this.setAttribute( 'RequestForProposals', 'mine', (this.reqPropData.request.mine ? TRUE : null) );
+        this.setAttribute( 'RequestForProposals', 'hidereasons', (this.reqPropData.request.hideReasons ? TRUE : null) );
 
         // Show freeze-message
         if ( this.freezeMessage ){  this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeButton') );  }
         else {  this.setInnerHtml( 'freezeButton' , (this.reqPropData.request.freezeUserInput ? 'Frozen' : 'Unfrozen') );  }
 
+        this.setInnerHtml( 'hideReasonsStatus', (this.reqPropData.request.hideReasons ? 'Reasons hidden' : null) );
+
         // For each proposal data...
-        var proposals = this.reqPropData.proposals;
-        for ( var p = 0;  p < proposals.length;  ++p ) { 
+        let proposals = this.reqPropData.proposals;
+        for ( let p = 0;  p < proposals.length;  ++p ) { 
             // Try to find proposal in existing proposal displays.
-            var proposalData = proposals[p];
+            let proposalData = proposals[p];
             // If proposal display exists... update its data... otherwise create proposal display.
-            var proposalDisp = this.proposalIdToDisp[ proposalData.id ];
+            let proposalDisp = this.proposalIdToDisp[ proposalData.id ];
             if ( proposalDisp ){
                 proposalDisp.setAllData( proposalData, this.reqPropData.reasons, this, this.reqPropData.linkKey );
             }
@@ -1507,10 +1568,10 @@
         if ( retrieveReasons ){  this.loadNewProposalReasons();  }
 
         // For each proposal sub-display...
-        var foundReason = false;
-        for ( var p = 0;  p < this.proposalDisplays.length;  ++p ){
-            var proposalDisp = this.proposalDisplays[p];
-            var proposalData = proposalDisp.proposal;
+        let foundReason = false;
+        for ( let p = 0;  p < this.proposalDisplays.length;  ++p ){
+            let proposalDisp = this.proposalDisplays[p];
+            let proposalData = proposalDisp.proposal;
             // Set flags for first proposal with reasons.
             proposalData.firstProposal = ( p == 0 )?  TRUE  :  FALSE;
             if ( ! foundReason  &&  proposalData.reasons.length > 0 ){
@@ -1525,19 +1586,31 @@
         }
 
         // Display new-proposal matches
-        var matchesDiv = this.getSubElement('matches');
+        // Create displays for suggested-proposals only when suggestion is clicked, to avoid disorienting insertion of unused suggestions
+        let hasMatches =  this.suggestions  &&  ( 0 < this.suggestions.length );
+        let matchesDiv = this.getSubElement('matches');
         clearChildren( matchesDiv );
-        if ( this.hasMatches ){
-            this.sortProposalsByMatchScore();
-            for ( var p = 0;  p < this.proposalDisplays.length;  ++p ){
-                var proposalDisplay = this.proposalDisplays[p];
-                var matchLink = htmlToElement( '<a class=matchLink></a>' );
-                var matchDiv = htmlToElement( '<div class=match></div>' );
-                var proposalText = proposalDisplay.proposal.title + ' ' + proposalDisplay.proposal.detail;
-                displayHighlightedContent( proposalText.substring(0,200)+'...' , this.highlightWords , matchDiv );
-                matchDiv.onclick = function(p){  return function(){ p.scrollToProposal() }  }(proposalDisplay);  // Create callback containing loop variable
-                matchLink.appendChild( matchDiv );
-                matchesDiv.appendChild( matchLink );
+        if ( this.suggestions  &&  (0 < this.suggestions.length) ){
+            let suggestions = this.suggestions.sort( (a, b) => a.scoreTotal - b.scoreTotal );
+            let thisCopy = this;
+            for ( let s = 0;  s < suggestions.length;  ++s ){
+                let suggestion = suggestions[s];
+                let suggestionText = [ suggestion.title, suggestion.detail ].filter(Boolean).join(' ');
+                let matchDiv = html('div').class('match').build();
+                displayHighlightedContent( suggestionText.substring(0,200)+'...' , this.highlightWords , matchDiv );
+                matchDiv.onclick = function(){
+                    // Ensure suggested-proposal is in proposal-data-collection
+                    let proposalDataExisting = thisCopy.reqPropData.proposals.find( p => (p.id == suggestion.id) );
+                    if ( ! proposalDataExisting ){  thisCopy.reqPropData.proposals.push( suggestion );  }
+                    // Ensure suggested-proposal is in proposal-displays
+                    let proposalDisplay = thisCopy.proposalIdToDisp[ suggestion.id ];
+                    if ( ! proposalDisplay ){
+                        proposalDisplay = thisCopy.addProposalDisplay( suggestion );
+                    }
+                    // Scroll to proposal
+                    proposalDisplay.scrollToProposal();
+                };
+                matchesDiv.appendChild( html('a').class('matchLink').children(matchDiv).build() );
             }
         }
 
@@ -1549,20 +1622,17 @@
     editable = function(){  return this.reqPropData.request.allowEdit && !this.isFrozen();  }
 
         RequestForProposalsDisplay.prototype.
-    isFrozen = function(){  return this.reqPropData.request.freezeUserInput;  }
+    areReasonsHidden = function(){  return this.reqPropData.request.hideReasons;  }
 
-
-    // Sort by match-score ascending
         RequestForProposalsDisplay.prototype.
-    sortProposalsByMatchScore = function( ){
-        this.proposalDisplays.sort(  function(a,b){ return (a.matchScore - b.matchScore); }  );
-    };
+    isFrozen = function(){  return this.reqPropData.request.freezeUserInput;  }
 
 
         RequestForProposalsDisplay.prototype.
     addProposalDisplay = function( proposalData ){  // returns ProposalDisplay
         // Create display
         proposalData.fromRequest = true;
+        if ( proposalData.reasons == null ){  proposalData.reasons = [ ];  }
         proposalDisp = new ProposalDisplay( proposalData.id );
         proposalDisp.setAllData( proposalData, this.reqPropData.reasons, this, this.reqPropData.linkKey );
         // Collect and index display
@@ -1571,6 +1641,7 @@
         // Add display DOM element to layout
         var proposalsDiv = this.getSubElement('Proposals');
         proposalsDiv.appendChild( proposalDisp.element );
+        proposalDisp.handleCollapse();
         return proposalDisp;
     };
 
@@ -1620,8 +1691,9 @@
             else if ( receiveData &&  receiveData.success ){
                 // update data
                 thisCopy.reqPropData.request = receiveData.request;
-                var freezeLabel = thisCopy.reqPropData.request.freezeUserInput ? 'Frozen' : 'Unfrozen';
-                thisCopy.freezeMessage = { color:GREEN , text:freezeLabel , textDefault:freezeLabel , ms:freezeMessageMillisec };
+                let freezeLabel = thisCopy.reqPropData.request.freezeUserInput ? 'Frozen' : 'Unfrozen';
+                let color = thisCopy.reqPropData.request.freezeUserInput ? RED : GREEN;
+                thisCopy.freezeMessage = { color:color , text:freezeLabel , textDefault:freezeLabel , ms:freezeMessageMillisec };
             }
             else if ( receiveData  &&  receiveData.message == NOT_OWNER ){
                 thisCopy.freezeMessage = { color:RED , text:'Cannot un/freeze request created by someone else.' , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
@@ -1639,28 +1711,34 @@
         if ( this.reqPropData.maxProposals ){  this.reqPropData.maxProposals += 5;  }
         this.moreProposalsMessage = { color:GREY, text:'Loading more proposals...' };
         this.dataUpdated();
-        var getReasons = ! LOAD_INCREMENTAL;
-        this.retrieveData( getReasons );
+        let getReasons = ! LOAD_INCREMENTAL;
+        let nextPage = true;
+        this.retrieveData( getReasons, nextPage );
     }
 
         RequestForProposalsDisplay.prototype.
     collapseNewProposals = function( focusedProposalId ){
-        // Delay before collapse, to give reasons time to display and layout
-        var thisCopy = this;
+        // Start collapsed, using approximate height
+        this.collapseAllProposals( focusedProposalId );
+
+        // Delay then re-collapse, to give reasons time to display and layout and adjust height
+        let thisCopy = this;
         setTimeout( function(){
-            for ( var p = 0;  p < thisCopy.proposalDisplays.length;  ++p ){
-                var proposalDisp = thisCopy.proposalDisplays[p];
-                proposalDisp.handleCollapse();
-            }
-            // Refocus proposal after collapsing is done
-            var proposalToFocus = thisCopy.proposalIdToDisp[ focusedProposalId ];
-            if ( proposalToFocus ){  proposalToFocus.scrollToProposal();  }
+            thisCopy.collapseAllProposals( focusedProposalId );
         } , 1000 );
     };
 
         RequestForProposalsDisplay.prototype.
-    startEditingNewProposal = function( ){
+    collapseAllProposals = function( focusedProposalId ){
+        for ( let p = 0;  p < this.proposalDisplays.length;  ++p ){
+            this.proposalDisplays[p].handleCollapse();
+        }
+        let proposalToFocus = this.proposalIdToDisp[ focusedProposalId ];
+        if ( proposalToFocus ){  proposalToFocus.scrollToProposal();  }
+    };
 
+        RequestForProposalsDisplay.prototype.
+    startEditingNewProposal = function( ){
         if ( this.reqPropData.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
         this.editingNewProposal = EDIT;
@@ -1745,18 +1823,35 @@
 
         if ( this.reqPropData.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
-        var titleInput = this.getSubElement('NewProposalTitle');
-        var detailInput = this.getSubElement('NewProposalDetail');
-        var reasonInput1 = this.getSubElement('NewProposalInitialReasonInput1');
-        var reasonInput2 = this.getSubElement('NewProposalInitialReasonInput2');
-        var reasonInput3 = this.getSubElement('NewProposalInitialReasonInput3');
+        let titleInput = this.getSubElement('NewProposalTitle');
+        let detailInput = this.getSubElement('NewProposalDetail');
+        let reasonInput1 = this.getSubElement('NewProposalInitialReasonInput1');
+        let reasonInput2 = this.getSubElement('NewProposalInitialReasonInput2');
+        let reasonInput3 = this.getSubElement('NewProposalInitialReasonInput3');
+
+        // Check new-proposal length
+        if ( titleInput.value.length + detailInput.value.length < minLengthProposal ){
+            this.newProposalValidity = 'Proposal is too short';
+            this.newProposalMessage = { color:RED, text:this.newProposalValidity };
+            this.dataUpdated();
+            return;
+        }
+        if ( (reasonInput1.value  &&  reasonInput1.value.length < minLengthReason)  &&
+             (reasonInput2.value  &&  reasonInput2.value.length < minLengthReason)  &&
+             (reasonInput3.value  &&  reasonInput3.value.length < minLengthReason)
+        ){
+            this.newProposalValidity = 'Supporting reason is too short';
+            this.newProposalMessage = { color:RED, text:this.newProposalValidity };
+            this.dataUpdated();
+            return;
+        }
 
         // save via ajax
         this.newProposalMessage = { color:GREY, text:'Saving proposal...' };
         this.newProposalValidity = '';
         this.dataUpdated();
 
-        var sendData = {
+        let sendData = {
             crumb: crumb , fingerprint:fingerprint ,
             requestId: this.reqPropData.linkKey.id ,
             title: titleInput.value ,
@@ -1765,21 +1860,13 @@
             initialReason2: reasonInput2.value ? reasonInput2.value : null ,
             initialReason3: reasonInput3.value ? reasonInput3.value : null
         };
-        var url = 'newProposalForRequest';
-        var thisCopy = this;
+        let url = 'newProposalForRequest';
+        let thisCopy = this;
         ajaxSendAndUpdate( sendData, url, this, function(error, status, receiveData){
-            if ( error ){  
-                var message = 'Failed to save';
-                thisCopy.newProposalMessage = { color:RED, text:message };
-                thisCopy.newProposalValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.success ){
+            if ( !error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.newProposalMessage = { color:GREEN, text:'Saved proposal', ms:3000 };
-                thisCopy.newProposalValidity = '';
-                thisCopy.dataUpdated();
-                // update data
-                var newProposal = receiveData.proposal;
+                // Update data
+                let newProposal = receiveData.proposal;
                 newProposal.reasons = [];
                 if ( receiveData.reasons ){
                     newProposal.reasons = receiveData.reasons;
@@ -1788,6 +1875,9 @@
 
                 thisCopy.reqPropData.proposals.push( newProposal );
                 thisCopy.dataUpdated();
+                // Scroll to newly added proposal
+                proposalDisp = thisCopy.proposalIdToDisp[ newProposal.id ];
+                if ( proposalDisp ){  proposalDisp.scrollToProposal();  }
                 // clear form 
                 titleInput.value = '';
                 detailInput.value = '';
@@ -1799,22 +1889,18 @@
                 thisCopy.editingNewProposal = FALSE;
                 thisCopy.dataUpdated();
             }
-            else if ( receiveData  &&  receiveData.message == TOO_SHORT ){
-                var message = 'Proposal is too short.';
-                thisCopy.newProposalMessage = { color:RED, text:message };
-                thisCopy.newProposalValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.message == REASON_TOO_SHORT ){
-                var message = 'Supporting reason is too short.';
-                thisCopy.newProposalMessage = { color:RED, text:message };
-                thisCopy.newProposalValidity = message;
-                thisCopy.dataUpdated();
-            }
             else {
-                var message = 'Could not save proposal.';
+                let message = null;
+                if ( receiveData ){
+                    if ( receiveData.message == TOO_SHORT ){  message = 'Proposal is too short.';  }
+                    else if ( receiveData  &&  receiveData.message == REASON_TOO_SHORT ){  message = 'Supporting reason is too short.';  }
+                    else if ( receiveData  &&  receiveData.message == DUPLICATE ){  message = 'Identical proposal exists';  }
+                }
+
+                if ( message ){  thisCopy.newProposalValidity = message;  }
+                else {  message = 'Could not save proposal';  }
+
                 thisCopy.newProposalMessage = { color:RED, text:message };
-                thisCopy.newProposalValidity = message;
                 thisCopy.dataUpdated();
             }
         } );
@@ -1822,8 +1908,8 @@
 
 
         RequestForProposalsDisplay.prototype.
-    onInput = function( ){  
-        deduplicate( 300, this, this.onInputDeduplicated );
+    onNewProposalKey = function( event ){
+        if ( event.key == KEY_NAME_ENTER ){  this.getSubElement('NewProposalDetail').focus();  }
     };
 
     // Interface function for top-level proposal and request displays
@@ -1831,61 +1917,6 @@
     topInputHandler = function( ){
         this.colorNextInput();
     };
-
-        RequestForProposalsDisplay.prototype.
-    onInputDeduplicated = function( ){
-
-        // For each proposal-display... find new-proposal keyword matches
-        var newProposalTitle = this.getSubElement('NewProposalTitle');
-        var newProposalDetail = this.getSubElement('NewProposalDetail');
-        var newProposalText = ( newProposalTitle.value ? newProposalTitle.value+' ' : '' ) + 
-                          ( newProposalDetail.value ? newProposalDetail.value : '' );
-        var numMatches = 0;
-        if ( newProposalText ){
-            numMatches = this.proposalDisplays.reduce( function(count, p){
-                var matchIntervals = keywordMatchIntervals( newProposalText, p.proposal.title + ' ' + p.proposal.detail );
-                var matches = matchIntervals.filter( function(i){return i.match} );
-                return ( matches  &&  matches.length > 0 ) ?  count+1  :  count;
-            } , 0 );
-        }
-        this.hasMatches = ( numMatches > 0 );
-        this.highlightWords = newProposalText;
-
-        // Display match count
-        this.matchesMessage = { color:GREY, text:''+numMatches+' matches' };
-
-        // For each proposal ... update word counts
-        var updatedWordCounts = false;
-        for ( var p = 0;  p < this.proposalDisplays.length;  ++p ){
-            var proposalDisp = this.proposalDisplays[p];
-            updatedWordCounts |= proposalDisp.updateWordCounts();
-        }
-        updatedWordCounts |= updateWordCounts( this, this.reqPropData.request.title + ' ' + this.reqPropData.request.detail );
-
-        // Update total word counts, recompute inverse-document-frequency
-        if ( updatedWordCounts ){
-            // For each proposal, and this request ... sum map[ word -> document count ]
-            this.wordToDocCount = {};
-            for ( var p = 0;  p < this.proposalDisplays.length;  ++p ){
-                var proposalDisp = this.proposalDisplays[p];
-                for ( var word in proposalDisp.wordToCount ){
-                    incrementMapValue( this.wordToDocCount, word, 1 );
-                }
-            }
-            for ( var word in this.wordToCount ){
-                incrementMapValue( this.wordToDocCount, word, 1 );
-            }
-
-            topDisp.wordToInvDocFrequency = wordCountsToInvDocFreq( this.wordToDocCount ); 
-        }
-
-        // Score proposal matches
-        computeMatchScores( newProposalText , topDisp.wordToInvDocFrequency, this.proposalDisplays , function(p){return p.voteScore()} );
-
-        this.dataUpdated();
-        this.colorNextInput();
-    };
-
 
     // Guide user to next input, by highlight-coloring input fields.
     // For button-presses that cause rendering, set data attributes and use css to highlight.
@@ -1952,15 +1983,134 @@
         }
     };
 
+
         RequestForProposalsDisplay.prototype.
-    retrieveDataUpdate = function( ){
-        var getReasons = true;
-        retrieveRequestProposalsReasons( this, getReasons );
+    onInput = function( ){
+        // Remove too-short messages
+        let titleInput = this.getSubElement('NewProposalTitle');
+        let detailInput = this.getSubElement('NewProposalDetail');
+        let reasonInput1 = this.getSubElement('NewProposalInitialReasonInput1');
+        let reasonInput2 = this.getSubElement('NewProposalInitialReasonInput2');
+        let reasonInput3 = this.getSubElement('NewProposalInitialReasonInput3');
+        if ( (minLengthProposal <= titleInput.value.length + detailInput.value.length)  &&
+             (! reasonInput1.value  ||  minLengthReason <= reasonInput1.value.length)  &&
+             (! reasonInput2.value  ||  minLengthReason <= reasonInput2.value.length)  &&
+             (! reasonInput3.value  ||  minLengthReason <= reasonInput3.value.length) 
+        ){
+            this.newProposalValidity = '';
+            this.newProposalMessage = { text:'' };
+            this.dataUpdated();  
+        }
+
+        // If no user-input... hide suggested-proposals
+        let rawInput = [ titleInput, detailInput, reasonInput1, reasonInput2, reasonInput3 ].map( i => i.value.trim() ).filter( Boolean ).join(' ');
+        if ( ! rawInput ){  this.suggestions = [ ];  }
+        this.highlightWords = rawInput;
+        this.dataUpdated();
+
+        // Suggest only if title+reason has at least 3 words, and just finished a word
+        let words = removeStopWords( tokenize(rawInput) ).slice( 0, MAX_WORDS_INDEXED );
+        if ( !words  ||  words.length < 1  ||  MAX_WORDS_INDEXED < words.length ){  return;  }
+        if ( !event  ||  !event.data  ||  ! event.data.match( /[\s\p{P}]/u ) ){  return;  }  // Require that current input is whitespace or punctuation
+
+        // Suggest only if input is changed since last suggestion
+        console.log( 'this.lastContentStartRetrieved=', this.lastContentStartRetrieved );
+        let contentStart = words.join(' ');
+        if ( contentStart == this.lastContentStartRetrieved ){  return;   }
+        this.lastContentStartRetrieved = contentStart;
+
+        // Retrieve top matching titles 
+        this.retrieveProposalSuggestions( words, contentStart );
+    };
+
+
+        RequestForProposalsDisplay.prototype.
+    retrieveProposalSuggestions = function( words, contentStart ){
+        // Request via ajax
+        if ( ! this.reqPropData  ||  ! this.reqPropData.linkKey  ||  ! this.reqPropData.linkKey.id ){  return;  }
+        let thisCopy = this;
+        let sendData = { content:contentStart };
+        let url = '/suggestProposals/' + this.reqPropData.linkKey.id;
+        ajaxPost( sendData, url, function(error, status, receiveData){
+
+            if ( !error  &&  receiveData  &&  receiveData.success ){
+                // Update proposal suggestions
+                let suggestionsChanged = false;
+                if ( receiveData.proposals ){
+                    // Collect new suggestion & increment stats 
+                    if ( ! thisCopy.suggestionToData ){  thisCopy.suggestionToData = { };  }  // { suggestionText:{ matchScore:? , totalScore:? , ... } }
+                    for ( let s = 0;  s < receiveData.proposals.length;  ++s ){
+                        let suggestionNew = receiveData.proposals[ s ];
+                        suggestionNew.content = [ suggestionNew.title, suggestionNew.detail ].filter( Boolean ).join(' ');
+                        if ( ! suggestionNew.content ){  continue;  }
+                        if ( !(suggestionNew.content in thisCopy.suggestionToData) ){
+                            thisCopy.incrementWordCounts( suggestionNew.content );
+                        }
+                        thisCopy.suggestionToData[ suggestionNew.content ] = suggestionNew;
+                    }
+                    // Find top-scored suggestions
+                    thisCopy.scoreMatches( contentStart );
+                    let topSuggestions = Object.values( thisCopy.suggestionToData )
+                        .filter( s => (0 < s.scoreMatch) )
+                        .sort( (a,b) => (b.scoreTotal - a.scoreTotal) )
+                        .slice( 0, 3 );
+
+                    // Check whether top-suggestions changed: old-suggestion not found in new-suggestions
+                    suggestionsChanged = ( thisCopy.suggestions == null ) ^ ( topSuggestions == null );
+                    if ( thisCopy.suggestions  &&  topSuggestions ){
+                        suggestionsChanged |= ( thisCopy.suggestions.length != topSuggestions.length );
+                        thisCopy.suggestions.map(  suggestionOld  =>  ( 
+                            suggestionsChanged |=  ! topSuggestions.find( suggestionNew => (suggestionNew.content == suggestionOld.content) )  )   );
+                    }
+                    thisCopy.suggestions = topSuggestions;
+                }
+
+                // Alert screen-reader user that suggestions updated
+                let hasMatches =  thisCopy.suggestions  &&  ( 0 < thisCopy.suggestions.length );
+                if ( suggestionsChanged  &&  hasMatches ){
+                    thisCopy.matchesMessage = { text:'' + thisCopy.suggestions.length + ' matches' , color:GREY , ms:5000 };
+                }
+                // Update which proposals are displayed
+                thisCopy.dataUpdated();
+                // Highlight matches in displayed proposals
+                let highlightWords = ( hasMatches )?  contentStart  :  null;
+                thisCopy.dataUpdated();
+            }
+        } );
+    };
+
+
+        RequestForProposalsDisplay.prototype.
+    scoreMatches = function( contentStart ){
+        // Update suggestion-scores, with new IDF-weights and new user-input
+        for ( const suggestion in this.suggestionToData ){
+            let suggestionData = this.suggestionToData[ suggestion ];
+            suggestionData.scoreMatch = this.wordMatchScore( contentStart, suggestion );
+            suggestionData.scoreTotal =  defaultTo(suggestionData.score, 0) * suggestionData.scoreMatch;  // Vote-score * match-score
+        }
     };
 
         RequestForProposalsDisplay.prototype.
-    retrieveData = function( getReasons ){
-        retrieveRequestProposalsReasons( this, getReasons );
+    incrementWordCounts = function( suggestion ){  
+        if ( ! this.wordToCount ){  this.wordToCount = { };  }
+        return incrementWordCounts( suggestion, this.wordToCount );
+    };
+
+        RequestForProposalsDisplay.prototype.
+    wordMatchScore = function( input, suggestion ){
+        if ( ! this.wordToCount ){  return 0;  }
+        return wordMatchScore( input, suggestion, this.wordToCount );
+    };
+
+
+        RequestForProposalsDisplay.prototype.
+    retrieveDataUpdate = function( ){
+        // Do not update, because re-ordering is confusing, and updating votes/counts is not important in a single browser-login
+    };
+
+        RequestForProposalsDisplay.prototype.
+    retrieveData = function( getReasons, nextPage ){
+        retrieveRequestProposalsReasons( this, getReasons, nextPage );
     };
 
 
@@ -1969,24 +2119,25 @@
 // Data retrieval
 
         function
-    retrieveRequestProposalsReasons( reqPropDisp, getReasons ){
+    retrieveRequestProposalsReasons( reqPropDisp, getReasons=false, nextPage=false ){
         // getReasons:boolean
 
         console.log( 'retrieveRequestProposalsReasons() getReasons=', getReasons );
 
         // proposals:series[proposal] , modified
         // reasons:series[reason] , modified
-        var reqPropData = reqPropDisp.reqPropData;
-        var request = reqPropData.request;
-        var proposals = reqPropData.proposals;
-        var reasons = reqPropData.reasons;
+        let reqPropData = reqPropDisp.reqPropData;
+        let request = reqPropData.request;
+        let proposals = reqPropData.proposals;
+        let reasons = reqPropData.reasons;
 
         // request via ajax
-        var sendData = { };
-        var url = 'getRequestData/' + reqPropData.linkKey.id;
-        var urlParams = [];
-        if ( reqPropData.maxProposals ){  urlParams.push( 'maxProposals=' + reqPropData.maxProposals );  }
+        let sendData = { };
+        let url = 'getRequestData/' + reqPropData.linkKey.id;
+        let urlParams = [];
         if ( ! getReasons ){  urlParams.push( 'getReasons=false' );  }
+        let cursor = reqPropData.cursor;
+        if ( nextPage  &&  cursor ){  urlParams.push('cursor=' + cursor);  }
         if ( urlParams.length > 0 ){  url += '?' + urlParams.join('&');  }
         ajaxGet( sendData, url, function(error, status, data){
             console.log( 'ajaxGet() error=', error, '  status=', status, '  data=', data );
@@ -2005,12 +2156,13 @@
                         request.allowEdit = data.request.allowEdit;
                         request.freezeUserInput = data.request.freezeUserInput;
                         request.mine = data.request.mine;
+                        request.hideReasons = data.request.hideReasons;
                     }
                     // update each proposal
                     if ( data.proposals ){
-                        for ( var p = 0;  p < data.proposals.length;  ++p ){
-                            var updatedProposal = data.proposals[p];
-                            var existingProposal = proposals.find( function(e){ return e.id == updatedProposal.id; } );
+                        for ( let p = 0;  p < data.proposals.length;  ++p ){
+                            let updatedProposal = data.proposals[p];
+                            let existingProposal = proposals.find( function(e){ return e.id == updatedProposal.id; } );
                             if ( existingProposal ){
                                 updateProposal( existingProposal, updatedProposal );
                             }
@@ -2024,7 +2176,8 @@
                     if ( data.reasons ){
                         updateReasons( proposals, reasons, data.reasons );
                     }
-                    // update display
+                    // Update display
+                    reqPropData.cursor = data.cursor;
                     reqPropDisp.dataUpdated( ! getReasons );
                     reqPropDisp.collapseNewProposals();
                 }
@@ -2037,23 +2190,30 @@
     }
 
         function
-    retrieveProposalReasons( proposalDisp, onlyTopReasons ){
+    retrieveProposalReasons( proposalDisp, onlyTopReasons=false, nextPage=false ){
 
-        console.log( 'retrieveProposalReasons() onlyTopReasons=', onlyTopReasons );
+        console.log( 'retrieveProposalReasons() onlyTopReasons=', onlyTopReasons, 'nextPage=', nextPage );
 
         // reasons:series[reason] , modified
-        var proposalData = proposalDisp.proposal;
-        var reasons = proposalData.reasons;
+        let proposalData = proposalDisp.proposal;
 
         // request via ajax
-        var sendData = { };
-        var url = proposalData.fromRequest ?
-            'getProposalData/' + proposalDisp.linkKey.id + '/' + proposalDisp.proposal.id :
-            'getProposalData/' + proposalDisp.linkKey.id;
-        if ( onlyTopReasons ){  url += '?onlyTop=true';  }
+        let sendData = { };
+        let url = 'topReasons/' + proposalDisp.linkKey.id;
+        if ( proposalData.fromRequest ){  url += '/' + proposalDisp.proposal.id;  }
+        let urlParams = [ ]
+        if ( onlyTopReasons ){  urlParams.push('preview');  }
+        if ( nextPage ){
+            if ( proposalDisp.cursorPro ){  urlParams.push('cursorPro=' + proposalDisp.cursorPro);  }
+            if ( proposalDisp.cursorCon ){  urlParams.push('cursorCon=' + proposalDisp.cursorCon);  }
+        }
+        if ( 0 < urlParams.length ){  url += '?' + urlParams.join('&');  }
+
         ajaxGet( sendData, url, function(error, status, receiveData){
             console.log( 'ajaxGet() error=', error, '  status=', status, '  receiveData=', receiveData );
-            if ( receiveData ){
+            proposalDisp.moreReasonsMessage = { color:BLACK, text:'More reasons' };
+
+            if ( !error  &&  receiveData ){
                 if ( receiveData.success ){
                     proposalData.linkOk = true;
                     if ( ! proposalData.linkKey ){  proposalData.linkKey = {};  }
@@ -2064,47 +2224,56 @@
                     }
                     // update each reason
                     if ( receiveData.reasons ){
-                        updateReasons( [proposalData], reasons, receiveData.reasons );
+                        updateReasons( [proposalData], proposalDisp.allReasons, receiveData.reasons );
+                        proposalDisp.dataUpdated();  // Add new reasons to proposal-display
+                        proposalDisp.refreshCollapse();  // Resize proposal preview
                     }
-                    // update display
-                    proposalDisp.dataUpdated();
+                    proposalDisp.cursorPro = receiveData.cursorPro;
+                    proposalDisp.cursorCon = receiveData.cursorCon;
                 }
                 else if ( receiveData.message == BAD_LINK ){
                     proposalData.linkOk = false;
-                    proposalDisp.dataUpdated();
                 }
             }
+            proposalDisp.dataUpdated();
         } );
     }
-    
+
         function
     updateReasons( proposals, reasons, newReasons ){
         // for each new reason data... 
         for ( var r = 0;  r < newReasons.length;  ++r ){
             var updatedReason = newReasons[r];
-            // if new reason already exists... update reason
+            // Clean up new-reason fields
+            if ( ! updatedReason.voteCount ){  updatedReason.voteCount = 0;  }
+            if ( ! updatedReason.score ){  updatedReason.score = 0;  }
+
+            // Merge new reason with existing reasons
             var existingReason = reasons.find( function(e){ return e.id == updatedReason.id; } );
-            var existingProposal = proposals.find( function(e){ return e.id == updatedReason.proposalId; } );
             if ( existingReason ){
+                // Update existing reason
                 existingReason.content = updatedReason.content;
                 existingReason.allowEdit = updatedReason.allowEdit;
                 existingReason.myVote = updatedReason.myVote;
                 existingReason.voteCount = updatedReason.voteCount;
                 existingReason.score = updatedReason.score;
             }
-            // if matching proposal exists... add reason to existing proposal
-            else if ( existingProposal ) {
-                // push() calls are redundant if reasons come from a single proposal.
-                // More efficient for each proposal to have a map of reason id -> reason data. But less stable ordering for display.
+            else {
+                // Collect new reason
                 reasons.push( updatedReason );
+            }
+
+            // Collect reason in existing proposal
+            var existingProposal = proposals.find( function(e){ return e.id == updatedReason.proposalId; } );
+            if ( existingProposal ) {
+                // More efficient lookup if each proposal has a map[ reason id -> reason data ]
+                // But map provides less stable ordering for display
                 var existingReasonInProposal = existingProposal.reasons.find( function(e){ return e.id == updatedReason.id; } );
                 if ( ! existingReasonInProposal ){  existingProposal.reasons.push( updatedReason );  }
-                if ( ! updatedReason.voteCount ){  updatedReason.voteCount = 0;  }
-                if ( ! updatedReason.score ){  updatedReason.score = 0;  }
             }
         }
     }
-    
+
         function
     updateProposal( existingProposal, updatedProposal ){
         existingProposal.title = updatedProposal.title;
@@ -2114,6 +2283,7 @@
         existingProposal.id = updatedProposal.id;  // Need linkKey to load proposal data.
         existingProposal.loginRequired = updatedProposal.loginRequired;
         existingProposal.freezeUserInput = updatedProposal.freezeUserInput;
+        existingProposal.hideReasons = updatedProposal.hideReasons;
     }
 
         function
@@ -2133,101 +2303,4 @@
         } );
     }
 
-
-
-/////////////////////////////////////////////////////////////////////////////////
-// global functions
-
-    // Returns map[ word -> inverse document frequency ] , or null if no recompute needed.
-    // Sets wordToCount in each documentObject.
-        function
-    computeInvDocFreq( documentObjects, documentTextAccessor ){
-
-        // Aggregate counts of documents with term
-        var recomputeInvDocFreq = false;
-        // For each document...
-        for ( var d = 0;  d < documentObjects.length;  ++d ){
-            var documentObject = documentObjects[d];
-            var updated = updateWordCounts( documentObject, documentTextAccessor(documentObject) );
-            recomputeInvDocFreq |= updated;
-        }
-
-        if ( ! recomputeInvDocFreq ){  return null;  }
-
-        // For each document... sum map[ word -> document count ]
-        var wordToDocCount = {};
-        for ( var d = 0;  d < documentObjects.length;  ++d ){
-            var documentObject = documentObjects[d];
-            // Increment map[ word -> document count ]
-            for ( var word in documentObject.wordToCount ){
-                incrementMapValue( wordToDocCount, word, 1 );
-            }
-        }
-
-        return wordCountsToInvDocFreq( wordToDocCount );
-    }
-
-
-    // Sets documentObject.wordToCount , returns updated:boolean
-        function
-    updateWordCounts( documentObject, documentText ){
-        if ( documentObject.wordToCount ){  return false;  }
-
-        recomputeInvDocFreq = true;
-        var documentWordArray = tokenize( documentText );
-
-        // Collect document map[ word -> count ]
-        var documentWordToCount = {};
-        for ( var w = 0;  w < documentWordArray.length;  ++w ){
-            var word = documentWordArray[w];
-            if ( word in STOP_WORDS ){  continue;  }
-            incrementMapValue( documentWordToCount, word, 1 );
-        }
-
-        // Store documentWordToCount in documentObject
-        documentObject.wordToCount = documentWordToCount;
-        return true;
-    }
-
-        function
-    wordCountsToInvDocFreq( wordToDocCount ){
-        // Convert word document counts to inverse-document-frequency
-        var wordToInvDocFrequency = {}
-        for ( word in wordToDocCount ){
-            wordToInvDocFrequency[ word ] = 1 / wordToDocCount[word];
-        }
-        return wordToInvDocFrequency;
-    }
-
-
-    // Reads each documentObject.wordToCount, sets each documentObject.matchScore
-        function
-    computeMatchScores( queryText , wordToInvDocFrequency, documentObjects , documentScoreAccessor ){
-
-        // Collect query-word weights
-        var queryWords = tokenize( queryText );
-        var queryWordsToWeights = {};
-        for ( var q = 0;  q < queryWords.length;  ++q ){
-            var word = queryWords[q];
-            var weight = wordToInvDocFrequency[ word ];
-            if ( weight ){  queryWordsToWeights[ word ] = weight;  }
-        }
-        // For each document... compute match score from word-match weights, and from score from number of votes and content length
-        for ( var d = 0;  d < documentObjects.length;  ++d ){
-            var documentObject = documentObjects[d];
-            var weightSum = 0.0;
-
-            // For each term in query and in document...
-            if ( documentObject.wordToCount ){
-                for ( var word in queryWordsToWeights ){
-                    var weight = queryWordsToWeights[ word ];
-                    var count = documentObject.wordToCount[word];
-                    if ( ! count ){  continue;  }
-                    weightSum += count * weight;
-                }
-            }
-            // Combine invDocFreq score and vote-score (plus 1 to avoid zero-vote problems)
-            documentObject.matchScore = ( 1 + weightSum ) * ( 1 + documentScoreAccessor(documentObject) );
-        }
-    }
 

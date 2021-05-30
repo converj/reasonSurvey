@@ -13,19 +13,22 @@ const = Constants()
 const.COOKIE_NAME = 'C'
 const.COOKIE_NAME_FOR_JAVASCRIPT = 'J'
 
+log = False
+
+
 # Returns cookieData:map[name->value]
 def getCookieData( httpRequest ):
-    if conf.isDev:  logging.debug( 'getCookieData() httpRequest.cookies=' + str(httpRequest.cookies) )
+    if conf.isDev and log:  logging.debug( 'getCookieData() httpRequest.cookies=' + str(httpRequest.cookies) )
 
     cookieBase64 = httpRequest.cookies.get( const.COOKIE_NAME )
     cookieBase64 = cookieBase64.encode('ascii') if cookieBase64  else None   # Only allow ASCII 128-bit range
-    if conf.isDev:  logging.debug( 'getCookieData() cookieBase64=' + str(cookieBase64) )
+    if conf.isDev and log:  logging.debug( 'getCookieData() cookieBase64=' + str(cookieBase64) )
 
     cookieJson = base64.urlsafe_b64decode( cookieBase64 ) if cookieBase64  else None   # Discards non-base-64 characters
-    if conf.isDev:  logging.debug( 'getCookieData() cookieJson=' + str(cookieJson) )
+    if conf.isDev and log:  logging.debug( 'getCookieData() cookieJson=' + str(cookieJson) )
     try:
         cookieStruct = json.loads( cookieJson ) if cookieJson  else {}
-        if conf.isDev:  logging.debug( 'getCookieData() cookieStruct=' + str(cookieStruct) )
+        if conf.isDev and log:  logging.debug( 'getCookieData() cookieStruct=' + str(cookieStruct) )
         if not isinstance( cookieStruct, dict )  or  not __isAllowedJsonValue( cookieStruct ):
             if conf.isDev:  logging.debug( 'getCookieData() disallowed json value in cookieStruct=' + str(cookieStruct) )
             return {}
@@ -78,7 +81,7 @@ def setCookieData( oldCookieData, newCookieData, useSecureCookie, httpResponse )
 
 def setCookieNameToValues( cookieName, cookieKeyToValue, httpResponse, secure=True, httponly=True ):
     cookieJson = json.dumps( cookieKeyToValue )
-    logging.debug( 'cookie.setCookieNameToValues() cookieName=' + str(cookieName) + ' cookieJson=' + str(cookieJson) )
+    if conf.isDev and log:  logging.debug( 'cookie.setCookieNameToValues() cookieName=' + str(cookieName) + ' cookieJson=' + str(cookieJson) )
 
     cookieBase64 = base64.urlsafe_b64encode( cookieJson )
     httpResponse.set_cookie( cookieName, cookieBase64, secure=secure, httponly=httponly )

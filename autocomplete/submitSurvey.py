@@ -10,6 +10,7 @@ import httpServer
 import httpServerAutocomplete
 import linkKey
 import question
+import secrets
 import survey
 import user
 import text
@@ -26,12 +27,15 @@ class SubmitNewSurvey( webapp2.RequestHandler ):
         inputData = json.loads( self.request.body )
         logging.debug( 'SubmitNewSurvey.post() inputData=' + str(inputData) )
 
+        title = text.formTextToStored( inputData.get('title', '') )
         introduction = text.formTextToStored( inputData.get('introduction', '') )
         browserCrumb = inputData.get( 'crumb', '' )
         loginCrumb = inputData.get( 'crumbForLogin', '' )
-        loginRequired = inputData.get( 'loginRequired', False )
+        loginRequired = bool( inputData.get('loginRequired', False) )
+        experimentalPassword = inputData.get( 'experimentalPassword', None )
+        hideReasons = bool( inputData.get('hideReasons', False) )
         logging.debug( 'SubmitNewSurvey.post() introduction=' + str(introduction) + ' browserCrumb=' + str(browserCrumb)
-            + ' loginCrumb=' + str(loginCrumb) + ' loginRequired=' + str(loginRequired) )
+            + ' loginCrumb=' + str(loginCrumb) + ' loginRequired=' + str(loginRequired) + ' hideReasons=' + str(hideReasons) )
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
 
@@ -40,10 +44,14 @@ class SubmitNewSurvey( webapp2.RequestHandler ):
         userId = cookieData.id()
 
         # Check survey introduction length.
-        if not httpServer.isLengthOk( introduction, '', conf.minLengthSurveyIntro ):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
-        
+        if not httpServer.isLengthOk( title, introduction, conf.minLengthSurveyIntro ):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+
+        # Check experimental password (low-risk secret)
+        if ( hideReasons or loginRequired or experimentalPassword )  and  ( experimentalPassword != secrets.experimentalPassword ):
+            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
+
         # Construct and store new survey record.
-        surveyRecord = survey.Survey( creator=userId, introduction=introduction, allowEdit=True )
+        surveyRecord = survey.Survey( creator=userId, title=title, introduction=introduction, allowEdit=True, hideReasons=hideReasons )
         surveyRecordKey = surveyRecord.put()
         logging.debug( 'surveyRecordKey.id={}'.format(surveyRecordKey.id()) )
 
@@ -68,6 +76,7 @@ class SubmitEditSurvey( webapp2.RequestHandler ):
         inputData = json.loads( self.request.body )
         logging.debug( 'SubmitEditSurvey.post() inputData=' + str(inputData) )
 
+        title = text.formTextToStored( inputData['title'] )
         introduction = text.formTextToStored( inputData['introduction'] )
         linkKeyString = inputData['linkKey']
         browserCrumb = inputData.get( 'crumb', '' )
@@ -94,7 +103,7 @@ class SubmitEditSurvey( webapp2.RequestHandler ):
         if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
 
         # Check survey length
-        if not httpServer.isLengthOk( introduction, '', conf.minLengthSurveyIntro ):
+        if not httpServer.isLengthOk( title, introduction, conf.minLengthSurveyIntro ):
             return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
 
         # Retrieve survey record.
@@ -107,7 +116,8 @@ class SubmitEditSurvey( webapp2.RequestHandler ):
         if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
         if not surveyRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.HAS_RESPONSES )
 
-        # Update survey record.
+        # Update survey record
+        surveyRec.title = title
         surveyRec.introduction = introduction
         surveyRec.put()
         

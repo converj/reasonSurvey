@@ -1,0 +1,123 @@
+
+
+/* New survey page */
+#pageBudgetNew  p {  margin:5px;  }
+#pageBudgetNew  #newBudgetForm {  background:#f0f0f0;  box-shadow:0px 0px 20px #888888;  border-radius:3px;  margin:20px 0px 20px 0px;  padding:15px 5px 15px 5px;  }
+#pageBudgetNew      #newBudgetForm label {  opacity:1.0;  }
+#pageBudgetNew      #newBudgetTitleInput {  margin-bottom:15px;  width:calc(100% - 15px);  font-weight:bold;  }
+#pageBudgetNew      #newBudgetIntroInput {  margin-bottom:15px;  width:calc(100% - 15px);  }
+#pageBudgetNew      #newBudgetTotalInput {  margin-bottom:20px;  width:calc(100% - 15px);  }
+
+
+/* Editing page */
+#pageBudgetEdit     .freezeButton {  display:inline-block;  }
+#pageBudgetEdit     .Budget[frozen='true'] .freezeButton {  color:red;  font-weight:bold;  }
+#pageBudgetEdit     .freezeMessage {  display:inline-block;  margin-left:20px;  }
+#pageBudgetEdit         .BudgetEdit {  margin:20px 0px 40px 0px;  padding:15px 5px 15px 5px;  background:#f0f0f0;  
+                                        box-shadow:0px 0px 20px #888888;  border-radius:3px;  line-height:2.0em;  }
+#pageBudgetEdit             .BudgetEditTitle {  font-weight:bold;  }
+#pageBudgetEdit             .BudgetEditInput {  }
+#pageBudgetEdit             .BudgetEdit input , .BudgetEdit textarea {  width:calc(100% - 15px);  }
+#pageBudgetEdit         .Slices {  }
+#pageBudgetEdit             .Slice {  position:relative;  margin:30px 0px 50px 0px;  padding:15px 5px 15px 5px;  background:#f0f0f0;
+                                      box-shadow:0px 0px 20px #888888;  border-radius:3px;  line-height:2.0em;  }
+#pageBudgetEdit                 .SliceTitleInput {  width:calc(100% - 12px);  }
+#pageBudgetEdit                 [hidereasons='true']  .SliceReasonLabel {  display:none;  }
+#pageBudgetEdit                 .SliceReasonInput {  width:calc(100% - 12px);  }
+#pageBudgetEdit                 [hidereasons='true']  .SliceReasonInput {  display:none;  }
+#pageBudgetEdit                     .SliceDeleteButton {  position:absolute;  right:0px;  top:5px;  padding:4px 10px 4px 10px;  box-shadow:-1px -1px 5px #bbbbbb inset;  }
+#pageBudgetEdit         .NewSlice {  margin:50px 0px 50px 0px;  padding:15px 5px 15px 5px;  background:#f0f0f0;
+                                      box-shadow:0px 0px 20px #888888;  border-radius:3px;  }
+#pageBudgetEdit             .NewSliceTitleInput {  width:calc(100% - 12px);  }
+#pageBudgetEdit     .BudgetViewButtonBar {  text-align:center;  }
+
+
+
+
+/* Viewing page */
+#pageBudgetView {  margin-left:70px;  }
+#pageBudgetView     .Budget {  }
+#pageBudgetView         .BudgetDescription {  margin:20px 0px 20px 0px;  
+                            padding:15px 10px 15px 10px;  background:#f0f0f0;  box-shadow:0px 0px 20px #888888;  border-radius:3px;  }
+#pageBudgetView             .BudgetIntroduction {  margin:10px 0px 20px 0px;  }
+#pageBudgetView             .BudgetDescription .TotalAvailable {  margin:10px 0px 10px 0px;  }
+#pageBudgetView             .BudgetDescription .TotalUsed {  margin:10px 0px 0px 0px;  }
+#pageBudgetView         .Slice {  margin:0px 0px 0px 0px;  background-color:#f0f0f0;  }
+#pageBudgetView             .SliceSizeDisplay {  position:fixed;  margin:0px;  left:0px;  top:0px;  width:50px;
+                                border:solid 1px grey;  border-right:none;  background-color:#dddddd;
+                                text-align:center;  font-size:16px;  font-weight:normal;
+                            }
+#pageBudgetView             .SliceSizeDisplay:hover {  background:rgb(206,231,256);  cursor:pointer;  }
+#pageBudgetView                 .AmountWord {  display:none;  }
+#pageBudgetView                 .AmountSymbol {  }
+#pageBudgetView             .SliceDescription {  position:relative;  padding:30px 0px 20px 0px;  border:solid 0.5px #888888;  border-left:none;  }
+#pageBudgetView                 .SliceDescription label {  display:block;  }
+#pageBudgetView                     .NewSlice {  }
+#pageBudgetView                         .NewSlice input {  width:calc(100% - 20px);  }
+#pageBudgetView                 .Suggestions {  margin:2px;  padding:0px;  }
+#pageBudgetView                     .Suggestion {  margin:0px;  padding:5px;  border:solid 1px #cccccc;  cursor:pointer;  opacity:1.0;  }
+#pageBudgetView                     .Suggestion:hover {  background:rgb(206,231,256);  }
+#pageBudgetView                     .Suggestion[empty='true'] {  display:none;  }
+#pageBudgetView                     .Slice[hasFocus='false'] .Suggestion {  display:none;  }
+#pageBudgetView                         .SuggestionReasonLabel {  margin:0px 3px 0px 20px;  color:#888888;  }
+#pageBudgetView                         [hidereasons='true']  .SuggestionReasonLabel {  display:none;  }
+#pageBudgetView                 .SliceInputs {  position:relative;  }
+#pageBudgetView                     .SliceTitleInput {  width:calc(100% - 60px);  margin:5px;  }
+#pageBudgetView                     [hidereasons='true']  .SliceReasonLabel {  display:none;  }
+#pageBudgetView                     .SliceReasonInput {  width:calc(100% - 23px);  margin:5px;  }
+#pageBudgetView                     [hidereasons='true']  .SliceReasonInput {  display:none;  }
+#pageBudgetView                     .SliceSize {  }
+#pageBudgetView                         .SizeInput {  width:50px;  margin:5px;  }
+#pageBudgetView                     .ReasonForResize {  padding:5px;  border:solid 1px #cccccc;  }
+#pageBudgetView                     .ReasonForResize:hover {  background:rgb(206,231,256);  }
+#pageBudgetView                     .Slice[hasFocus='false'] .ReasonForResize {  display:none;  }
+#pageBudgetView                         .SuggestionLabel {  display:inline-block;  margin-right:3px;  color:#888888;  }
+#pageBudgetView                         .SuggestionContent {  display:inline-block;  }
+#pageBudgetView                     .SliceDeleteButton {  position:absolute;  right:-2px;  top:20px;  padding:4px 10px 4px 10px;  box-shadow:-1px -1px 5px #bbbbbb inset;  }
+
+.lines {  position:fixed;  top:0px;  left:0px;  height:100%;  width:100%;  z-index:-1;  }
+
+
+/* Results page */
+#pageBudgetResult {  margin-left:70px;  }
+#pageBudgetResult   .Budget { margin:10px;  }
+#pageBudgetResult   .Slices { }
+#pageBudgetResult       .BudgetIntroduction {  margin-bottom:20px;  }
+#pageBudgetResult       .Slice {  }
+#pageBudgetResult           .Slice[singleslice='false'] .PageTitle {  display:none;  }
+#pageBudgetResult           .SizeInput {  display:none;  }
+#pageBudgetResult           .SliceSizeDisplay {  position:fixed;  left:0px;  top:0px;  width:50px;  border:solid 1px grey;  border-right:none;  background-color:#dddddd;  text-align:center;  }
+#pageBudgetResult           .Slice[singleslice='true'] .SliceSizeDisplay {  display:none;  }
+#pageBudgetResult           .SliceSizeDisplay:hover {  background:rgb(206,231,256);  cursor:pointer;  }
+#pageBudgetResult               .AmountWord {  display:none;  }
+#pageBudgetResult               .AmountSymbol {  }
+#pageBudgetResult           .SliceDescription {  position:relative;  padding:30px 0px 20px 10px;  border:solid 0.5px #888888;  border-left:none;  }
+#pageBudgetResult               .Size {  margin:10px 10px 10px 0px;  }
+#pageBudgetResult                   .Size > span {  margin:10px 10px 10px 0px;  }
+#pageBudgetResult               .SliceVotes {  margin:10px 10px 10px 0px;  }
+#pageBudgetResult                   .SliceVotes > span {  margin:10px 10px 10px 0px;  }
+#pageBudgetResult               .SliceTitle {  font-weight:bold;  }
+#pageBudgetResult               .BudgetResultSliceReasons {  border-collapse:collapse;  }
+#pageBudgetResult               .BudgetResultSliceReasons > tr > td {  border:solid 1px #cccccc;  padding:5px;  vertical-align:top;  }
+#pageBudgetResult                   .AnswerCountBarBack {  width:100px;  }
+#pageBudgetResult                       .AnswerCountBar {  background-color:#8888aa;  }
+#pageBudgetResult                   .ReasonContent {  }
+#pageBudgetResult                   .ReasonContent[aria-expanded=false] {
+                                        display:-webkit-box;  -webkit-line-clamp:2;  -webkit-box-orient:vertical;  overflow:hidden;  }
+#pageBudgetResult                   .ReasonContent:hover {  background:rgb(206,231,256);  cursor:pointer;  }
+#pageBudgetResult               .Slice[singleslice='true'] .SliceResultsButton {  display:none;  }
+
+
+/* Overrides for wide screen */
+@media (min-width:800px) {
+    #pageBudgetView     {  margin-left:120px;  }
+    #pageBudgetView         .SliceSizeDisplay {  left:190px;  width:70px;  }
+    #pageBudgetView             .AmountWord {  display:inline-block;  }
+    #pageBudgetView             .AmountSymbol {  display:none;  }
+
+    #pageBudgetResult   {  margin-left:120px;  }
+    #pageBudgetResult       .SliceSizeDisplay {  left:190px;  width:70px;  }
+    #pageBudgetResult           .AmountWord {  display:inline-block;  }
+    #pageBudgetResult           .AmountSymbol {  display:none;  }
+}
+

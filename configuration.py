@@ -10,6 +10,10 @@ const = Constants()
 const.isDev = os.path.isfile('configurationDev.py')
 if const.isDev:  import configurationDev
 
+if not const.isDev:  logging.getLogger().setLevel( logging.WARNING )
+
+const.SITE_NAME = 'Converj'
+
 const.COOKIE_FIELD_SIGNATURE = 'signature'
 const.COOKIE_FIELD_BROWSER_ID = 'identity'
 const.COOKIE_FIELD_VOTER_ID = 'voterId'
@@ -37,6 +41,7 @@ const.MAX_TOP_REASONS = 6
 # HTTP/JSON request response codes
 const.TOO_SHORT = 'TOO_SHORT'
 const.REASON_TOO_SHORT = 'REASON_TOO_SHORT'
+const.DUPLICATE = 'DUPLICATE'
 const.BAD_CRUMB = 'BAD_CRUMB'
 const.NO_COOKIE = 'NO_COOKIE'
 const.NO_LOGIN = 'NO_LOGIN'
@@ -44,6 +49,8 @@ const.BAD_LINK = 'BAD_LINK'
 const.NOT_OWNER = 'NOT_OWNER'
 const.HAS_RESPONSES = 'HAS_RESPONSES'
 const.FROZEN = 'FROZEN'
+const.OVER_BUDGET = 'OVER_BUDGET'
+const.EXPERIMENT_NOT_AUTHORIZED = 'EXPERIMENT_NOT_AUTHORIZED'
 
 # Persistent record class names
 const.REQUEST_CLASS_NAME = 'RequestForProposals'
@@ -55,6 +62,8 @@ const.LINK_KEY_CLASS_NAME = 'LinkKey'
 # Environment variable names
 const.REQUEST_LOG_ID = 'REQUEST_LOG_ID'
 
+
+const.MAX_WORDS_INDEXED = 20
 
 const.STOP_WORDS = [
     "a",
@@ -142,7 +151,6 @@ const.STOP_WORDS = [
     "mustn't",
     "my",
     "myself",
-    "no",
     "nor",
     "not",
     "of",
@@ -232,4 +240,6 @@ const.STOP_WORDS = [
     "yourself",
     "yourselves"
 ]
+
+const.STOP_WORDS_SET = set( const.STOP_WORDS )
 

@@ -15,6 +15,8 @@ import logging
 import os
 import webapp2
 # Import local modules
+import autocomplete.configAutocomplete
+import budget.configBudget
 from configuration import const as conf
 import httpServer
 import secrets
@@ -30,19 +32,31 @@ class MainPage( webapp2.RequestHandler ):
         logging.debug( 'self.request=' + str(self.request) )
 
         templateValues = {
-            # Pass configuration data from server to client.
+            # Pass configuration data from server to client
+            'SITE_NAME': conf.SITE_NAME ,
             'minLengthRequest': conf.minLengthRequest,
             'minLengthProposal': conf.minLengthProposal,
             'minLengthReason': conf.minLengthReason,
+            'minLengthSurveyIntro': conf.minLengthSurveyIntro,
+            'minLengthQuestion': conf.minLengthQuestion,
+            'minLengthAnswer': conf.minLengthAnswer,
+            'minLengthBudgetIntro': conf.minLengthBudgetIntro ,
+            'minLengthSliceTitle': conf.minLengthSliceTitle ,
+            'minLengthSliceReason': conf.minLengthSliceReason ,
             'TOO_SHORT': conf.TOO_SHORT,
             'REASON_TOO_SHORT': conf.REASON_TOO_SHORT,
+            'DUPLICATE': conf.DUPLICATE,
             'NO_COOKIE': conf.NO_COOKIE,
             'NO_LOGIN': conf.NO_LOGIN,
             'BAD_CRUMB': conf.BAD_CRUMB,
             'BAD_LINK': conf.BAD_LINK,
             'NOT_OWNER': conf.NOT_OWNER,
             'HAS_RESPONSES': conf.HAS_RESPONSES,
+            'ERROR_DUPLICATE': conf.ERROR_DUPLICATE,
             'FROZEN': conf.FROZEN ,
+            'EXPERIMENT_NOT_AUTHORIZED': conf.EXPERIMENT_NOT_AUTHORIZED ,
+            'OVER_BUDGET': conf.OVER_BUDGET ,
+            'MAX_WORDS_INDEXED': conf.MAX_WORDS_INDEXED ,
             'STOP_WORDS': json.dumps(  { w:True for w in conf.STOP_WORDS }  ) ,
             'VOTER_ID_LOGIN_SIG_LENGTH': conf.VOTER_ID_LOGIN_SIG_LENGTH ,
             'VOTER_ID_LOGIN_REQUEST_ID_LENGTH': conf.VOTER_ID_LOGIN_REQUEST_ID_LENGTH ,
@@ -84,11 +98,12 @@ class TermsOfService( webapp2.RequestHandler ):
         templateValues = {
             'TITLE': 'Terms of Service' ,
             'COMPANY_NAME': 'Converj LLC' ,
-            'THE_CONTACT': '???CONTACT???' ,
-            'THE_ADDRESS': '???ADDRESS???' ,
-            'THE_LOCATION': '???LOCATION???' ,
+            'THE_CONTACT': 'LEGALCORP SOLUTIONS INC' ,
+            'THE_ADDRESS': '506 S Spring St #13308, Los Angeles CA 90013' ,
+            'THE_LOCATION': 'Los Angeles, California, United States' ,
         }
         httpServer.outputTemplate( 'termsOfService.html', templateValues, self.response )
+
 
 class PrivacyPolicy( webapp2.RequestHandler ):
 
@@ -97,20 +112,19 @@ class PrivacyPolicy( webapp2.RequestHandler ):
         templateValues = {
             'TITLE': 'Privacy Policy' ,
             'COMPANY_NAME': 'Converj LLC' ,
-            'THE_LOCATION': '???LOCATION???' ,
+            'THE_LOCATION': 'Los Angeles, California, United States' ,
         }
         httpServer.outputTemplate( 'privacyPolicy.html', templateValues, self.response )
 
         
 
-
 # Route URLs to page generators
 app = webapp2.WSGIApplication(
     [
-        ('/procon', MainPage),
+        ('/', MainPage) ,
         ('/initialCookie', InitialCookie) ,
         ('/termsOfService.html', TermsOfService) ,
-        ('/privacyPolicy.html', PrivacyPolicy)
+        ('/privacyPolicy.html', PrivacyPolicy) ,
     ],
     debug=conf.isDev
 )

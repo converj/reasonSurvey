@@ -21,6 +21,7 @@ import secrets
 const = Constants()
 const.ID_COOKIE_LENGTH = 50
 
+log = False
 
 
 ########################################################################
@@ -60,8 +61,8 @@ def checkCrumb( userId, browserCrumb, loginRequired=False, loginCrumb=None ):
     expectedCrumb = createCrumb( userId, loginRequired=loginRequired )
     
     inputCrumb = loginCrumb if loginRequired  else browserCrumb
-    logging.debug( 'user.checkCrumb() inputCrumb=' + str(inputCrumb) )
-    logging.debug( 'user.checkCrumb() expectedCrumb=' + str(expectedCrumb) )
+    if conf.isDev and log:  logging.debug( 'user.checkCrumb() inputCrumb=' + str(inputCrumb) )
+    if conf.isDev and log:  logging.debug( 'user.checkCrumb() expectedCrumb=' + str(expectedCrumb) )
     
     return (expectedCrumb == inputCrumb)
 
@@ -120,18 +121,18 @@ class CookieData ( object ):
 # Caller should only check crumb & fingerprint from POST calls, to keep those secrets out of URL parameters
 def validate( httpRequest, httpInput, crumbRequired=True, signatureRequired=True, makeValid=False ):
 
-    if conf.isDev:  logging.debug( 'validate() crumbRequired=' + str(crumbRequired) + ' signatureRequired=' + str(signatureRequired) + ' makeValid=' + str(makeValid) )
+    if conf.isDev and log:  logging.debug( 'validate() crumbRequired=' + str(crumbRequired) + ' signatureRequired=' + str(signatureRequired) + ' makeValid=' + str(makeValid) )
 
     # Extract cookie-data
     cookieData = cookie.getCookieData( httpRequest )
-    if conf.isDev:  logging.debug( 'validate() cookieData=' + str(cookieData) )
+    if conf.isDev and log:  logging.debug( 'validate() cookieData=' + str(cookieData) )
 
     # Fingerprint may be used to sign & set cookies, even if input-signature is not required
     fingerprint = browserFingerprint( httpRequest, httpInput )
 
     # Validate browser-id
     browserId = cookieData.get( conf.COOKIE_FIELD_BROWSER_ID, None )
-    if conf.isDev:  logging.debug( 'validate() browserId=' + str(browserId) )
+    if conf.isDev and log:  logging.debug( 'validate() browserId=' + str(browserId) )
     if not isValidCookieId( browserId ):
         if makeValid:
             browserId = generateCookieId()
@@ -151,10 +152,10 @@ def validate( httpRequest, httpInput, crumbRequired=True, signatureRequired=True
     # Validate cookie-signature
     if signatureRequired:
         signatureFromCookie = cookieData.get( conf.COOKIE_FIELD_SIGNATURE, None )
-        if conf.isDev:  logging.debug( 'signatureFromCookie=' + str(signatureFromCookie) )
+        if conf.isDev and log:  logging.debug( 'signatureFromCookie=' + str(signatureFromCookie) )
 
         signatureComputed = cookieSignature( fingerprint, cookieData )
-        if conf.isDev:  logging.debug( 'signatureComputed=' + str(signatureComputed) )
+        if conf.isDev and log:  logging.debug( 'signatureComputed=' + str(signatureComputed) )
         if signatureFromCookie != signatureComputed:
             if conf.isDev:  logging.debug( 'validate() signatureFromCookie=' + str(signatureFromCookie) + ' != signatureComputed=' + str(signatureComputed) )
             return CookieData( errorMessage=conf.NO_COOKIE )
@@ -170,11 +171,11 @@ def browserFingerprint( httpRequest, httpInput ):
 
     fingerprintHeaders = [ 'Accept-Language', 'Dnt', 'User-Agent' ]  # 'Accept' keeps changing from page to page
     fingerprintHeaderStrings = [ '{}:{}'.format(f, httpRequest.headers.get(f,''))  for f in fingerprintHeaders ]
-    if conf.isDev:  logging.debug( 'fingerprintHeaderStrings=' + str(fingerprintHeaderStrings) )
+    if conf.isDev and log:  logging.debug( 'fingerprintHeaderStrings=' + str(fingerprintHeaderStrings) )
 
     fingerprintFromJavascript = httpInput.get('fingerprint', None)
     if not fingerprintFromJavascript:  return None   # Fingerprint based only on http-headers would not match
-    if conf.isDev:  logging.debug( 'fingerprintFromJavascript=' + str(fingerprintFromJavascript) )
+    if conf.isDev and log:  logging.debug( 'fingerprintFromJavascript=' + str(fingerprintFromJavascript) )
     
     return str(fingerprintFromJavascript) + ' ' + ' '.join(fingerprintHeaderStrings)
 
@@ -185,20 +186,20 @@ def browserFingerprint( httpRequest, httpInput ):
 # and do set cookies, keeping old signature
 def cookieSignature( browserFingerprintStr, cookieData ):
     
-    if conf.isDev:  logging.debug( 'browserFingerprintStr=' + str(browserFingerprintStr) )
+    if conf.isDev and log:  logging.debug( 'browserFingerprintStr=' + str(browserFingerprintStr) )
 
     # Exclude the signature itself from the signature-input
     signedCookieData = cookieData.copy()
     signedCookieData.pop( conf.COOKIE_FIELD_SIGNATURE, None )
     signedCookieData.pop( conf.COOKIE_FIELD_RECENTS, None )  # Don't sign recent-links, so that recent-links can be updated by GET calls without re-signing
     orderedCookieData = serialize( signedCookieData )
-    if conf.isDev:  logging.debug( 'orderedCookieData=' + str(orderedCookieData) )
+    if conf.isDev and log:  logging.debug( 'orderedCookieData=' + str(orderedCookieData) )
     
     signatureInput = [ browserFingerprintStr, orderedCookieData ]
-    if conf.isDev:  logging.debug( 'signatureInput=' + str(signatureInput) )
+    if conf.isDev and log:  logging.debug( 'signatureInput=' + str(signatureInput) )
     
     signature = hashForSignature( secrets.sessionSalt , ' '.join(signatureInput) )
-    if conf.isDev:  logging.debug( 'signature=' + str(signature) )
+    if conf.isDev and log:  logging.debug( 'signature=' + str(signature) )
     return signature
 
 
@@ -234,11 +235,11 @@ def storeRecentLinkKey( linkKey, cookieData ):
     if not cookieData.valid():  return
 
     recentLinkKeys = cookieData.dataNew.get( conf.COOKIE_FIELD_RECENTS, {} )
-    if conf.isDev:  logging.debug( 'storeRecentLinkKey() recentLinkKeys=' + str(recentLinkKeys) )
+    if conf.isDev and log:  logging.debug( 'storeRecentLinkKey() recentLinkKeys=' + str(recentLinkKeys) )
 
     now = int( time.time() )
     updateRecent( recentLinkKeys, linkKey, now, conf.recentRequestsMax )
-    if conf.isDev:  logging.debug( 'storeRecentLinkKey() recentLinkKeys=' + str(recentLinkKeys) )
+    if conf.isDev and log:  logging.debug( 'storeRecentLinkKey() recentLinkKeys=' + str(recentLinkKeys) )
 
     cookieData.dataNew[ conf.COOKIE_FIELD_RECENTS ] = recentLinkKeys
 

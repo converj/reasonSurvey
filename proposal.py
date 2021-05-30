@@ -1,12 +1,13 @@
-# Import external modules.
+# Import external modules
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 import logging
 import random
 import time
-# Import local modules.
+# Import app modules
 from configuration import const as conf
 from constants import Constants
+import text
 
 
 const = Constants()
@@ -28,7 +29,29 @@ class Proposal(ndb.Model):
     numPros = ndb.IntegerProperty( default=0 )
     numCons = ndb.IntegerProperty( default=0 )
     netPros = ndb.IntegerProperty( default=0 )   # numPros - numCons
+    score = ndb.FloatProperty( default=0 )
     lastSumUpdateTime = ndb.IntegerProperty( default=0 )
+
+    words = ndb.StringProperty( repeated=True )
+
+    # Experimental
+    hideReasons = ndb.BooleanProperty( default=False )
+    # Proposal-ids for empty (hidden) reasons
+    emptyProId = ndb.StringProperty()
+    emptyConId = ndb.StringProperty()
+
+    def setContent( self, title, detail ):
+        self.title = title
+        self.detail = detail
+        # Index content words 
+        words = text.uniqueInOrder(  text.removeStopWords( text.tokenize(title) + text.tokenize(detail) )  )
+        words = words[ 0 : conf.MAX_WORDS_INDEXED ]  # Limit number of words indexed 
+        self.words = text.tuples( words, maxSize=2 )
+
+    def updateScore( self ):
+        contentLen = ( len(self.title) if self.title else 0 ) + ( len(self.detail) if self.detail else 0 )
+        self.score = float( self.netPros ) / float( contentLen + 100.0 )
+
 
 
 @ndb.transactional( retries=const.MAX_RETRY )
@@ -38,21 +61,64 @@ def setEditable( proposalId, editable ):
     proposalRecord.put()
 
 
+# Returns records, cursor, more-flag
+def retrieveTopProposals( requestId, maxProposals, cursor=None ):
+    future = retrieveTopProposalsAsync( requestId, maxProposals, cursor=cursor )
+    return future.get_result()
+
+# Returns future producing 1 batch of records & next-page-cursor 
+def retrieveTopProposalsAsync( requestId, maxProposals, cursor=None ):
+    if conf.isDev:  logging.debug( 'retrieveTopProposalsAsync() requestId=' + str(requestId) + ' cursor=' + str(cursor) )
+    requestIdStr = str( requestId )
+    return Proposal.query( Proposal.requestId==requestIdStr ).order( -Proposal.netPros ).fetch_page_async( maxProposals, start_cursor=cursor )
+
+
+# Returns series[ proposal-record-future ] 
+def retrieveTopProposalsForStart( requestId, proposalStart ):
+    requestIdStr = str( requestId )
+    inputWords = text.uniqueInOrder(  text.removeStopWords( text.tokenize(proposalStart) )  )
+    if conf.isDev:  logging.debug( 'retrieveTopProposalsForStart() inputWords=' + str(inputWords) )
+
+    proposalRecordFutures = []
+    if inputWords and ( 0 < len(inputWords) ):
+        # Retrieve top-voted proposal-records matching last input-word 
+        # Results will be collected & match-scored in client 
+        lastWord = inputWords[ -1 ]
+        proposalRecordFutures.append(  Proposal.query( Proposal.requestId==requestIdStr, Proposal.words==lastWord
+            ).order( -Proposal.score ).fetch_async( 1 )  )
+        # Retrieve for last input-word-pair 
+        if ( 2 <= len(inputWords) ):
+            lastTuple = ' '.join( inputWords[-2:-1] )
+            proposalRecordFutures.append(  Proposal.query( Proposal.requestId==requestIdStr, Proposal.words==lastTuple
+                ).order( -Proposal.score ).fetch_async( 1 )  )
+
+    # De-duplicate records, since both word & tuple-top-suggestion may be the same 
+    recordsUnique = { }
+    for f in proposalRecordFutures:
+        if f:
+            for r in f.get_result():
+                if r:
+                    recordsUnique[ r.key.id() ] = r
+    if conf.isDev:  logging.debug( 'retrieveTopProposalsForStart() recordsUnique=' + str(recordsUnique) )
+
+    return recordsUnique.values()
+
+
 
 #####################################################################################
 # Use tasklets for async counting pros/cons per proposal.
 
 # @ndb.tasklet
 # def maybeUpdateProConAggs( proposalId ):
-#     allowAgg = yield __setVoteAggStartTime()   # Async, transaction
+#     now = int( time.time() )
+#     allowAgg = yield __setVoteAggStartTime( proposalId, now )   # Async, transaction
 #     if allowAgg:
-#         __updateVoteAggs( proposalId )
+#         __updateVoteAggs( proposalId, now )
 # 
 # # If enough delay since voteAggregateStartTime... updates voteAggregateStartTime and returns flag.
 # @ndb.transactional( retries=const.MAX_RETRY )
-# def __setVoteAggStartTime( proposalId ):
+# def __setVoteAggStartTime( proposalId, now ):
 #     proposalRecord = Proposal.get_by_id( int(proposalId) )
-#     now = int( time.time() )
 #     if proposalRecord.voteAggregateStartTime + const.MIN_REAGGREGATE_DELAY_SEC > now:
 #         return False
 #     proposalRecord.voteAggregateStartTime = now
@@ -61,12 +127,15 @@ def setEditable( proposalId, editable ):
 # 
 # # Retrieves all reason vote counts for a proposal, sums their pro/con counts, and updates proposal pro/con counts.
 # @ndb.tasklet
-# def __updateVoteAggs( proposalId ):
+# def __updateVoteAggs( proposalId, now ):
 #     reasons = yield Reason.query( Reason.proposalId==proposalId ).fetch_async()   # Async
 #     numPros = sum( reason.voteCount for reason in reasons  if reason.proOrCon == conf.PRO )
 #     numCons = sum( reason.voteCount for reason in reasons  if reason.proOrCon == conf.CON )
-#     __setNumProsAndCons( proposalId, numPros, numCons )    # Transaction
-
+#     __setNumProsAndConsTransact( proposalId, numPros, numCons, now )    # Transaction
+# 
+# @ndb.transactional( retries=const.MAX_RETRY )
+# def __setNumProsAndConsTransact( proposalId, numPros, numCons, now ):
+#     __setNumProsAndConsImp( proposalId, numPros, numCons, now )
 
 
 #####################################################################################
@@ -86,24 +155,24 @@ class ProposalShard( ndb.Model ):
 
 @ndb.tasklet
 def incrementTasklet( requestId, proposalId, prosInc, consInc ):
-    logging.debug( 'proposal.incrementAsync() proposalId={}'.format(proposalId) )
+    if conf.isDev:  logging.debug( 'proposal.incrementTasklet() proposalId={}'.format(proposalId) )
 
     yield __incrementShard( requestId, proposalId, prosInc, consInc )   # Pause and wait for async transaction
 
     # Cache sums in Proposal record, to make top proposals queryable by score.
     # Rate-limit updates to Proposal, by storing last-update time
     now = int( time.time() )
-    updateNow = yield __checkAndSetLastSumTime( proposalId, now )  # Pause and wait for async transaction
-    logging.debug( 'proposal.incrementAsync() updateNow=' + str(updateNow) )
+    updateNow = yield __checkLastSumTime( proposalId, now )  # Pause and wait for async transaction
+    if conf.isDev:  logging.debug( 'proposal.incrementTasklet() updateNow=' + str(updateNow) )
 
     if updateNow:
         shardRecords = yield __getProposalShardsAsync( proposalId )   # Pause and wait for async
         numPros = sum( s.numPros for s in shardRecords  if s )
         numCons = sum( s.numCons for s in shardRecords  if s )
-        logging.debug( 'proposal.incrementAsync() numPros=' + str(numPros) + ' numCons=' + str(numCons) )
+        if conf.isDev:  logging.debug( 'proposal.incrementTasklet() numPros=' + str(numPros) + ' numCons=' + str(numCons) )
 
-        yield __setNumProsAndConsAsync( proposalId, numPros, numCons )   # Pause and wait for async transaction
-        logging.debug( 'proposal.incrementAsync() __setNumProsAndCons() done' )
+        yield __setNumProsAndConsAsync( proposalId, numPros, numCons, now )   # Pause and wait for async transaction
+        if conf.isDev:  logging.debug( 'proposal.incrementTasklet() __setNumProsAndConsTransact() done' )
 
 
 @ndb.transactional_async( retries=const.MAX_RETRY )
@@ -120,15 +189,13 @@ def __incrementShard( requestId, proposalId, prosInc, consInc ):
 
 # Returns whether update is required now
 @ndb.transactional_async( retries=const.MAX_RETRY )
-def __checkAndSetLastSumTime( proposalId, now ):
-    logging.debug( 'proposal.__checkAndSetLastSumTime() proposalId={}'.format(proposalId) )
+def __checkLastSumTime( proposalId, now ):
+    if conf.isDev:  logging.debug( 'proposal.__checkLastSumTime() proposalId={}'.format(proposalId) )
 
     proposalRecord = Proposal.get_by_id( int(proposalId) )
-    logging.debug( 'proposal.__checkAndSetLastSumTime() proposalRecord={}'.format(proposalRecord) )
+    if conf.isDev:  logging.debug( 'proposal.__checkLastSumTime() proposalRecord={}'.format(proposalRecord) )
 
     if proposalRecord.lastSumUpdateTime + const.COUNTER_CACHE_SEC < now:
-        proposalRecord.lastSumUpdateTime = now
-        proposalRecord.put()
         return True
     else:
         return False
@@ -136,25 +203,24 @@ def __checkAndSetLastSumTime( proposalId, now ):
 
 def __getProposalShardsAsync( proposalId ):
     shardKeyStrings = [ const.SHARD_KEY_TEMPLATE.format(proposalId, s) for s in range(const.NUM_SHARDS) ]
-    logging.debug( 'proposal.__getProposalShardsAsync() shardKeyStrings=' + str(shardKeyStrings) )
+    if conf.isDev:  logging.debug( 'proposal.__getProposalShardsAsync() shardKeyStrings=' + str(shardKeyStrings) )
 
     shardKeys = [ ndb.Key(ProposalShard, s) for s in shardKeyStrings ]
     return ndb.get_multi_async( shardKeys )
 
 
 @ndb.transactional_async( retries=const.MAX_RETRY )
-def __setNumProsAndConsAsync( proposalId, numPros, numCons ):
-    __setNumProsAndConsImp( proposalId, numPros, numCons )
+def __setNumProsAndConsAsync( proposalId, numPros, numCons, now ):
+    __setNumProsAndConsImp( proposalId, numPros, numCons, now )
 
-@ndb.transactional( retries=const.MAX_RETRY )
-def __setNumProsAndCons( proposalId, numPros, numCons ):
-    __setNumProsAndConsImp( proposalId, numPros, numCons )
-
-def __setNumProsAndConsImp( proposalId, numPros, numCons ):
+def __setNumProsAndConsImp( proposalId, numPros, numCons, now ):
     proposalRecord = Proposal.get_by_id( int(proposalId) )
     proposalRecord.numPros = numPros
     proposalRecord.numCons = numCons
     proposalRecord.netPros = numPros - numCons
+    proposalRecord.updateScore()
+    proposalRecord.lastSumUpdateTime = now
+    proposalRecord.allowEdit = False  # If votes have been given to proposal's empty reasons... do not allow editing proposal
     proposalRecord.put()
 
 

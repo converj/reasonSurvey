@@ -1,30 +1,47 @@
 
     // Find elements
-    var buttonSubmit = document.getElementById('buttonSubmit');
-    var newRequestInputTitle = document.getElementById('newRequestInputTitle');
-    var newRequestInputDetail = document.getElementById('newRequestInputDetail');
-    var loginRequiredForRequestCheckbox = document.getElementById('loginRequiredForRequest');
-    var newRequestSubmitMessage = document.getElementById('newRequestSubmitMessage');
+    let buttonSubmit = document.getElementById('buttonSubmit');
+    let newRequestInputTitle = document.getElementById('newRequestInputTitle');
+    let newRequestInputDetail = document.getElementById('newRequestInputDetail');
+    let loginRequiredForRequestCheckbox = document.getElementById('loginRequiredForRequest');
+    let newRequestSubmitMessage = document.getElementById('newRequestSubmitMessage');
+    let experimentalPasswordForRequest = document.getElementById('experimentalPasswordForRequest');
+    let hideReasonsForRequest = document.getElementById('hideReasonsForRequest');
 
 
 
         function
-    newRequestHandleLoad( ){
+    newRequestHandleLoad( experimentUrlFragment ){
+        // Clear form inputs
         newRequestInputTitle.value = '';
         newRequestInputDetail.value = '';
         loginRequiredForRequestCheckbox.checked = false;
+        experimentalPasswordForRequest.value = '';
+        hideReasonsForRequest.checked = false;
+
+        // Clear messages
         showMessage( '', GREY, null, newRequestSubmitMessage );
         newRequestInputTitle.setCustomValidity( '' );
         newRequestInputDetail.setCustomValidity( '' );
         loginRequiredForRequestCheckbox.setCustomValidity( '' );
+
+        // Show experimental options
+        let experimentalInputsDiv = document.getElementById('experimentalInputsForRequest');
+        experimentalInputsDiv.style.display = ( experimentUrlFragment == TRUE )?  'block'  :  'none';
+
         newRequestHandleInput();
     }
 
 
 
-    // handle typing, to guide user to next input
+    // Handle typing, to guide user to next input
         function
     newRequestHandleInput( ){
+        if ( newRequestInputTitle.value.length + newRequestInputDetail.value.length >= minLengthRequest ){
+            newRequestInputTitle.setCustomValidity('');
+            newRequestInputDetail.setCustomValidity('');
+        }
+
         if ( newRequestInputTitle.value == '' ){
             newRequestInputTitle.style.color = GREEN;
             newRequestInputDetail.style.color = BLACK;
@@ -47,15 +64,39 @@
     };
 
 
-    // handle submit
+        function
+    newRequestExperimentalOptionsInput( ){
+        if ( hideReasonsForRequest.checked  &&  (! experimentalPasswordForRequest.value) ){
+            let message = 'Experimental password required';
+            experimentalPasswordForRequest.setCustomValidity( message );
+        }
+        else {
+            experimentalPasswordForRequest.setCustomValidity('');
+            showMessage( '', GREY, null, newRequestSubmitMessage );
+        }
+    }
+    experimentalPasswordForRequest.oninput = newRequestExperimentalOptionsInput;
+    hideReasonsForRequest.onclick = newRequestExperimentalOptionsInput;
+
+
+
+    // Handle form-submit
     buttonSubmit.onclick = function(){
 
         // Check request-for-proposals length
         if ( newRequestInputTitle.value.length + newRequestInputDetail.value.length < minLengthRequest ){
-            var message = 'Request is too short.';
+            let message = 'Request is too short';
             showMessage( message, RED, null, newRequestSubmitMessage );
             newRequestInputTitle.setCustomValidity( message );
             newRequestInputDetail.setCustomValidity( message );
+            return false;
+        }
+
+        // Require experiment-password for experiment-options like hide-reasons
+        if ( hideReasonsForRequest.checked  &&  (! experimentalPasswordForRequest.value) ){
+            let message = 'Experimental password required';
+            showMessage( message, RED, null, newRequestSubmitMessage );
+            experimentalPasswordForRequest.setCustomValidity( message );
             return false;
         }
 
@@ -73,55 +114,37 @@
         showMessage( 'Saving request for proposals...', GREY, null, newRequestSubmitMessage );
         newRequestInputTitle.setCustomValidity('');
         newRequestInputDetail.setCustomValidity('');
-        var dataSend = {
+        let dataSend = {
             crumb:crumb , fingerprint:fingerprint ,
             title:newRequestInputTitle.value , detail:newRequestInputDetail.value ,
-            loginRequired:loginRequiredForRequestCheckbox.checked
+            loginRequired:loginRequiredForRequestCheckbox.checked ,
+            experimentalPassword:experimentalPasswordForRequest.value , hideReasons:hideReasonsForRequest.checked
         };
-        var url = 'newRequest';
+        let url = 'newRequest';
         ajaxPost( dataSend, url, function(error, status, data){
-            if ( error  ||  !data ){
-                var message = 'Failed to save request';
-                showMessage( 'Failed: '+error, RED, null, newRequestSubmitMessage );
-                newRequestInputTitle.setCustomValidity( message );
-                newRequestInputDetail.setCustomValidity( message );
-            }
-            else if ( ! data.success  &&  data.message == NO_COOKIE ){
-                var message = 'No cookie present';
-                showMessage( MESSAGE_NO_COOKIE, RED, null, newRequestSubmitMessage );
-                newRequestInputTitle.setCustomValidity( message );
-                newRequestInputDetail.setCustomValidity( message );
-            }
-            else if ( ! data.success  &&  data.message == BAD_CRUMB ){
-                var message = 'No crumb present';
-                showMessage( MESSAGE_BAD_CRUMB, RED, null, newRequestSubmitMessage );
-                newRequestInputTitle.setCustomValidity( message );
-                newRequestInputDetail.setCustomValidity( message );
-            }
-            else if ( ! data.success  &&  data.message == TOO_SHORT ){
-                var message = 'Request is too short.';
-                showMessage( message, RED, null, newRequestSubmitMessage );
-                newRequestInputTitle.setCustomValidity( message );
-                newRequestInputDetail.setCustomValidity( message );
-            }
-            else if ( ! data.success ){
-                var message = 'Failed to save request.';
-                showMessage( message, RED, null, newRequestSubmitMessage );
-                newRequestInputTitle.setCustomValidity( message );
-                newRequestInputDetail.setCustomValidity( message );
-            }
-            else if ( data.request ){
+            if ( !error  &&  data   &&  data.success  &&  data.request ){
                 showMessage( 'Saved request for proposals', GREEN, null, newRequestSubmitMessage );
                 newRequestInputTitle.setCustomValidity('');
                 newRequestInputDetail.setCustomValidity('');
-                // navigate to request view page
+                // Navigate to request view page
                 setWholeFragment( {page:FRAG_PAGE_ID_REQUEST, link:data.linkKey.id} );
             }
-            else {  
-                var message = 'Failed to save request.';
+            else {
+                let message = 'Failed to save request';
+
+                if ( data  &&  data.message == NO_COOKIE ){  message = 'No cookie present';  }
+                else if ( data  &&  data.message == BAD_CRUMB ){  message = 'No crumb present';  }
+                else if ( data  &&  data.message == TOO_SHORT ){
+                    message = 'Request is too short.';
+                    newRequestInputTitle.setCustomValidity( message );
+                    newRequestInputDetail.setCustomValidity( message );
+                }
+                else if ( data  &&  data.message == EXPERIMENT_NOT_AUTHORIZED ){
+                    message = 'Experimental password required';
+                    experimentalPasswordForProposal.setCustomValidity( message );
+                }
+
                 showMessage( message, RED, null, newRequestSubmitMessage );
-                newRequestInputTitle.setCustomValidity( message );
-                newRequestInputDetail.setCustomValidity( message );
             }
         } );
     }

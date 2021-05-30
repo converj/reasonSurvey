@@ -1,7 +1,7 @@
 import configuration as baseConf  # Import from parent directory requires that this file has a different name from file in parent dir.
 
 
-const = baseConf.const
+const = baseConf.const   # Callers can import only this file and get both base and local constants via "const" variable
 
 const.minLengthSurveyIntro = 30
 const.minLengthQuestion = 30

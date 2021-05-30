@@ -13,13 +13,17 @@ import user
 # Filtering / transforming persistent record fields for display
 
 def surveyToDisplay( surveyRecord, userId ):
-    return {
+    display = {
         'id': str(surveyRecord.key.id()),
+        'title': surveyRecord.title ,
         'introduction': surveyRecord.introduction,
         'mine': (surveyRecord.creator == userId),
         'allowEdit': (userId == surveyRecord.creator) and surveyRecord.allowEdit ,
         'freezeUserInput': surveyRecord.freezeUserInput
     }
+    # Only set if used
+    if surveyRecord.hideReasons:  display['hideReasons'] = surveyRecord.hideReasons
+    return display
 
 def questionToDisplay( questionRecord, userId ):
     return {

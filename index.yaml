@@ -17,10 +17,25 @@ indexes:
   - name: voteCount
     direction: desc
 
+- kind: Answer
+  properties:
+  - name: questionId
+  - name: surveyId
+  - name: words
+  - name: score
+    direction: desc
+
 - kind: Proposal
   properties:
   - name: requestId
   - name: netPros
+    direction: desc
+
+- kind: Proposal
+  properties:
+  - name: requestId
+  - name: words
+  - name: score
     direction: desc
 
 - kind: Reason
@@ -28,4 +43,44 @@ indexes:
   - name: proOrCon
   - name: proposalId
   - name: score
+    direction: desc
+
+- kind: Reason
+  properties:
+  - name: proposalId
+  - name: words
+  - name: score
+    direction: desc
+
+- kind: Slice
+  properties:
+  - name: budgetId
+  - name: score
+    direction: desc
+
+- kind: Slice
+  properties:
+  - name: budgetId
+  - name: title
+  - name: score
+    direction: desc
+
+- kind: Slice
+  properties:
+  - name: budgetId
+  - name: title
+  - name: voteCount
+    direction: desc
+
+- kind: Slice
+  properties:
+  - name: budgetId
+  - name: words
+  - name: score
+    direction: desc
+
+- kind: SliceTitle
+  properties:
+  - name: budgetId
+  - name: voteCount
     direction: desc

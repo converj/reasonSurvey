@@ -115,6 +115,7 @@ class LoginReturn(webapp2.RequestHandler):
 
         # Send page that closes tab
         responseData.update( {
+            'SITE_NAME': conf.SITE_NAME ,
             'crumb': user.createCrumb( browserId ) ,
             'city': city
         } )

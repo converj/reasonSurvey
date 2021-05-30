@@ -20,12 +20,12 @@ import text
 class SubmitEditQuestion(webapp2.RequestHandler):
 
     def post(self):
-        logging.debug( 'SubmitEditQuestion.post() request.body=' + self.request.body )
+        logging.debug(('SubmitEditQuestion.post()', 'request.body=', self.request.body))
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         inputData = json.loads( self.request.body )
-        logging.debug( 'SubmitEditQuestion.post() inputData=' + str(inputData) )
+        logging.debug(('SubmitEditQuestion.post()', 'inputData=', inputData))
 
         content = text.formTextToStored( inputData['content'] )
         linkKeyString = inputData['linkKey']
@@ -33,9 +33,8 @@ class SubmitEditQuestion(webapp2.RequestHandler):
         questionId = str( int(questionId) ) if questionId  else None
         browserCrumb = inputData.get( 'crumb', None )
         loginCrumb = inputData.get( 'crumbForLogin', None )
-        logging.debug( 'SubmitEditQuestion.post() content=' + str(content) + ' browserCrumb=' + str(browserCrumb) 
-            + ' loginCrumb=' + str(loginCrumb) 
-            + ' linkKeyString=' + str(linkKeyString) + ' questionId=' + str(questionId) )
+        logging.debug(('SubmitEditQuestion.post()', 'content=', content, 'browserCrumb=', browserCrumb,
+            'loginCrumb=', loginCrumb, 'linkKeyString=', linkKeyString, 'questionId=', questionId))
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
         cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
@@ -45,7 +44,7 @@ class SubmitEditQuestion(webapp2.RequestHandler):
         # Retrieve link-key record
         if linkKeyString is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKeyString is null' )
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyString )
-        logging.debug( 'SubmitEditQuestion.post() linkKeyRecord=' + str(linkKeyRecord) )
+        logging.debug(('SubmitEditQuestion.post()', 'linkKeyRecord=', linkKeyRecord))
 
         if linkKeyRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
         if linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + str(linkKeyRecord.destinationType) )
@@ -61,14 +60,14 @@ class SubmitEditQuestion(webapp2.RequestHandler):
         # Retrieve survey record
         surveyRec = survey.Survey.get_by_id( int(surveyId) )
         if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='survey not found' )
-        logging.debug( 'SubmitEditQuestion.post() surveyRec=' + str(surveyRec) )
+        logging.debug(('SubmitEditQuestion.post()', 'surveyRec=', surveyRec))
         if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
 
         # Retrieve question record
         # If question record exists...
         if questionId:
             questionRec = question.Question.get_by_id( int(questionId) )
-            logging.debug( 'SubmitEditQuestion.post() questionRec=' + str(questionRec) )
+            logging.debug(('SubmitEditQuestion.post()', 'questionRec=', questionRec))
 
             if questionRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='question not found' )
             if questionRec.surveyId != linkKeyRecord.destinationId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='questionRec.surveyId != linkKeyRecord.destinationId' )
@@ -105,20 +104,18 @@ class SubmitEditQuestion(webapp2.RequestHandler):
 class DeleteQuestion(webapp2.RequestHandler):
 
     def post(self):
-        logging.debug( 'DeleteQuestion.post() request.body=' + self.request.body )
+        logging.debug(('DeleteQuestion', 'request.body=', self.request.body))
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         inputData = json.loads( self.request.body )
-        logging.debug( 'DeleteQuestion.post() inputData=' + str(inputData) )
+        logging.debug(('DeleteQuestion', 'inputData=', inputData))
 
         linkKeyString = inputData['linkKey']
         questionId = inputData['questionId']
         browserCrumb = inputData.get( 'crumb', None )
         loginCrumb = inputData.get( 'crumbForLogin', None )
-        logging.debug( 'DeleteQuestion.post() browserCrumb=' + str(browserCrumb) 
-            + ' loginCrumb=' + str(loginCrumb) 
-            + ' linkKeyString=' + str(linkKeyString) + ' questionId=' + str(questionId) )
+        logging.debug(('DeleteQuestion', 'browserCrumb=', browserCrumb, 'loginCrumb=', loginCrumb, 'linkKeyString=', linkKeyString, 'questionId=', questionId))
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
         cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
@@ -130,7 +127,7 @@ class DeleteQuestion(webapp2.RequestHandler):
         # Retrieve link-key record
         if linkKeyString is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKeyString is null' )
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyString )
-        logging.debug( 'DeleteQuestion.post() linkKeyRecord=' + str(linkKeyRecord) )
+        logging.debug(('DeleteQuestion', 'linkKeyRecord=', linkKeyRecord))
 
         if linkKeyRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
         if linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + str(linkKeyRecord.destinationType) )
@@ -146,13 +143,13 @@ class DeleteQuestion(webapp2.RequestHandler):
 
         # Delete question from survey.
         surveyRec = survey.Survey.get_by_id( int(surveyId) )
-        logging.debug( 'DeleteQuestion.post() surveyRec=' + str(surveyRec) )
+        logging.debug(('DeleteQuestion', 'surveyRec=', surveyRec))
         
         if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='survey record not found' )
         if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
 
         questionIds = [ q for q in surveyRec.questionIds  if q != questionId ]
-        logging.debug( 'DeleteQuestion.post() questionIds=' + str(questionIds) )
+        logging.debug(('DeleteQuestion', 'questionIds=', questionIds))
         surveyRec.questionIds = questionIds
         surveyRec.put()
 
@@ -164,10 +161,10 @@ class DeleteQuestion(webapp2.RequestHandler):
 
         # Delete answers from question.  If fail, answers are orphaned, but retrievable by querying by question id.
         answerRecords = answer.Answer.query( answer.Answer.questionId==questionId ).fetch()
-        logging.debug( 'DeleteQuestion.post() answerRecords=' + str(answerRecords) )
+        logging.debug(('DeleteQuestion', 'answerRecords=', answerRecords))
         
         answerKeys = [ a.key  for a in answerRecords ]
-        logging.debug( 'DeleteQuestion.post() answerKeys=' + str(answerKeys) )
+        logging.debug(('DeleteQuestion', 'answerKeys=', answerKeys))
         
         ndb.delete_multi( answerKeys )
         

@@ -10,7 +10,7 @@
         this.createFromHtml( questionId, '\n\n' + [
             '<h1 class=title id=title> Question Results </h1>',
             '<div class=Question id=Question>',
-            '    <div id=Message role=alert></div>',
+            '    <div class=Message id=Message aria-live=polite></div>',
             '    <label for=QuestionContent id=QuestionPosition></label>',
             '    <div class=QuestionContent id=QuestionContent></div>',
             '    <div class=Answers id=Answers></div>',
@@ -81,19 +81,19 @@
 
             // Build answer-without-reason table-row
             // Use html-builder instead of text-to-html which fails on partial table
-            var answerDiv = html('tr').class('Answer').children( 
+            var answerRow = html('tr').class('Answer').children( 
                 html('td').class('AnswerCell').class('AnswerCountBarBack').children(
                     html('div').class('AnswerCountBar').style('width', parseInt(voteFrac * 100) + '%').innerHtml('&nbsp;').build()
                 ).build() ,
                 html('td').class('AnswerCell').class('AnswerCount').innerHtml(sumAnswerVotes).build() ,
                 html('td').class('AnswerCell').class('AnswerContent').style('opacity', opacityFrac).innerHtml(answerGroupData.answerText).build()
             ).build();
-            answersDiv.appendChild( answerDiv );
+            answersDiv.appendChild( answerRow );
 
             // Build answers-with-reasons expander
             // Use separate table for answers-with-reasons, because expander cannot work on just some table-rows
             var reasonsDiv = html('div').class('AnswerReasons').build();
-            var expandableRow = html('tr').children(
+            var expandableRow = html('tr').class('ReasonsRow').children(
                 html('td').attribute('colspan', 3).children(
                     html('details').children(
                         html('summary').innerHtml('&nbsp;').build() ,
@@ -190,11 +190,13 @@
         ElementWrap.call( this );  // Inherit member data from ElementWrap.
 
         this.createFromHtml( surveyId, '\n\n' + [
-            '<h1 class=title> Survey Results </h1>',
-            '<div class=Survey id=Survey>',
-            '    <div id=Message role=alert></div>',
-            '    <div class=Questions id=Questions></div>',
-            '</div>'
+            '   <h1 class=title> Survey Results </h1>' ,
+            '   <div class=Survey id=Survey>' ,
+            '       <div class=Message id=freezeMessage aria-live=polite></div>' ,
+            '       <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
+            '       <div class=Message id=Message aria-live=polite></div>' ,
+            '       <div class=Questions id=Questions></div>' ,
+            '   </div>'
         ].join('\n') );
     }
     SurveyResultDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods from ElementWrap.
@@ -216,10 +218,19 @@
         SurveyResultDisplay.prototype.
     dataUpdated = function( ){
 
-        var surveyIntroStart = ( this.survey && this.survey.introduction )?  ': ' + this.survey.introduction.substr(0, 50)  :  '';
-        document.title = SITE_TITLE + ': View Survey' + surveyIntroStart;
+        document.title = SITE_TITLE + ': ' + this.survey.title;
 
+        // Messages
         this.message = showMessageStruct( this.message, this.getSubElement('Message') );
+        this.freezeMessage = {  color:RED , text:(this.survey.freezeUserInput ? 'Frozen' : null)  };
+        this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeMessage') );
+
+        // Html content
+        this.setInnerHtml( 'hideReasonsStatus', (this.survey.hideReasons ? 'Reasons hidden' : null) );
+
+        // Attributes
+        this.setAttribute( 'Survey', 'mine', (this.survey.mine ? TRUE : null) );
+        this.setAttribute( 'Survey', 'hidereasons', (this.survey.hideReasons ? TRUE : null) );
 
         // For each question with data, in survey order... ensure question display exists
         for ( var q = 0;  q < this.questionIds.length;  ++q ){
@@ -238,10 +249,16 @@
     };
     
 
+        SurveyResultDisplay.prototype.
+    areReasonsHidden = function(){  return this.survey.hideReasons;  }
+
     // Called by QuestionViewDisplay for no good reason.  Why does SurveyViewDisplay exist while results are shown?
         SurveyResultDisplay.prototype.
     isFrozen = function( ){  return  this.survey && this.survey.freezeUserInput;  }
 
+
+        SurveyResultDisplay.prototype.
+    retrieveDataUpdate = function( ){  return this.retrieveData();  }
 
         SurveyResultDisplay.prototype.
     retrieveData = function( ){
@@ -257,8 +274,11 @@
                     if ( receiveData.survey ){
                         // Update survey fields
                         thisCopy.survey.id = receiveData.survey.id;
+                        thisCopy.survey.title = receiveData.survey.title;
                         thisCopy.survey.introduction = receiveData.survey.introduction;
                         thisCopy.survey.freezeUserInput = receiveData.survey.freezeUserInput;
+                        thisCopy.survey.mine = receiveData.survey.mine;
+                        thisCopy.survey.hideReasons = receiveData.survey.hideReasons;
                     }
                     // Retrieve questions data, async
                     thisCopy.retrieveQuestions();

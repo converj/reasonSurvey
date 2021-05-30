@@ -72,7 +72,6 @@ class SubmitVote(webapp2.RequestHandler):
         logging.debug( 'reasonRecord=' + str(reasonRecord) )
 
         # Verify that reason belongs to linkKey's request/proposal
-        isRequestForProposals = ( linkKeyRec.destinationType == conf.REQUEST_CLASS_NAME )
         if linkKeyRec.destinationType == conf.PROPOSAL_CLASS_NAME:
             if reasonRecord.proposalId != linkKeyRec.destinationId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='reasonRecord.proposalId != linkKeyRec.destinationId' )
         elif linkKeyRec.destinationType == conf.REQUEST_CLASS_NAME:
@@ -81,8 +80,9 @@ class SubmitVote(webapp2.RequestHandler):
             return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + linkKeyRec.destinationType )
 
         # Set vote, update vote count -- using transactions and retry.
+        # Marks reason as not editable
         success, reasonRecordUpdated, voteRecord = reason.vote( 
-            reasonRecord.requestId, reasonRecord.proposalId, reasonId, userId, voteUp, isRequestForProposals=isRequestForProposals )
+            reasonRecord.requestId, reasonRecord.proposalId, reasonId, userId, voteUp )
         logging.debug( 'success=' + str(success) + ' reasonRecordUpdated=' + str(reasonRecordUpdated) + ' voteRecord=' + str(voteRecord) )
         if not success:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='reason.vote() success=false' )
         if reasonRecordUpdated is not None:  reasonRecord = reasonRecordUpdated
@@ -96,9 +96,7 @@ class SubmitVote(webapp2.RequestHandler):
         httpServer.outputJson( cookieData, responseData, self.response )
         logging.debug( 'SubmitVote.post() done' )
 
-        # Mark reason as not editable.
-        if reasonRecord.allowEdit:
-            reason.setEditable( reasonId, False )
+
 
 
 # Route HTTP request

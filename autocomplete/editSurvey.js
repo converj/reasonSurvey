@@ -4,28 +4,28 @@
         function
     AnswerEditDisplay( displayId ){
         // User-interface state variables (not persistent data)
-        ElementWrap.call( this );  // Inherit member data from ElementWrap.
+        ElementWrap.call( this );  // Inherit member data
         this.messageColor = GREY;
 
         // Create html element, store it in this.element
         this.createFromHtml( displayId, '\n\n' + [
             '<div class=Answer id=Answer>',
-            '    <div class=AnswerEdit>', 
-            '    <label for=AnswerContentInput> Answer </label>',
-            '    <input class=AnswerContentInput id=AnswerContentInput placeholder="" ',
-            '        onblur=handleEditAnswerBlur oninput=handleEditAnswerInput onkeydown=handleAnswerKey />',
-            '    <label for=AnswerReasonInput> Reason </label>',
-            '    <textarea class=AnswerReasonInput id=AnswerReasonInput placeholder="" ',
-            '        onblur=handleEditAnswerBlur oninput=handleEditAnswerInput onkeydown=handleReasonKey></textarea>',
-            '    </div>',
-            '    <div class=AnswerEditingButtons>',
-            '        <button class=AnswerDeleteButton title="delete" onmousedown=handleEditAnswerDelete> X </button>',
-            '    </div>',
-            '    <div class=AnswerEditMessage id=AnswerEditMessage role=alert></div>',
+            '   <div class=AnswerEdit>' , 
+            '       <label for=AnswerContentInput> Answer </label>' ,
+            '       <input class=AnswerContentInput id=AnswerContentInput placeholder="" ' ,
+            '           onblur=handleEditAnswerBlur oninput=handleEditAnswerInput onkeydown=handleAnswerKey />' ,
+            '       <label class=AnswerReasonLabel for=AnswerReasonInput> Reason </label>' ,
+            '       <textarea class=AnswerReasonInput id=AnswerReasonInput placeholder="" ' ,
+            '           onblur=handleEditAnswerBlur oninput=handleEditAnswerInput onkeydown=handleReasonKey></textarea>' ,
+            '       <div class="Message AnswerEditMessage" id=AnswerEditMessage aria-live=polite></div>' ,
+            '   </div>',
+            '   <div class=AnswerEditingButtons>',
+            '       <button class=AnswerDeleteButton title="delete" onmousedown=handleEditAnswerDelete> X </button>',
+            '   </div>',
             '</div>'
         ].join('\n') );
     }
-    AnswerEditDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods from ElementWrap.
+    AnswerEditDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
 
         AnswerEditDisplay.prototype.
     setAllData = function( answerData, topDisp, questionDisplay ){
@@ -40,6 +40,7 @@
     dataUpdated = function( ){
         this.editMessage = showMessageStruct( this.editMessage, this.getSubElement('AnswerEditMessage') );
         this.getSubElement('AnswerContentInput').setCustomValidity( this.answerValidity ? this.answerValidity : '' );
+        this.getSubElement('AnswerReasonInput').setCustomValidity( this.reasonValidity ? this.reasonValidity : '' );
 
         // Update content input
         var contentValue = ( this.contentInputValue )?  this.contentInputValue  :  this.answer.content;
@@ -84,17 +85,22 @@
 
         if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
 
-        var contentInput = this.getSubElement('AnswerContentInput');
-        var reasonInput = this.getSubElement('AnswerReasonInput');
+        let contentInput = this.getSubElement('AnswerContentInput');
+        let reasonInput = this.getSubElement('AnswerReasonInput');
         this.setContentInputValue( contentInput.value, reasonInput.value );
         this.fitAnswer();
 
-        // Clear too-short message
-        if ( this.editMessage  
-                &&  (this.editMessage.text == ANSWER_TOO_SHORT_MESSAGE)  
-                &&  (this.contentInputValue.length >= minLengthAnswer + ANSWER_REASON_DELIMITER.length) ){
+        // Clear too-short messages
+        if ( this.answerTooShort  &&  (minLengthAnswer <= contentInput.value.length) ){
             this.editMessage = { text:'' };
             this.answerValidity = '';
+            this.answerTooShort = false;
+            this.dataUpdated();
+        }
+        if ( this.reasonTooShort  &&  (0 < reasonInput.value.length) ){
+            this.editMessage = { text:'' };
+            this.reasonValidity = '';
+            this.reasonTooShort = false;
             this.dataUpdated();
         }
     };
@@ -107,7 +113,12 @@
         // ENTER key on answer: focus answer-reason input
         if ( event.keyCode === KEY_CODE_ENTER ) {  
             event.preventDefault();
-            this.getSubElement('AnswerReasonInput').focus();
+            if ( this.topDisp.areReasonsHidden() ){
+                this.questionDisplay.focusNewAnswerInput();
+            }
+            else {
+                this.getSubElement('AnswerReasonInput').focus();
+            }
             return false;
         }
     };
@@ -151,13 +162,7 @@
         // If same answer exists elsewhere in the list... still save, because
         // need server-side answer standardization, to ensure records did not collide.
 
-        if ( inputValue.length < minLengthAnswer ){
-            this.editMessage = { color:RED, text:ANSWER_TOO_SHORT_MESSAGE };
-            this.answerValidity = ANSWER_TOO_SHORT_MESSAGE;
-            this.dataUpdated();
-            return;
-        }
-        
+        // Question must exist
         if ( ! this.questionDisplay.question.id ){
             var message = 'Question not yet saved';
             this.editMessage = { color:RED, text:message };
@@ -166,12 +171,31 @@
             return;
         }
 
+        // Require that answer is long enough
+        if ( contentInput.value.length < minLengthAnswer ){
+            this.editMessage = { color:RED, text:ANSWER_TOO_SHORT_MESSAGE };
+            this.answerValidity = ANSWER_TOO_SHORT_MESSAGE;
+            this.answerTooShort = true;
+            this.dataUpdated();
+            return;
+        }
+//         // Require that answer has reason
+//         if ( inputReason.value.length <= 0 ){
+//             this.editMessage = { color:RED, text:REASON_TOO_SHORT_MESSAGE };
+//             this.reasonValidity = REASON_TOO_SHORT_MESSAGE;
+//             this.reasonTooShort = true;
+//             this.dataUpdated();
+//             return;
+//         }
+
+        // Require that answer/reason changed
         if ( inputValue == this.answer.content ){  return;  }
 
         var answerData = this.answer;
         // save via ajax
         this.editMessage = { color:GREY, text:'Saving changes...' };
         this.answerValidity = '';
+        this.reasonValidity = '';
         this.dataUpdated();
         var sendData = {
             crumb:crumb , fingerprint:fingerprint ,
@@ -183,19 +207,14 @@
         var url = '/autocomplete/editAnswer';
         var thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
-            if ( error ){
-                var message = 'Failed to save answer';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.answerValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.success ){
+            if ( !error  &&  receiveData  &&  receiveData.success ){
                 if ( receiveData.answers  &&  receiveData.answers.length > 0 ){
                     // Update data and display
                     answerData.id = receiveData.answers[0].id;
                     answerData.content = receiveData.answers[0].content;
                     thisCopy.editMessage = { color:GREEN, text:'Saved answer', ms:5000 };
                     thisCopy.answerValidity = '';
+                    thisCopy.reasonValidity = '';
                     thisCopy.setContentInputValue( null, null );
                     thisCopy.dataUpdated();
 
@@ -209,38 +228,30 @@
                 } else {
                     thisCopy.editMessage = { color:GREEN, text:'' };
                     thisCopy.answerValidity = '';
+                    thisCopy.reasonValidity = '';
                     thisCopy.setContentInputValue( null, null );
                     thisCopy.dataUpdated();
                 }
             }
-            else if ( receiveData  &&  receiveData.message == TOO_SHORT ){  
-                var message = 'Answer is too short.';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.answerValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.message == NOT_OWNER ){  
-                var message = 'Cannot edit answer created by someone else.';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.answerValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.message == HAS_RESPONSES ){  
-                var message = 'Cannot edit answer that already has votes.';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.answerValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.message == ERROR_DUPLICATE ){  
-                var message = 'Duplicate answer.';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.answerValidity = message;
-                thisCopy.dataUpdated();
-            }
             else {
-                var message = 'Failed to save answer.';
+                let message = null;
+                if ( receiveData  &&  receiveData.message == TOO_SHORT ){
+                    message = 'Answer is too short.';
+                    thisCopy.answerTooShort = true;
+                }
+                else if ( receiveData  &&  receiveData.message == NOT_OWNER ){  message = 'Cannot edit answer created by someone else.';  }
+                else if ( receiveData  &&  receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit answer that already has votes.';  }
+                else if ( receiveData  &&  receiveData.message == ERROR_DUPLICATE ){  message = 'Duplicate answer.';  }
+                if ( message ){  thisCopy.answerValidity = message;  }
+
+                if ( receiveData  &&  receiveData.message == REASON_TOO_SHORT ){
+                    message = 'Reason is too short.';
+                    thisCopy.reasonTooShort = true;
+                    thisCopy.reasonValidity = message;
+                }
+
+                if ( ! message ){  message = 'Failed to save answer';  }
                 thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.answerValidity = message;
                 thisCopy.dataUpdated();
             }
         } );
@@ -264,6 +275,7 @@
         // save via ajax
         this.editMessage = { color:GREY, text:'Deleting...' };
         this.answerValidity = '';
+        this.reasonValidity = '';
         this.dataUpdated();
         var sendData = {
             crumb:crumb , fingerprint:fingerprint ,
@@ -322,7 +334,7 @@
         function
     QuestionEditDisplay( questionId ){
         // User-interface state variables (not persistent data)
-        ElementWrap.call( this );  // Inherit member data from ElementWrap.
+        ElementWrap.call( this );  // Inherit member data
         this.messageColor = GREY;
 
         this.createFromHtml( questionId, '\n\n' + [
@@ -336,7 +348,7 @@
             '            onkeydown=handleEditQuestionKey oninput=handleEditQuestionInput onblur=handleEditQuestionSave></textarea>',
             '    </div>',
             '    <button class=QuestionDeleteButton title="delete" onmousedown=handleQuestionDelete> X </button>',
-            '    <div class=QuestionEditMessage id=QuestionEditMessage role=alert></div>',
+            '    <div class="Message QuestionEditMessage" id=QuestionEditMessage aria-live=polite></div>',
             // Answers
             '    <div class=Answers id=Answers></div>',
             '    <div class=NewAnswer>', 
@@ -347,7 +359,7 @@
             '</div>'
         ].join('\n') );
     }
-    QuestionEditDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods from ElementWrap.
+    QuestionEditDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
 
 
         QuestionEditDisplay.prototype.
@@ -767,32 +779,42 @@
 
         function
     SurveyEditDisplay( surveyId ){
+        // User-interface state variables (not persistent data)
+        ElementWrap.call( this );  // Inherit member-data
+        
         this.createFromHtml( surveyId, '\n\n' + [
             '<h1 class=title> Edit Survey </h1>',
             '<div class=Survey id=Survey>',
-            '    <div class=SurveyLinkMessage id=SurveyLinkMessage role=alert></div>',
+            '    <div class="Message SurveyLinkMessage" id=SurveyLinkMessage aria-live=polite></div>',
             '    <div class=loginStatus id=loginStatus></div>',
+            '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
             '    <div> ' ,
             '        <button class=freezeButton id=freezeButton onclick=clickFreezeButton></button>' ,
-            '        <div class=freezeMessage id=freezeMessage></div>' ,
+            '        <div class="Message freezeMessage" id=freezeMessage></div>' ,
             '    </div> ' ,
             '    <div class=SurveyEdit>', 
+            '        <label for=SurveyTitleInput> Survey title </label>',
+            '        <input type=text class="SurveyEditInput SurveyTitleInput" id=SurveyTitleInput placeholder="" ',
+            '            onkeydown=handleEditTitleKey oninput=handleEditTitleInput onblur=handleEditSurveySave></textarea>',
             '        <label for=SurveyIntroInput> Survey introduction </label>',
             '        <textarea class=SurveyEditInput id=SurveyIntroInput placeholder="" ',
             '            onkeydown=handleEditIntroKey oninput=handleEditIntroInput onblur=handleEditSurveySave></textarea>',
+            '        <div class="Message SurveyEditMessage" id=SurveyEditMessage aria-live=polite></div> ',
             '    </div>',
-            '    <div class=SurveyEditMessage id=SurveyEditMessage role=alert></div>',
+            '    <h2> Questions </h2>' ,
+            '    <p> Add survey questions here. </p>' ,
+            '    <p> You can suggest answers here, but participants will also be able to enter any answer they want. </p>' ,
             '    <div class=Questions id=Questions></div>',
             '    <div class=NewQuestion>', 
             '        <label for=NewQuestionInput> New question </label>',
             '        <textarea class=NewQuestionInput id=NewQuestionInput placeholder="" ',
             '            oninput=handleNewQuestionInput></textarea>',
             '    </div>',
-            '    <button class=SurveyViewButton id=SurveyViewButton onclick=onViewSurvey> View Survey </button>',
+            '    <div class=SurveyViewButtonBar><button class=SurveyViewButton id=SurveyViewButton onclick=onViewSurvey> View Survey </button></div>' ,
             '</div>'
         ].join('\n') );
     }
-    SurveyEditDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods from ElementWrap.
+    SurveyEditDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
 
 
         SurveyEditDisplay.prototype.
@@ -820,6 +842,7 @@
             this.linkMessage = showMessageStruct( this.linkMessage, this.getSubElement('SurveyLinkMessage') );
         }
         this.editMessage = showMessageStruct( this.editMessage, this.getSubElement('SurveyEditMessage') );
+        this.getSubElement('SurveyTitleInput').setCustomValidity( this.surveyTitleValidity? this.surveyTitleValidity : '' );
         this.getSubElement('SurveyIntroInput').setCustomValidity( this.surveyIntroValidity? this.surveyIntroValidity : '' );
 
         if ( this.topDisp.linkKey.loginRequired ){
@@ -828,6 +851,7 @@
         else {
             this.setInnerHtml( 'loginStatus', (this.survey.mine ? 'Browser login only' : null) );
         }
+        this.setInnerHtml( 'hideReasonsStatus', (this.survey.hideReasons ? 'Reasons hidden' : null) );
 
         // Show freeze-message, freeze-button label
         this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeMessage') );
@@ -835,7 +859,12 @@
 
         // Set survey attributes
         this.setAttribute( 'Survey' , 'frozen' , (this.isFrozen() ? TRUE : null) );
+        this.setAttribute( 'Survey', 'mine', (this.survey.mine ? TRUE : null) );
+        this.setAttribute( 'Survey', 'hidereasons', (this.survey.hideReasons ? TRUE : null) );
 
+        // Set title
+        var titleInputContent = ( this.titleInput )?  this.titleInput  :  this.survey.title;
+        this.setProperty( 'SurveyTitleInput', 'value', titleInputContent );
         // Set introduction
         var introInputContent = ( this.introInput )?  this.introInput  :  this.survey.introduction;
         this.setProperty( 'SurveyIntroInput', 'value', introInputContent );
@@ -886,6 +915,10 @@
 
 
         SurveyEditDisplay.prototype.
+    areReasonsHidden = function(){  return this.survey.hideReasons;  }
+
+
+        SurveyEditDisplay.prototype.
     isFrozen = function( ){  return this.survey && this.survey.freezeUserInput;  }
 
         SurveyEditDisplay.prototype.
@@ -923,6 +956,25 @@
 
 
         SurveyEditDisplay.prototype.
+    handleEditTitleKey = function( event ){
+        if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
+        // if ENTER key... focus introduction-input, then blur causes save
+        if ( event.keyCode === KEY_CODE_ENTER ) {  
+            event.preventDefault();
+            this.getSubElement('SurveyIntroInput').focus();
+            return false;
+        }
+    };
+
+        SurveyEditDisplay.prototype.
+    handleEditTitleInput = function( ){
+        if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
+        var titleInput = this.getSubElement('SurveyTitleInput');
+        this.titleInput = titleInput.value;
+    };
+
+
+        SurveyEditDisplay.prototype.
     handleEditIntroKey = function( event ){
 
         if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
@@ -930,15 +982,13 @@
         // ENTER key...
         if ( event.keyCode === KEY_CODE_ENTER ) {  
             event.preventDefault();
-            // Save intro
-            this.handleEditSurveySave();
-            // Focus next existing / new question input
+            // Focus next existing / new question input, then blur causes save
             if ( this.questionDisplays  &&  this.questionDisplays.length > 0 ){
                 this.questionDisplays[0].setInputFocusAtEnd();
             }
             else {
-                var newAnswerInput = this.getSubElement('NewAnswerInput');
-                newAnswerInput.focus();
+                var newQuestionInput = this.getSubElement('NewQuestionInput');
+                newQuestionInput.focus();
             }
             return false;
         }
@@ -946,13 +996,12 @@
 
         SurveyEditDisplay.prototype.
     handleEditIntroInput = function( ){
-
         if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
-
         var introInput = this.getSubElement('SurveyIntroInput');
         this.introInput = introInput.value;
         fitTextAreaToText( introInput );
     };
+
 
         SurveyEditDisplay.prototype.
     handleNewQuestionInput = function( ){
@@ -982,6 +1031,9 @@
     
 
         SurveyEditDisplay.prototype.
+    retrieveDataUpdate = function( ){  return this.retrieveData();  }
+
+        SurveyEditDisplay.prototype.
     retrieveData = function( ){
         // request via ajax
         var thisCopy = this;
@@ -993,9 +1045,12 @@
                     thisCopy.survey.linkOk = true;
                     if ( receiveData.survey ){
                         thisCopy.survey.id = receiveData.survey.id;
+                        thisCopy.survey.title = receiveData.survey.title;
                         thisCopy.survey.introduction = receiveData.survey.introduction;
                         thisCopy.survey.allowEdit = receiveData.survey.allowEdit;
                         thisCopy.survey.freezeUserInput = receiveData.survey.freezeUserInput;
+                        thisCopy.survey.mine = receiveData.survey.mine;
+                        thisCopy.survey.hideReasons = receiveData.survey.hideReasons;
                     }
                     if ( receiveData.linkKey ){
                         thisCopy.linkKey.loginRequired = receiveData.linkKey.loginRequired;
@@ -1065,8 +1120,9 @@
 
         if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
 
+        var titleInput = this.getSubElement('SurveyTitleInput');
         var introInput = this.getSubElement('SurveyIntroInput');
-        if ( introInput.value == this.survey.introduction ){  return;  }
+        if ( (titleInput.value == this.survey.title) && (introInput.value == this.survey.introduction) ){  return;  }
 
         // save via ajax
         this.editMessage = { color:GREY, text:'Saving changes...' };
@@ -1074,7 +1130,9 @@
         this.dataUpdated();
         var sendData = { 
             crumb:crumb , fingerprint:fingerprint ,
-            linkKey:this.topDisp.linkKey.id , introduction:introInput.value
+            linkKey:this.topDisp.linkKey.id , 
+            title:titleInput.value ,
+            introduction:introInput.value
         };
         var url = '/autocomplete/editSurvey';
         var thisCopy = this;
@@ -1090,6 +1148,7 @@
                 thisCopy.surveyIntroValidity = '';
                 thisCopy.dataUpdated();
                 // update data
+                thisCopy.survey.title = receiveData.survey.title;
                 thisCopy.survey.introduction = receiveData.survey.introduction;
                 thisCopy.dataUpdated();
             }
@@ -1123,7 +1182,7 @@
 
         SurveyEditDisplay.prototype.
     onViewSurvey = function( ){
-        setFragmentFields( {page:FRAG_PAGE_VIEW_QUESTION} );
+        setFragmentFields( {page:FRAG_PAGE_VIEW_AUTOCOMPLETE} );
     };
     
         SurveyEditDisplay.prototype.

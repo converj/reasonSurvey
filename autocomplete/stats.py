@@ -4,8 +4,34 @@ import hashlib
 import logging
 import random
 import re
+import sys
 # Import app modules
 from configAutocomplete import const as conf
+
+
+
+# Assumes that keys are integers, but may return float between keys
+def medianKey( keyToCount ):
+    if keyToCount is None:  return None
+    # Sum half the counts
+    sumCount = sum(  [ count  for key, count in keyToCount.iteritems() ]  )
+    halfSumCount = float(sumCount) / 2.0
+    logging.debug( 'medianKey() halfSumCount=' + str(halfSumCount) + ' keyToCount=' + str(keyToCount) )
+    # Return key matching half the count, ordered by key as integer
+    runningSumCount = 0
+    keysSorted = sorted( keyToCount.keys() , key=int )
+    for k in range(len(keysSorted)):
+        key = keysSorted[k]
+        keyNext = keysSorted[k+1]  if (k+1 < len(keysSorted))  else None
+        count = keyToCount[ key ]
+        runningSumCount += count
+        # If halfSumCount falls between key-count and next-key-count... average keys
+        if ( halfSumCount < runningSumCount ) or ( keyNext is None ):  return float(key)
+        elif ( halfSumCount == runningSumCount ):  return average( [float(key), float(keyNext)] )
+    return None
+
+def average( values ):
+    return sum(values) / len(values)
 
 
 
@@ -75,6 +101,20 @@ import unittest
 
 class TestStats(unittest.TestCase):
 
+    def testMedianKey( self ):
+
+        self.assertEqual( 2 , medianKey({'1':1, '100':1, '2':1}) )
+        self.assertEqual( 12 , medianKey({'1':1, '100':1, '2':1, '22':1}) )
+
+        self.assertEqual( 151 , medianKey({'1':9, '2':1, '300':10}) )
+        self.assertEqual( 50 , medianKey({'1':10, '99':10}) )
+        self.assertEqual(  1 , medianKey({'1':10, '99':9}) )
+        self.assertEqual( 99 , medianKey({'1':9,  '99':10}) )
+        self.assertEqual( 5 , medianKey({'3':1, '4':1, '5':3}) )
+        self.assertEqual( 5 , medianKey({'5':2}) )
+        self.assertEqual( 1 , medianKey({'1':10, '2':2}) )
+
+
     def testRandomSample( self ):
 
         random.seed( 1 )
@@ -118,5 +158,6 @@ class TestStats(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    logging.basicConfig( stream=sys.stdout, level=logging.DEBUG, format='%(filename)s %(funcName)s():  %(message)s' )
     unittest.main()
 

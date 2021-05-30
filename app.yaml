@@ -53,7 +53,15 @@ handlers:
   script: getRequestData.app
   secure: always
 
-- url: /getProposalData/.*
+- url: /suggestProposals/.*
+  script: getRequestData.app
+  secure: always
+
+- url: /topReasons/.*
+  script: getProposalData.app
+  secure: always
+
+- url: /suggestReasons/.*
   script: getProposalData.app
   secure: always
 
@@ -76,7 +84,6 @@ handlers:
 - url: /(.*\.(png|css|js))$
   static_files: \1
   upload: .*\.(png|css|js)$
-
 
 
 
@@ -152,18 +159,80 @@ handlers:
   script: autocomplete.getRecent.app
   secure: always
 
-- url: /autocomplete/?
-  script: autocomplete.main.app
+
+
+
+- url: /budget/budgetNew
+  script: budget.submitBudget.app
+  secure: always
+
+- url: /budget/budgetEdit
+  script: budget.submitBudget.app
+  secure: always
+
+- url: /budget/budgetFreeze
+  script: budget.submitBudget.app
+  secure: always
+
+
+- url: /budget/sliceCreatorEdit
+  script: budget.submitSlice.app
+  secure: always
+
+- url: /budget/sliceCreatorDelete
+  script: budget.submitSlice.app
+  secure: always
+
+- url: /budget/sliceVote
+  script: budget.submitSlice.app
+  secure: always
+
+- url: /budget/sliceSetSize
+  script: budget.submitSlice.app
+  secure: always
+
+- url: /budget/sliceDelete
+  script: budget.submitSlice.app
+  secure: always
+
+
+- url: /budget/budget/.*
+  script: budget.getBudget.app
+  secure: always
+
+
+- url: /budget/slice/.*
+  script: budget.getSlice.app
+  secure: always
+
+- url: /budget/slicesForPrefix/.*
+  script: budget.getSlice.app
+  secure: always
+
+- url: /budget/sliceSizeReasons/.*
+  script: budget.getSlice.app
+  secure: always
+
+- url: /budget/slicesForUser/.*
+  script: budget.getSlice.app
+  secure: always
+
+- url: /budget/slicesFromCreator/.*
+  script: budget.getSlice.app
+  secure: always
+
+- url: /budget/sliceTitleResults/.*
+  script: budget.getSlice.app
+  secure: always
+
+- url: /budget/sliceReasonResults/.*
+  script: budget.getSlice.app
   secure: always
 
 
 
 
 - url: /initialCookie
-  script: main.app
-  secure: always
-
-- url: /procon
   script: main.app
   secure: always
 
@@ -176,6 +245,6 @@ handlers:
   secure: always
 
 - url: /.*
-  script: siteList.app
+  script: main.app
   secure: always
 
