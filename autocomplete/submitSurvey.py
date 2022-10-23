@@ -3,28 +3,28 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
-import webapp2
 # Import app modules
-from configAutocomplete import const as conf
+import common
+from autocomplete.configAutocomplete import const as conf
 import httpServer
-import httpServerAutocomplete
+from httpServer import app
+from autocomplete import httpServerAutocomplete
 import linkKey
-import question
+from autocomplete import question
 import secrets
-import survey
+from autocomplete import survey
 import user
 import text
 
 
 
-class SubmitNewSurvey( webapp2.RequestHandler ):
-
-    def post(self):
-        logging.debug( 'SubmitNewSurvey.post() request.body=' + self.request.body )
+@app.post('/autocomplete/newSurvey')
+def newSurvey( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug( 'SubmitNewSurvey.post() inputData=' + str(inputData) )
 
         title = text.formTextToStored( inputData.get('title', '') )
@@ -39,19 +39,20 @@ class SubmitNewSurvey( webapp2.RequestHandler ):
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
 
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response, loginRequired=loginRequired )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, loginRequired=loginRequired )
+        if not cookieData.valid():  return httpResponse
         userId = cookieData.id()
 
         # Check survey introduction length.
-        if not httpServer.isLengthOk( title, introduction, conf.minLengthSurveyIntro ):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+        if not httpServer.isLengthOk( title, introduction, conf.minLengthSurveyIntro ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
         # Check experimental password (low-risk secret)
         if ( hideReasons or loginRequired or experimentalPassword )  and  ( experimentalPassword != secrets.experimentalPassword ):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
 
         # Construct and store new survey record.
-        surveyRecord = survey.Survey( creator=userId, title=title, introduction=introduction, allowEdit=True, hideReasons=hideReasons )
+        surveyRecord = survey.Survey( creator=userId, title=title, introduction=introduction, allowEdit=True, hideReasons=hideReasons,
+            adminHistory=common.initialChangeHistory() )
         surveyRecordKey = surveyRecord.put()
         logging.debug( 'surveyRecordKey.id={}'.format(surveyRecordKey.id()) )
 
@@ -63,17 +64,16 @@ class SubmitNewSurvey( webapp2.RequestHandler ):
         surveyDisplay = httpServerAutocomplete.surveyToDisplay( surveyRecord, userId )
         linkKeyDisplay = httpServer.linkKeyToDisplay( linkKeyRecord )
         responseData.update(  { 'success':True, 'linkKey':linkKeyDisplay, 'survey':surveyDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
-class SubmitEditSurvey( webapp2.RequestHandler ):
-
-    def post(self):
-        logging.debug( 'SubmitEditSurvey.post() request.body=' + self.request.body )
+@app.post('/autocomplete/editSurvey') 
+def editSurvey( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug( 'SubmitEditSurvey.post() inputData=' + str(inputData) )
 
         title = text.formTextToStored( inputData['title'] )
@@ -86,35 +86,35 @@ class SubmitEditSurvey( webapp2.RequestHandler ):
             + ' linkKeyString=' + str(linkKeyString) )
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpResponse
         userId = cookieData.id()
 
         # Retrieve link-key record
-        if linkKeyString is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKeyString is null' )
+        if linkKeyString is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKeyString is null' )
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyString )
         logging.debug( 'SubmitEditSurvey.post() linkKeyRecord=' + str(linkKeyRecord) )
 
-        if linkKeyRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
-        if linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + str(linkKeyRecord.destinationType) )
+        if linkKeyRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
+        if linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey destinationType=' + str(linkKeyRecord.destinationType) )
         surveyId = linkKeyRecord.destinationId
         loginRequired = linkKeyRecord.loginRequired
 
-        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Check survey length
         if not httpServer.isLengthOk( title, introduction, conf.minLengthSurveyIntro ):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
         # Retrieve survey record.
         surveyRec = survey.Survey.get_by_id( int(surveyId) )
         logging.debug( 'SubmitEditSurvey.post() surveyRec=' + str(surveyRec) )
 
-        if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='survey not found' )
+        if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='survey not found' )
 
         # Verify that survey is editable
-        if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
-        if not surveyRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.HAS_RESPONSES )
+        if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
+        if not surveyRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
 
         # Update survey record
         surveyRec.title = title
@@ -124,17 +124,17 @@ class SubmitEditSurvey( webapp2.RequestHandler ):
         # Display updated survey.
         surveyDisplay = httpServerAutocomplete.surveyToDisplay( surveyRec, userId )
         responseData.update(  { 'success':True, 'survey':surveyDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
-class ReorderSurveyQuestions( webapp2.RequestHandler ):
 
-    def post(self):
-        logging.debug( 'ReorderSurveyQuestions.post() request.body=' + self.request.body )
+@app.post('/autocomplete/reorderSurveyQuestions')
+def reorderSurveyQuestions( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug( 'ReorderSurveyQuestions.post() inputData=' + str(inputData) )
 
         questionIds = inputData['questionIds']
@@ -146,32 +146,32 @@ class ReorderSurveyQuestions( webapp2.RequestHandler ):
             + ' linkKeyString=' + str(linkKeyString) )
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpResponse
         userId = cookieData.id()
 
         # Retrieve link-key record
-        if linkKeyString is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKeyString is null' )
+        if linkKeyString is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKeyString is null' )
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyString )
         logging.debug( 'ReorderSurveyQuestions.post() linkKeyRecord=' + str(linkKeyRecord) )
 
-        if linkKeyRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
-        if linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + str(linkKeyRecord.destinationType) )
+        if linkKeyRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
+        if linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey destinationType=' + str(linkKeyRecord.destinationType) )
         surveyId = linkKeyRecord.destinationId
         loginRequired = linkKeyRecord.loginRequired
 
-        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Retrieve survey record.
         surveyRec = survey.Survey.get_by_id( int(surveyId) )
         logging.debug( 'ReorderSurveyQuestions.post() surveyRec=' + str(surveyRec) )
 
-        if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='survey not found' )
-        if surveyId != linkKeyRecord.destinationId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='surveyId != linkKeyRecord.destinationId' )
+        if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='survey not found' )
+        if surveyId != linkKeyRecord.destinationId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='surveyId != linkKeyRecord.destinationId' )
 
         # Verify that survey is editable
-        if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
-        if not surveyRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.HAS_RESPONSES )
+        if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
+        if not surveyRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
 
         # If questionId is missing from survey record... disallow/remove it.
         questionIdsFromSurveySet = set( surveyRec.questionIds )
@@ -195,17 +195,17 @@ class ReorderSurveyQuestions( webapp2.RequestHandler ):
         surveyDisplay = httpServerAutocomplete.surveyToDisplay( surveyRec, userId )
         surveyDisplay['questionIds'] = surveyRec.questionIds
         responseData.update(  { 'success':True, 'survey':surveyDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
-class FreezeSurvey( webapp2.RequestHandler ):
 
-    def post(self):
-        logging.debug( 'FreezeSurvey.post() request.body=' + self.request.body )
+@app.post('/autocomplete/freezeSurvey')
+def freezeSurvey( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug( 'FreezeSurvey.post() inputData=' + str(inputData) )
 
         linkKeyString = inputData['linkKey']
@@ -213,49 +213,41 @@ class FreezeSurvey( webapp2.RequestHandler ):
         logging.debug( 'FreezeSurvey.post() freeze=' + str(freeze) + ' linkKeyString=' + str(linkKeyString) )
 
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpResponse
         userId = cookieData.id()
 
         # Retrieve link-key record
-        if linkKeyString is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKeyString is null' )
+        if linkKeyString is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKeyString is null' )
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyString )
         logging.debug( 'FreezeSurvey.post() linkKeyRecord=' + str(linkKeyRecord) )
 
-        if linkKeyRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
-        if linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + str(linkKeyRecord.destinationType) )
+        if linkKeyRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
+        if linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey destinationType=' + str(linkKeyRecord.destinationType) )
         surveyId = linkKeyRecord.destinationId
         loginRequired = linkKeyRecord.loginRequired
 
-        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Retrieve survey record
         surveyRec = survey.Survey.get_by_id( int(surveyId) )
         logging.debug( 'FreezeSurvey.post() surveyRec=' + str(surveyRec) )
 
-        if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='survey not found' )
+        if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='survey not found' )
 
         # Verify that survey is editable
-        if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
-        if not surveyRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.HAS_RESPONSES )
+        if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
+        if not surveyRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
 
         # Update survey record
         surveyRec.freezeUserInput = freeze
+        common.appendFreezeInputToHistory( freeze, surveyRec.adminHistory )
         surveyRec.put()
 
         # Display updated survey
         surveyDisplay = httpServerAutocomplete.surveyToDisplay( surveyRec, userId )
         responseData.update(  { 'success':True, 'survey':surveyDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
-
-
-# Route HTTP request
-app = webapp2.WSGIApplication([
-    ('/autocomplete/newSurvey', SubmitNewSurvey) ,
-    ('/autocomplete/editSurvey', SubmitEditSurvey) ,
-    ('/autocomplete/reorderSurveyQuestions', ReorderSurveyQuestions) ,
-    ('/autocomplete/freezeSurvey', FreezeSurvey)
-])
 
 

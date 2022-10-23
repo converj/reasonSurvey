@@ -3,32 +3,32 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
-import webapp2
 # Import app modules
-from configBudget import const as conf
+from budget.configBudget import const as conf
 import httpServer
-import httpServerBudget
+from httpServer import app
+from budget import httpServerBudget
 import linkKey
-import budget
+from budget import budget
 import user
 
 
-class GetBudget( webapp2.RequestHandler ):
-    def get( self, linkKeyStr ):
 
-        logging.debug( 'getBudget.GetBudget() linkKeyStr=' + linkKeyStr )
+@app.get( r'/budget/budget/<alphanumeric:linkKeyStr>' )
+def getBudget( linkKeyStr ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
 
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, idRequired=False )
+        cookieData = httpServer.validate( httpRequest, {}, responseData, httpResponse, idRequired=False )
         userId = cookieData.id()
         
         # Retrieve and check linkKey
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
         if (linkKeyRecord is None) or (linkKeyRecord.destinationType != conf.BUDGET_CLASS_NAME):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.BAD_LINK )
         budgetId = linkKeyRecord.destinationId
 
         # Retrieve Budget by id, filter/transform fields for display.
@@ -45,12 +45,6 @@ class GetBudget( webapp2.RequestHandler ):
 
         # Display budget data.
         responseData = { 'success':True , 'linkKey':linkKeyDisplay , 'budget':budgetDisp }
-        httpServer.outputJson( cookieData, responseData, self.response )
-
-
-# Route HTTP request
-app = webapp2.WSGIApplication( [
-    ( r'/budget/budget/([0-9A-Za-z]+)' , GetBudget )
-] )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 

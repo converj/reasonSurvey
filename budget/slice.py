@@ -13,27 +13,22 @@
 
 
 # Import external modules
-from collections import Counter, namedtuple
 import datetime
 from google.appengine.ext import ndb
-from google.appengine.api import search
 import hashlib
 import logging
 import re
 import time;
 # Import app modules
-from configBudget import const as conf
+from budget.configBudget import const as conf
 import autocomplete.stats as stats
 import text
 
 
 
 # Constants
-conf.MAX_RETRY = 3
 conf.MAX_VOTE_RETRY = 3
 conf.CHAR_LENGTH_UNIT = 100
-conf.MAX_SLICE_SUGGESTIONS = 3
-conf.NUM_FREQ_SLICE_SUGGESTIONS = min( 1, conf.MAX_SLICE_SUGGESTIONS - 1 )  # Should be less than MAX_SLICE_SUGGESTIONS
 
 
 
@@ -102,7 +97,7 @@ class Slice( ndb.Model ):
         size = str( size )  # JSON-field stores keys as strings
         countOld = self.sizeToCount.get( size, 0 )
         self.sizeToCount[ size ] = max( 0, countOld + increment )  # Do not allow negative counts
-        self.sizeToCount = { s:c  for s,c in self.sizeToCount.iteritems()  if 0 < c }  # Filter zeros
+        self.sizeToCount = { s:c  for s,c in self.sizeToCount.items()  if 0 < c }  # Filter zeros
 
     def medianSize( self ):  return stats.medianKey( self.sizeToCount )
 
@@ -113,12 +108,12 @@ class Slice( ndb.Model ):
         return voteCountToScore( self.countVotesAboveSize(size), self.title, self.reason )
 
     def countVotesBelowSize( self, size ):
-        resultSum = sum(  [ c  for s, c  in self.sizeToCount.iteritems()  if int(s) < size ]  )
+        resultSum = sum(  [ c  for s, c  in self.sizeToCount.items()  if int(s) < size ]  )
         logging.debug( 'countVotesBelowSize() resultSum=' + str(resultSum) + ' size=' + str(size) + ' sizeToCount=' + str(self.sizeToCount) )
         return resultSum
 
     def countVotesAboveSize( self, size ):
-        resultSum = sum(  [ c  for s, c  in self.sizeToCount.iteritems()  if size < int(s) ]  )
+        resultSum = sum(  [ c  for s, c  in self.sizeToCount.items()  if size < int(s) ]  )
         logging.debug( 'countVotesAboveSize() resultSum=' + str(resultSum) + ' size=' + str(size) + ' sizeToCount=' + str(self.sizeToCount) )
         return resultSum
 
@@ -152,7 +147,7 @@ class SliceTitle( ndb.Model ):
         size = str( size )  # JSON-field stores keys as strings
         countOld = self.sizeToCount.get( size, 0 )
         self.sizeToCount[ size ] = max( 0, countOld + increment )  # Do not allow negative counts
-        self.sizeToCount = { s:c  for s,c in self.sizeToCount.iteritems()  if 0 < c }  # Filter zeros
+        self.sizeToCount = { s:c  for s,c in self.sizeToCount.items()  if 0 < c }  # Filter zeros
         logging.debug( 'SliceTitle.incrementSizeCount() sizeToCount=' + str(self.sizeToCount) )
 
     def medianSize( self ):  return stats.medianKey( self.sizeToCount )
@@ -170,13 +165,13 @@ class SliceTitle( ndb.Model ):
 # Record-class for storing budget x user -> all slice-votes for this user
 class SliceVotes( ndb.Model ):
     # Indexed fields for querying
-    userId = ndb.StringProperty()
     budgetId = ndb.StringProperty()
+    userId = ndb.StringProperty()
 
     slices = ndb.JsonProperty( default={} )  # map[ sliceId -> size ]
     
     def slicesTotalSize( self ):
-        return sum( [size  for sliceId, size  in self.slices.iteritems()] )
+        return sum( [size  for sliceId, size  in self.slices.items()] )
 
     @staticmethod
     def toKeyId( budgetId, userId ):

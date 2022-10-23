@@ -3,32 +3,32 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
-import webapp2
 # Import app modules
-from configAutocomplete import const as conf
+from autocomplete.configAutocomplete import const as conf
 import httpServer
-import httpServerAutocomplete
+from httpServer import app
+from autocomplete import httpServerAutocomplete
 import linkKey
-import survey
+from autocomplete import survey
 import user
 
 
-class GetSurvey( webapp2.RequestHandler ):
-    def get( self, linkKeyStr ):
 
-        logging.debug( 'getSurvey.GetSurvey() linkKeyStr=' + linkKeyStr )
+@app.get( r'/autocomplete/getSurvey/<alphanumeric:linkKeyStr>' )
+def getSurvey( linkKeyStr ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs.
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
 
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, idRequired=False )
+        cookieData = httpServer.validate( httpRequest, {}, responseData, httpResponse, idRequired=False )
         userId = cookieData.id()
         
         # Retrieve and check linkKey.
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
         if (linkKeyRecord is None) or (linkKeyRecord.destinationType != conf.SURVEY_CLASS_NAME):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.BAD_LINK )
         surveyId = linkKeyRecord.destinationId
 
         # Retrieve Survey by id, filter/transform fields for display.
@@ -45,12 +45,6 @@ class GetSurvey( webapp2.RequestHandler ):
 
         # Display survey data.
         responseData = { 'success':True , 'linkKey':linkKeyDisplay , 'survey':surveyDisp }
-        httpServer.outputJson( cookieData, responseData, self.response )
-
-
-# Route HTTP request
-app = webapp2.WSGIApplication( [
-    ( r'/autocomplete/getSurvey/([0-9A-Za-z]+)' , GetSurvey )
-] )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 

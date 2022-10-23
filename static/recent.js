@@ -39,6 +39,7 @@
                         '<div class=recentRequest tabindex=0>',
                         '    <div class=recentRequestType>' + linkType.display + '</div>',
                         '    <div class=recentRequestType>' + (recent.frozen ? '(frozen)' : '') + '</div>',
+                        '    <div class=recentRequestType>' + (recent.freezeNewProposals ? '(frozen proposals)' : '') + '</div>',
                         '    <div class=recentRequestType>' + (recent.hideReasons ? '(reasons hidden)' : '') + '</div>',
                         '    <h2 class=recentRequestTitle>' + recent.title + '</h2>',
                         '    <div class=recentRequestDetail>' + detailSample + '</div>',

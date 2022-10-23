@@ -99,10 +99,10 @@ logOnScreenReplace( ...arguments ){
 
 
         function
-    scrollToHtmlElement( htmlElement ){
+    scrollToHtmlElement( htmlElement, margin=20 ){
         var elementJquery = jQuery( htmlElement );
         jQuery('html, body').animate( {
-            scrollTop: ( elementJquery.offset().top - 20 ) + 'px'
+            scrollTop: ( elementJquery.offset().top - margin ) + 'px'   // Scroll so a little margin shows above the target
         }, 'fast' );
     }
 
@@ -246,7 +246,7 @@ objectsEqual( obj1, obj2, ignoreKeys ){
     function
 htmlToElement( html ){
     var tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+    if ( html ){  tempDiv.innerHTML = html;  }
     var element = ( tempDiv.children.length == 1 )?  tempDiv.children[0]  :  tempDiv;
     return element;
 }
@@ -1008,32 +1008,48 @@ tuples( words, maxSize=2 ){
 
 
 const AUTO_LINK_URL_HOSTS = [
+    'allsides.com' ,
     'axios.com' ,
     'ballotpedia.org' ,
     'bostonglobe.com' ,
+    'cbpp.org' ,
     'cbsnews.com' ,
+    'childstats.gov' ,
+    'cits.ucsb.edu' ,
+    'edf.org' ,
+    'factcheck.org' ,
+    'forbes.com' ,
+    'globalchange.gov' ,
     'kansan.com' ,
+    'kidscount.org' ,
     'latimes.com' ,
     'medium.com' ,
     'mosieboyd.com' ,
+    'nature.com' ,
     'nbcnews.com' ,
+    'noaa.gov' ,
     'nymag.com' ,
     'nytimes.com' ,
+    'pewresearch.org' ,
+    'politifact.com' ,
     'publicintegrity.org' ,
     'reason.com' ,
     'sacbee.com' ,
     'sandiegouniontribune.com' ,
+    'snopes.com' ,
     'statista.com' ,
     'thebalance.com' ,
     'thedartmouth.com' ,
+    'theflipside.io' ,
     'theguardian.com' ,
     'usatoday.com' ,
+    'uscis.gov' ,
     'votersedge.org' ,
     'votesmart.org' ,
     'vox.com' ,
     'washingtonpost.com' ,
     'washingtontimes.com' ,
-    'en.wikipedia.org' ,
+    'wikipedia.org' ,
     'wired.com'
 ];
 

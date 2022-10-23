@@ -4,7 +4,8 @@
 import json
 import logging
 # Import app modules.
-from configAutocomplete import const as conf
+from autocomplete.configAutocomplete import const as conf
+import common
 import linkKey
 import user
 
@@ -19,7 +20,8 @@ def surveyToDisplay( surveyRecord, userId ):
         'introduction': surveyRecord.introduction,
         'mine': (surveyRecord.creator == userId),
         'allowEdit': (userId == surveyRecord.creator) and surveyRecord.allowEdit ,
-        'freezeUserInput': surveyRecord.freezeUserInput
+        'freezeUserInput': surveyRecord.freezeUserInput ,
+        'adminHistory': common.decodeChangeHistory( surveyRecord.adminHistory ) ,
     }
     # Only set if used
     if surveyRecord.hideReasons:  display['hideReasons'] = surveyRecord.hideReasons

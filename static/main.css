@@ -15,7 +15,7 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
             border:solid 1px #cccccc;  box-shadow:0px 0px 5px 0px #aaaaaa inset;
         }
         textarea {  line-height:1.5em;  }
-        input[ type=checkbox ] {  width:auto;  margin-left:5px;  }
+        input[ type=checkbox ] {  width:auto;  margin-left:5px;  cursor:pointer;  }
         input:invalid , textarea:invalid , input.invalid {  background-color:#ffdddd;  }
         label {  color:black;  opacity:0.5;  font-size:12pt;  cursor:pointer;  }
         ::placeholder {  color:#888888;  opacity:1.0;  }
@@ -185,7 +185,8 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
         .loginRequiredLabel {  }
         .loginRequiredCheckbox {    }
     .experimentalInputs {  display:none;  margin:10px 0px 20px 0px;  }
-        .experimentalPasswordInput {  display:inline-block;  margin:10px 0px 10px 10px;  width:calc(100% - 150px);  }
+        .experimentalPasswordInput {  display:inline-block;  margin:10px 0px 10px 10px;  width:calc(100% - 103px);  }
+        .doneLinkInput {  display:inline-block;  margin:10px 0px 10px 10px;  width:calc(100% - 100px);  }
         .hideReasonsCheckbox {  margin:25px 0px 10px 5px;  }
     #newRequestSubmit , #newProposalSubmit {  text-align:center;  }
 
@@ -221,15 +222,31 @@ a.recentRequestLink {  text-decoration:none;  }
     .RequestMessage {  color:green;  opacity:0.50;  margin:30px 10px 20px 5px;  }
     .loginStatus {  color:grey;  margin:10px 0px 10px 5px;  }
 
-    .freezeButton {  display:none;  margin:10px 0px 30px 5px; }
-    .ReqProp[mine='true']  .freezeButton {  display:inline-block;  }
-    .ReqProp[mine='true'][frozen='true']  .freezeButton {  color:red;  }
+    .doneLink {  display:none;  margin:20px 0px 20px 5px;  }
+    .ReqProp[hasdonelink='true'][mine='true']  .doneLink {  display:block;  }
+    .doneLink .doneLinkLabel {  color:grey;  }
+    .doneLink a {  color:rgba(150,150,255,255);  }
+
+    .freezeUserInput {  display:none;  margin:20px 0px 20px 5px;  }
+    .ReqProp[mine='true']  .freezeUserInput {  display:block;  }
+    .freezeUserInput .Message {  display:inline-block;  margin-left:15px;  vertical-align:bottom;  }
+
+    .freezeNewProposals {  display:none;  margin:20px 0px 20px 5px;  }
+    .ReqProp[mine='true']  .freezeNewProposals {  display:block;  }
+    .freezeNewProposals .Message {  display:inline-block;  margin-left:15px;  vertical-align:bottom;  }
+
     .hideReasonsStatus {  display:none;  color:red;  }
-    [mine='true'][hidereasons='true']  .hideReasonsStatus {  display:block;  }
+    [mysurvey='true'][hidereasons='true']  .hideReasonsStatus {  display:block;  }
 
     .freezeText {  display:none;  color:red;  margin:10px 0px 30px 5px;  }
     .ReqProp[frozen='true']              .freezeText {  display:block;  }
     .ReqProp[frozen='true'][mine='true'] .freezeText {  display:none;  }
+
+    .adminHistory {  margin:50px 0px 30px 5px;  }
+    .Proposal[fromrequest='true'] .adminHistory {  display:none;  }
+        .adminHistoryLast {  color:grey;  }
+        .adminHistoryFull {  margin:5px 0px 0px 20px;  }
+            .adminHistoryFull .change {  margin:10px;  }
 
     .Request {  padding:15px 5px 15px 5px;  margin-bottom:20px;  border:solid 1px #dddddd;  background-color:#f0f0f0;  box-shadow:0px 0px 20px #888;  border-radius:3px;  }
 
@@ -271,10 +288,10 @@ a.recentRequestLink {  text-decoration:none;  }
             .Proposal[fromRequest='true'] .loginStatus {  display:none;  }
 
             /* Freeze-button */
-            .Proposal[fromRequest='true']              .freezeButton {  display:none;  }
-            .Proposal[mine='true']                     .freezeButton {  display:inline-block;  }
-            .Proposal[mine='true'][frozen='true']      .freezeButton {  color:red;  }
-            .Proposal[fromRequest='true'][mine='true'] .freezeButton {  display:none;  }
+            .Proposal[mine='true']                     .freezeUserInput {  display:inline-block;  }
+            .Proposal[fromRequest='true']              .freezeUserInput {  display:none;  }
+            .Proposal[fromRequest='true'][mine='true'] .freezeUserInput {  display:none;  }
+
             /* Freeze-text */
             .Proposal[frozen='true'][singleProposal='true']                                  .freezeText {  display:block;  }
             .Proposal[frozen='true'][singleProposal='true'][mine='true']                     .freezeText {  display:none;  }
@@ -282,32 +299,44 @@ a.recentRequestLink {  text-decoration:none;  }
             .Proposal[frozen='true'][singleProposal='true'][fromRequest='true']              .freezeText {  display:block;  }
             .ReqProp[frozen='true'] .Proposal .freezeText {  display:none;  }
 
-            .ProposalContentReasonsNew {  padding:10px 0px 10px 0px;  background-color:#f0f0f0;  border:solid 1px #dddddd;  box-shadow:0px 0px 20px #888;  border-radius:3px;  }
+            .ProposalContentReasonsNew {  background-color:#f0f0f0;  border:solid 1px #dddddd;  box-shadow:0px 0px 20px #888;  border-radius:3px;  }
             .Proposal[fromRequest='true'] .ProposalContentReasonsNew {  }
             .Proposal[fromRequest='false'] .ProposalContentReasonsNew {  border:none;  }
 
-            .Collapseable {  }  /* Separate from the table-cell, to force the table-cell to take full width */
-            .Proposal[collapse='true']    .Collapseable {  max-height:300px;  overflow:hidden;  }
+            .Collapseable {  }  /* Separate from the table-cell, to force the table-cell to take full width */  /* No longer needed */
+            .ProposalContentWrap {  position:relative;  }
+                .ProposalContentCover {  position:absolute;  top:0px;  left:0px;  height:100%;  width:100%;  z-index:5;  }
+                .ProposalContentCover:hover {  cursor:pointer;  background:rgb(206,231,256);  opacity:0.50;  }
+                .Proposal[singleProposal='true']  .ProposalContentCover {  display:none;  }
 
-                .ProposalContent {  padding-left:5px;  overflow-y:hidden;  }
+                .ProposalContent {  padding:10px 5px 0px 5px;  overflow-y:hidden;  }
+                .Proposal[collapse='true'] .ProposalContent {  max-height:100px;  }
+
                 .Proposal[fromRequest='true'] .ProposalContent {  padding-bottom:15px;  }
                 .Proposal[fromRequest='false'] .ProposalContent {  margin:0px 0px 20px 0px;  padding:10px 5px 10px 5px;  }
                     .Proposal[fromRequest='false'] .ProposalContent h2  {  font-size:22px;  }
 
-                /* Reason columns */
-                .Reasons {  display:table;  border-collapse:collapse;  width:calc(100% - 1px);  position:relative;  }
-                .Proposal[collapse='true'] .Reasons {  margin:0px 0px 75px 0px;  
-                    box-shadow:0px 0px 20px #f0f0f0 , 0px 0px 20px #f0f0f0 , 0px 0px 20px #f0f0f0 , 0px 0px 20px #f0f0f0 , 0px 0px 20px #f0f0f0;
-                }
-                .Proposal[use1column='true'] .Reasons {  display:block;  }
-                    .ReasonsPro , .ReasonsCon {  display:table-cell;  width:50%;  border:solid 1px #dddddd;  vertical-align:top;  }
-                    .Proposal[use1column='true'] .ReasonsPro {  display:block;  width:100%;  }
-                    .Proposal[use1column='true'] .ReasonsCon {  display:none;  }
-                    .Reasons[hasmatches='true'] .ReasonsPro {  vertical-align:bottom;  }
-                    .Reasons[hasmatches='true'] .ReasonsCon {  vertical-align:bottom;  }
+                /* Vote sums */
+                .ProposalVoteSums {  display:none;  position:relative;  padding:10px 5px 10px 5px;  border-top:solid 1px #dddddd;
+                    z-index:5;  box-shadow:0 -15px 10px -5px #f0f0f0;  }
+                .Proposal[votecounts='true'] .ProposalVoteSums {  display:block;  text-align:center;  }
+                    .ProposalVotePro {  display:inline-block;  }
+                    .ProposalVoteCon {  display:inline-block;  }
+                    .ProposalVoteSums .VoteSumLabel {  margin:0px 5px 0px 15px;  color:#888888;  }
 
-                        /* Reason */
-                        .Reason {  position:relative;  padding:5px 5px 15px 5px;  min-height:40px;  }
+                /* Reason columns */
+                .Proposal[collapse='true'] .ReasonsWrap {  max-height:175px;  overflow-y:hidden;  }
+                    .Reasons {  display:table;  border-collapse:collapse;  width:calc(100% - 1px);  position:relative;  }
+                    .Proposal[collapse='true'] .Reasons {  margin:0px 0px 75px 0px;  }
+                    .Proposal[use1column='true'] .Reasons {  display:block;  }
+                        .ReasonsPro , .ReasonsCon {  display:table-cell;  width:50%;  border:solid 1px #dddddd;  vertical-align:top;  }
+                        .Proposal[use1column='true'] .ReasonsPro {  display:block;  width:100%;  }
+                        .Proposal[use1column='true'] .ReasonsCon {  display:none;  }
+                        .Reasons[hasmatches='true'] .ReasonsPro {  vertical-align:bottom;  }
+                        .Reasons[hasmatches='true'] .ReasonsCon {  vertical-align:bottom;  }
+
+                          /* Reason */
+                          .Reason {  position:relative;  padding:5px 5px 15px 5px;  min-height:40px;  }
                         
                             /* Reason viewing */
                             .ReasonViewing {  }
@@ -352,8 +381,10 @@ a.recentRequestLink {  text-decoration:none;  }
                                     [frozen='true'] .Reason[myvote='true']:hover .ReasonVoteArrowHead {  box-shadow:none;  border-bottom-color:#60a0ff;  }
                                     [frozen='true'] .Reason[myvote='true']:hover .ReasonVoteArrowBody {  box-shadow:none;  background:#60a0ff;  }
 
-                                    .ReasonVoteCount {  position:relative;  top:13px;  min-width:10px;  color:grey;  }
-                                
+                                    .ReasonVoteCount {  position:relative;  top:13px;  min-width:10px;  color:grey;  display:none;  }
+                                    [frozen='true'] .ReasonVoteCount {  display:block;  }
+                                    [mysurvey='true'] .ReasonVoteCount {  display:block;  }
+
                                 .ReasonScore {  position:relative;  top:12px;  left:-10px;  font-size:12px;  color:#aaa;  display:none;  }
 
                             /* Reason editing */
@@ -363,7 +394,7 @@ a.recentRequestLink {  text-decoration:none;  }
                                 .ReasonEditingButtons {  }
                                     .ReasonEditingButtons .Button {  margin:10px 10px 10px 0px;  }
 
-                /* Proposal expand bottom rail */
+                /* Proposal expand bottom rail, linking to single-proposal-page */
                 .ProposalExpandBottomRelative {  position:relative;  }
                     .ProposalExpandBottomWrap {
                         display:none;
@@ -376,17 +407,19 @@ a.recentRequestLink {  text-decoration:none;  }
                             position:absolute;
                             bottom:0px;  width:100%;  height:75px;  z-index:2;
                             background-color:#f0f0f0;
-                            box-shadow:0 -10px 10px #f0f0f0;  border:solid 1px #dddddd;
+                            box-shadow:0 -10px 10px #f0f0f0;
+                            border:solid 1px #dddddd;
                             text-align:center;
                         }
                         .ProposalExpandBottom:hover button {  background:rgb(206,231,256);  }
 
+            /* Button to load more proposals on single-proposal-page */
             .moreReasonsDiv {  text-align:center;  display:none;  }
             .Proposal[singleProposal='true'][hidereasons='false'] .moreReasonsDiv {  display:block;  }
                 .moreReasonsDiv button {  margin:10px;  }
 
             /* New reason */
-            .NewReasonForm {  }
+            .NewReasonForm {  border-top:solid 1px #dddddd;  padding:10px 0px 10px 0px;  position:relative;  box-shadow:0 -15px 10px -5px #f0f0f0;  }
             [frozen='true']  .NewReasonForm {  display:none;  }
             [hidereasons='true']  .NewReasonForm {  display:none;  }
                 .NewReason {  padding:5px;  }
@@ -406,14 +439,22 @@ a.recentRequestLink {  text-decoration:none;  }
                 .backButton button {  margin:10px;  }
 
 
+    /* Bottom buttons and links */
     .MoreProposalsWrap {  text-align:center;  margin:0px;  padding:50px 0px 30px 0px;  }
     .MoreProposalsWrap:hover button {  background:rgb(206,231,256);  }
+
+    .doneLinkForParticipants {  display:none;  margin:0px 0px 50px 0px;  padding:30px;  text-align:center;  }
+    .doneLinkForParticipants:hover {  background:rgb(206,231,256);  }
+    .ReqProp[hasdonelink='true'][done='true']  .doneLinkForParticipants {  display:block;  }
+
+
 
     /* New proposal */
     .NewProposalForm {  border-top:solid 1px #dddddd;  position:relative;  margin:20px 0px 0px 0px;  padding:10px;
         background:#f0f0f0;  box-shadow:0px 0px 20px #888;  border-radius:3px;
     }
     .ReqProp[frozen='true'] .NewProposalForm {  display:none;  }
+    .ReqProp[freezenewproposals='true'] .NewProposalForm {  display:none;  }
 
         .NewProposalSectionTitle {  margin:15px 0px 0px 0px;  text-align:center;  font-weight:bold;  font-size:20px;  color:#888888;  }
 

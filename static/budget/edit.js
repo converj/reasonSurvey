@@ -544,6 +544,7 @@
                     thisCopy.budget.introduction = receiveData.budget.introduction;
                     thisCopy.budget.total = receiveData.budget.total;
                     thisCopy.budget.allowEdit = receiveData.budget.allowEdit;
+                    thisCopy.budget.adminHistory = receiveData.budget.adminHistory;
                     thisCopy.budget.freezeUserInput = receiveData.budget.freezeUserInput;
                     thisCopy.budget.mine = receiveData.budget.mine;
                     thisCopy.budget.hideReasons = receiveData.budget.hideReasons;

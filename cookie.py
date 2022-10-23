@@ -6,6 +6,7 @@ import re
 # Import app modules
 from configuration import const as conf
 from constants import Constants
+import text
 
 
 # Constants
@@ -21,7 +22,7 @@ def getCookieData( httpRequest ):
     if conf.isDev and log:  logging.debug( 'getCookieData() httpRequest.cookies=' + str(httpRequest.cookies) )
 
     cookieBase64 = httpRequest.cookies.get( const.COOKIE_NAME )
-    cookieBase64 = cookieBase64.encode('ascii') if cookieBase64  else None   # Only allow ASCII 128-bit range
+    cookieBase64 = text.toAscii(cookieBase64) if cookieBase64  else None   # Only allow ASCII 128-bit range
     if conf.isDev and log:  logging.debug( 'getCookieData() cookieBase64=' + str(cookieBase64) )
 
     cookieJson = base64.urlsafe_b64decode( cookieBase64 ) if cookieBase64  else None   # Discards non-base-64 characters
@@ -39,13 +40,13 @@ def getCookieData( httpRequest ):
 
 def __isAllowedJsonValue( value ):
     if value is None:  return True
-    if isinstance( value, (int, long, float) ):  return True
-    if isinstance( value, (str, unicode) ):
+    if isinstance( value, (int, float) ):  return True
+    if isinstance( value, (str) ):
         reMatch = re.match( r'^[A-Za-z0-9=\-_., ]*$' , value )  # Must allow space and punctuation used in voter-city
         if conf.isDev and not reMatch:  logging.debug( '__isAllowedJsonValue() regex mismatch for value=' + str(value) )
         return reMatch
     if isinstance( value, dict ): 
-        for k,v in value.iteritems():
+        for k,v in value.items():
             if not __isAllowedJsonValue(k):  return False
             if not __isAllowedJsonValue(v):  return False
         return True
@@ -83,7 +84,8 @@ def setCookieNameToValues( cookieName, cookieKeyToValue, httpResponse, secure=Tr
     cookieJson = json.dumps( cookieKeyToValue )
     if conf.isDev and log:  logging.debug( 'cookie.setCookieNameToValues() cookieName=' + str(cookieName) + ' cookieJson=' + str(cookieJson) )
 
-    cookieBase64 = base64.urlsafe_b64encode( cookieJson )
+    # HTTP-request will probably return cookie data as unicode, so set in HTTP-response as unicode, to match
+    cookieBase64 = text.toUnicode(  base64.urlsafe_b64encode( text.utf8(cookieJson) )  )
     httpResponse.set_cookie( cookieName, cookieBase64, secure=secure, httponly=httponly )
 
 
@@ -98,7 +100,7 @@ class TestCookie(unittest.TestCase):
 
     class CookiesMock:
         def get( self, cookieName ):
-            return base64.urlsafe_b64encode(  json.dumps( {'b':'B'} )  )
+            return text.toUnicode(   base64.urlsafe_b64encode(  text.utf8( json.dumps({'b':'B'}) )  )   )
 
     class RequestMock:
         def __init__(self): self.cookies = TestCookie.CookiesMock()
@@ -121,8 +123,9 @@ class TestCookie(unittest.TestCase):
         useSecureCookie = False
         mergedCookieData = setCookieData( oldCookieData, newCookieData, useSecureCookie, mock_Response )
         responseCookieData = mock_Response.cookieNameToData['C']
-        self.assertEqual( 
-            base64.urlsafe_b64encode(  json.dumps( {'a':'A', 'b':'B'} )  ) ,
+
+        self.assertEqual(
+            text.toUnicode(   base64.urlsafe_b64encode(  text.utf8( json.dumps({'b':'B','a':'A'}) )  )   ) ,
             responseCookieData )
 
 if __name__ == '__main__':

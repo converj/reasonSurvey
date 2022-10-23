@@ -40,6 +40,8 @@ let surveyResultsDisplay = null;  // Cache whole display, because it contains se
 
 let loginRequestKey = null;
 
+let app = { };  // Global data for the app.  All the global-variables above should move inside app-object.
+
 clearData();
 
 
@@ -49,6 +51,9 @@ clearData();
 $(document).ready( function(){
 
     console.log('Document ready');
+    
+    // Show initial page, before cookie set
+    window.onhashchange();
 
     requestInitialCookie( function(){
         updateMenuForScreenChange();
@@ -101,8 +106,8 @@ updateDisplayData( loggedIn ){
 }
 
 
-
-jQuery(document).scroll( alignRows );
+// Set scroll handler
+jQuery(document).scroll(  () => { if (typeof alignRows === "function"){alignRows()} }  );
 
 
 
@@ -154,22 +159,25 @@ window.onhashchange = function(){
     else if ( FRAG_PAGE_ID_REQUEST == page ){
 
         // If link-key is unchanged...
-        let sameRequest = false;
-        if ( linkKey  &&  reqPropData  &&  reqPropData.linkKey  &&  reqPropData.linkKey.id == linkKey ){
+        const DUMMY_REQUEST_ID = 'REQUEST_ID';
+        let haveOldReqData = ( linkKey  &&  reqPropData  &&  reqPropData.linkKey  &&  (reqPropData.linkKey.id == linkKey)  &&  reqPropData.request  &&
+//             (reqPropData.request.id != DUMMY_REQUEST_ID)  &&
+            ('title' in reqPropData.request) );
+        if ( haveOldReqData ){
             // Re-use request data when returning from proposal to request.
             // (Later, copy updated proposal/reason data from proposal back to request, when returning from proposal to request.)
-            sameRequest = true;
             proposalData.singleProposal = false;
         }
         else {
-            reqPropData = { linkKey:{id:linkKey}, linkOk:true, request:{id:'REQUEST_ID'}, proposals:[], reasons:[] };
+            reqPropData = { linkKey:{id:linkKey}, linkOk:true, request:{id:DUMMY_REQUEST_ID}, proposals:[], reasons:[] };
         }
+        console.log( 'window.onhashchange() haveOldReqData=', haveOldReqData );
 
         // Create request display.
         // Use linkKey as display id, because linkKey is needed as display id before retrieveData() runs.
         let reqPropDisp = new RequestForProposalsDisplay( reqPropData.linkKey.id );
         reqPropDisp.setAllData( reqPropData );
-        if ( ! sameRequest ){
+        if ( ! haveOldReqData ){
             let getReasons = ! LOAD_INCREMENTAL;
             reqPropDisp.retrieveData( getReasons );  // Async
         }
@@ -181,7 +189,7 @@ window.onhashchange = function(){
         replaceChildren( pageDiv, reqPropDisp.element );  // Remove old request, add new request.
 
         // If previous page was sub-proposal... find sub-proposal display, and scroll to focus sub-proposal.
-        if ( sameRequest ){
+        if ( haveOldReqData ){
             reqPropDisp.collapseNewProposals( proposalData.id );
             let proposalDisp = reqPropDisp.proposalIdToDisp ?  reqPropDisp.proposalIdToDisp[ proposalData.id ]  :  null;
             if ( proposalDisp ){  proposalDisp.scrollToProposal();  }
@@ -218,6 +226,7 @@ window.onhashchange = function(){
         showPage( DIV_ID_PROPOSAL, SITE_TITLE + ': Proposal' );
         let pageDiv = document.getElementById( DIV_ID_PROPOSAL );
         replaceChildren( pageDiv, proposalDisp.element );  // Remove old proposal, add new proposal.
+        proposalDisp.scrollToProposal();
     }
     // Page: proposal
     else if ( FRAG_PAGE_ID_PROPOSAL == page ){
@@ -464,8 +473,22 @@ toggleMenu( showMenu ){
 }
 
 // Back links go back from proposal to enclosing request.
-jQuery('#menuItemLinkBackProposals').click(  function(e){ e.preventDefault(); window.history.back(); }  );
-jQuery('#menuItemLinkBackResults').click(  function(e){ e.preventDefault(); window.history.back(); }  );
+// jQuery('#menuItemLinkBackProposals').click(  function(e){ e.preventDefault(); window.history.back(); }  );
+jQuery('#menuItemLinkBackProposals').click(  function(e){ e.preventDefault(); setFragmentFields( {page:FRAG_PAGE_ID_REQUEST} ); }  );
+// jQuery('#menuItemLinkBackResults').click(  function(e){ e.preventDefault(); window.history.back(); }  );
+jQuery('#menuItemLinkBackResults').click(  function(e){
+            e.preventDefault();
+            let fragKeyToValue = parseFragment();
+            if ( fragKeyToValue.page == FRAG_PAGE_QUESTION_RESULTS ){
+                setFragmentFields( {page:FRAG_PAGE_AUTOCOMPLETE_RESULTS} );
+            }
+            else if ( fragKeyToValue.page == FRAG_PAGE_BUDGET_SLICE_RESULT ){
+                setFragmentFields( {page:FRAG_PAGE_BUDGET_RESULT} );
+            }
+            else {
+                return false;
+            }
+}  );
 jQuery('#menuItemLinkBackProposals').keyup( enterToClick );
 jQuery('#menuItemLinkBackResults').keyup( enterToClick );
 

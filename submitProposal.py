@@ -3,10 +3,11 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
-import webapp2
 # Import app modules
+import common
 from configuration import const as conf
 import httpServer
+from httpServer import app
 import linkKey
 import proposal
 import reason
@@ -18,16 +19,14 @@ import user
 
 
 
-class SubmitNewProposal(webapp2.RequestHandler):
-
-    def post(self):
-
-        logging.debug(LogMessage('SubmitNewProposal', 'request.body=', self.request.body))
+@app.post('/newProposal')
+def submitNewProposal( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(LogMessage('SubmitNewProposal', 'inputData=', inputData))
 
         title = text.formTextToStored( inputData.get('title', '') )
@@ -41,21 +40,21 @@ class SubmitNewProposal(webapp2.RequestHandler):
         logging.debug(LogMessage('SubmitNewProposal', 'title=', title, 'detail=', detail, 'browserCrumb=', browserCrumb, 'loginCrumb=', loginCrumb, 'loginRequired=', loginRequired, 'hideReasons=', hideReasons))
 
         # Voter login not required to create initial proposal, though login may be required to use proposal
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response, loginRequired=loginRequired )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, loginRequired=loginRequired )
+        if not cookieData.valid():  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Check proposal length
-        if not httpServer.isLengthOk( title, detail, conf.minLengthProposal ):  return httpServer.outputJson( responseData, self.response, errorMessage=conf.TOO_SHORT )
+        if not httpServer.isLengthOk( title, detail, conf.minLengthProposal ):  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
         # Check experimental password (low-risk secret)
         if ( hideReasons or loginRequired or experimentalPassword )  and  ( experimentalPassword != secrets.experimentalPassword ):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
 
         # No need to prevent duplicates, because this is a top-level single proposal
         
         # Construct new proposal record
-        proposalRecord = proposal.Proposal( creator=userId , allowEdit=True , hideReasons=hideReasons )
+        proposalRecord = proposal.Proposal( creator=userId , allowEdit=True , hideReasons=hideReasons , adminHistory=common.initialChangeHistory() )
         proposalRecord.setContent( title, detail )
         # Store proposal record
         proposalRecordKey = proposalRecord.put()
@@ -81,20 +80,18 @@ class SubmitNewProposal(webapp2.RequestHandler):
         linkKeyDisplay = httpServer.linkKeyToDisplay( proposalLinkKeyRecord )
         proposalDisplay = httpServer.proposalToDisplay( proposalRecord, userId )
         responseData.update(  { 'success':True, 'linkKey':linkKeyDisplay, 'proposal':proposalDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
-class SubmitNewProposalForRequest(webapp2.RequestHandler):
-
-    def post(self):
-
-        logging.debug(LogMessage('SubmitNewProposalForRequest', 'request.body=', self.request.body))
+@app.post('/newProposalForRequest')
+def submitNewProposalForRequest( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(LogMessage('SubmitNewProposalForRequest', 'inputData=', inputData))
 
         requestLinkKeyStr = inputData['requestId']
@@ -107,38 +104,38 @@ class SubmitNewProposalForRequest(webapp2.RequestHandler):
         loginCrumb = inputData.get( 'crumbForLogin', '' )
         logging.debug(LogMessage('SubmitNewProposalForRequest', 'requestLinkKeyStr=', requestLinkKeyStr, 'title=', title, 'detail=', detail, 'browserCrumb=', browserCrumb, 'loginCrumb=', loginCrumb))
 
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Check proposal length
-        if not httpServer.isLengthOk( title, detail, conf.minLengthProposal ):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+        if not httpServer.isLengthOk( title, detail, conf.minLengthProposal ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
         initialReasons = [ r for r in [ initialReason1, initialReason2, initialReason3 ] if r is not None ]
         for initialReason in initialReasons:
-            if initialReason is not None and not httpServer.isLengthOk( initialReason, None, conf.minLengthReason ):  httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.REASON_TOO_SHORT );  return;
+            if initialReason is not None and not httpServer.isLengthOk( initialReason, None, conf.minLengthReason ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.REASON_TOO_SHORT )
 
         # Retrieve link-key record, and convert it to requestId
-        if requestLinkKeyStr is None:  httpServer.outputJson( cookieData, responseData, self.response, errorMessage='requestLinkKeyStr is null');  return;
+        if requestLinkKeyStr is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='requestLinkKeyStr is null')
         requestLinkKeyRec = linkKey.LinkKey.get_by_id( requestLinkKeyStr )
         logging.debug(LogMessage('SubmitNewProposalForRequest', 'requestLinkKeyRec=', requestLinkKeyRec))
 
-        if requestLinkKeyRec is None:  httpServer.outputJson( cookieData, responseData, self.response, errorMessage='requestLinkKey not found' );  return;
-        if requestLinkKeyRec.destinationType != conf.REQUEST_CLASS_NAME:  httpServer.outputJson( cookieData, responseData, self.response, errorMessage='requestLinkKey not a request' );  return;
+        if requestLinkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='requestLinkKey not found' )
+        if requestLinkKeyRec.destinationType != conf.REQUEST_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='requestLinkKey not a request' )
         requestId = requestLinkKeyRec.destinationId
 
-        if requestLinkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if requestLinkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Retrieve request-for-proposals record
         requestRec = requestForProposals.RequestForProposals.get_by_id( int(requestId) )
-        if not requestRec:  return
+        if not requestRec:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='request not found' )
 
         # Check whether request-for-proposals is frozen
-        if requestRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
+        if requestRec.freezeUserInput or requestRec.freezeNewProposals:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.FROZEN )
         
         # Retrieve any existing identical proposal, to prevent duplicates
         existingProposals = proposal.Proposal.query( proposal.Proposal.requestId==requestId ,
             proposal.Proposal.title==title , proposal.Proposal.detail==detail ).fetch( 1 )
-        if existingProposals:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.DUPLICATE )
+        if existingProposals:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.DUPLICATE )
 
         # Construct new proposal record
         hasReasons = ( 0 < len(initialReasons) )
@@ -163,8 +160,8 @@ class SubmitNewProposalForRequest(webapp2.RequestHandler):
             proposalRecord.emptyConId = str( emptyConRecord.put().id() )
             proposalRecord.put()
 
-            reasonDisplays.append(  httpServer.reasonToDisplay( emptyProRecord, userId )  )
-            reasonDisplays.append(  httpServer.reasonToDisplay( emptyConRecord, userId )  )
+            reasonDisplays.append(  httpServer.reasonToDisplay( emptyProRecord, userId, proposal=proposalRecord, request=requestRec )  )
+            reasonDisplays.append(  httpServer.reasonToDisplay( emptyConRecord, userId, proposal=proposalRecord, request=requestRec )  )
 
         else:
             # For each initial reason...
@@ -177,26 +174,28 @@ class SubmitNewProposalForRequest(webapp2.RequestHandler):
                 logging.debug(LogMessage('SubmitNewProposalForRequest', 'reasonRecordKey', reasonRecordKey))
 
                 # Convert reason for display.
-                reasonDisplays.append(  httpServer.reasonToDisplay( reasonRecord, userId )  )
+                reasonDisplays.append(  httpServer.reasonToDisplay( reasonRecord, userId, proposal=proposalRecord, request=requestRec )  )
+
+        # Mark request-for-proposals as not editable
+        # Causes a little delay to do this blocking, but only for first proposal
+        if requestRec.allowEdit:
+            requestRec.allowEdit = False
+            requestRec.put()
 
         # Display proposal.
         proposalDisplay = httpServer.proposalToDisplay( proposalRecord, userId, requestRecord=requestRec )
         responseData.update(  { 'success':True, 'proposal':proposalDisplay, 'reasons':reasonDisplays }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
-
-        # Mark request-for-proposals as not editable.
-        if ( requestRec.allowEdit ):
-            requestForProposals.setEditable( requestId, False )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
-class SubmitEditProposal(webapp2.RequestHandler):
 
-    def post(self):
-        logging.debug(LogMessage('SubmitEditProposal', 'request.body=', self.request.body))
+@app.post('/editProposal')
+def submitEditProposal( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(LogMessage('SubmitEditProposal', 'inputData=', inputData))
 
         title = text.formTextToStored( inputData['title'] )
@@ -209,54 +208,54 @@ class SubmitEditProposal(webapp2.RequestHandler):
 
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Check proposal length
         if not httpServer.isLengthOk( title, detail, conf.minLengthProposal ):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
         # Require link-key.
         linkKeyRec = linkKey.LinkKey.get_by_id( linkKeyString )
         logging.debug(LogMessage('SubmitEditProposal', 'linkKeyRec=', linkKeyRec))
 
-        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
+        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
 
-        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Retrieve proposal record.
         proposalRec = proposal.Proposal.get_by_id( int(proposalId) )
         logging.debug(LogMessage('SubmitEditProposal', 'proposalRec=', proposalRec))
 
-        if proposalRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='proposal not found' )
+        if proposalRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='proposal not found' )
 
         # Verify that proposal matches link-key, and is not frozen
         requestRec = None
         if linkKeyRec.destinationType == conf.REQUEST_CLASS_NAME:
-            if proposalRec.requestId != linkKeyRec.destinationId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='proposalRec.requestId != linkKeyRec.destinationId' )
+            if proposalRec.requestId != linkKeyRec.destinationId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='proposalRec.requestId != linkKeyRec.destinationId' )
 
             # Retrieve request-for-proposals to check whether it is frozen
             requestRec = requestForProposals.RequestForProposals.get_by_id( int(proposalRec.requestId) )
-            if requestRec == None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='requestRec is null' )
-            if requestRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
+            if requestRec == None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='requestRec is null' )
+            if requestRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.FROZEN )
 
         elif linkKeyRec.destinationType == conf.PROPOSAL_CLASS_NAME:
-            if proposalId != linkKeyRec.destinationId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='proposalId != linkKeyRec.destinationId' )
+            if proposalId != linkKeyRec.destinationId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='proposalId != linkKeyRec.destinationId' )
             # Check whether proposal is frozen
-            if proposalRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
+            if proposalRec.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.FROZEN )
 
         else:
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + str(linkKeyRec.destinationType) )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey destinationType=' + str(linkKeyRec.destinationType) )
 
         # Verify that proposal is editable
-        if userId != proposalRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
-        if not proposalRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.HAS_RESPONSES )
+        if userId != proposalRec.creator:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
+        if not proposalRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
 
         # Retrieve any existing identical proposal, to prevent duplicates
         existingProposals = proposal.Proposal.query( proposal.Proposal.requestId==proposalRec.requestId ,
             proposal.Proposal.title==title , proposal.Proposal.detail==detail ).fetch( 1 )
-        if existingProposals:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.DUPLICATE )
+        if existingProposals:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.DUPLICATE )
 
         # Update proposal record.
         proposalRec.setContent( title, detail )
@@ -265,17 +264,17 @@ class SubmitEditProposal(webapp2.RequestHandler):
         # Display updated proposal.
         proposalDisplay = httpServer.proposalToDisplay( proposalRec, userId, requestRecord=requestRec )
         responseData.update(  { 'success':True, 'proposal':proposalDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
-class SubmitFreezeProposal(webapp2.RequestHandler):
 
-    def post(self):
-        logging.debug(LogMessage('SubmitFreezeProposal', 'request.body=', self.request.body))
+@app.post('/freezeProposal')
+def submitFreezeProposal( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(LogMessage('SubmitFreezeProposal', 'inputData=', inputData))
 
         freeze = bool( inputData.get('freezeUserInput', False) )
@@ -285,49 +284,40 @@ class SubmitFreezeProposal(webapp2.RequestHandler):
 
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Retrieve link-key record
         linkKeyRec = linkKey.LinkKey.get_by_id( linkKeyString )
         logging.debug(LogMessage('SubmitFreezeProposal', 'linkKeyRec=', linkKeyRec))
 
-        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
+        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
 
-        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Verify that proposal matches link-key
-        if linkKeyRec.destinationType != conf.PROPOSAL_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey destinationType=' + str(linkKeyRec.destinationType) )
+        if linkKeyRec.destinationType != conf.PROPOSAL_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey destinationType=' + str(linkKeyRec.destinationType) )
 
-        if str(proposalId) != linkKeyRec.destinationId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='proposalId != linkKeyRec.destinationId' )
+        if str(proposalId) != linkKeyRec.destinationId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='proposalId != linkKeyRec.destinationId' )
 
         # Retrieve proposal record
         proposalRec = proposal.Proposal.get_by_id( proposalId )
         logging.debug(LogMessage('SubmitFreezeProposal', 'proposalRec=', proposalRec))
 
-        if proposalRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='proposal not found' )
+        if proposalRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='proposal not found' )
 
         # Verify that user is creator
-        if userId != proposalRec.creator:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
+        if userId != proposalRec.creator:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
 
         # Update proposal record.
         proposalRec.freezeUserInput = freeze
+        common.appendFreezeInputToHistory( freeze, proposalRec.adminHistory )
         proposalRec.put()
         
         # Display updated proposal.
         proposalDisplay = httpServer.proposalToDisplay( proposalRec, userId )
         responseData.update(  { 'success':True, 'proposal':proposalDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
-
-
-
-# Route HTTP request
-app = webapp2.WSGIApplication([
-    ('/newProposal', SubmitNewProposal),
-    ('/newProposalForRequest', SubmitNewProposalForRequest),
-    ('/editProposal', SubmitEditProposal) ,
-    ('/freezeProposal', SubmitFreezeProposal)
-])
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 

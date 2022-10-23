@@ -4,9 +4,9 @@
 <head>
     <title>{{SITE_NAME}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel='stylesheet' href='main.css' />
-    <link rel='stylesheet' href='autocomplete/main.css' />
-    <link rel='stylesheet' href='budget/main.css' />
+    <link rel='stylesheet' href='{{ url_for('static', filename='main.css') }}' />
+    <link rel='stylesheet' href='{{ url_for('static', filename='autocomplete/main.css') }}' />
+    <link rel='stylesheet' href='{{ url_for('static', filename='budget/main.css') }}' />
 </head>
 <body>
 <div id=content>
@@ -52,14 +52,22 @@
                 and to understand others' reasons.
             </p>
 
-            <a class=newSurveyLink href='#page=newAutocomplete'> Auto-complete Survey:
-                <span class=newSurveyLinkDetail>Find out what people think, and why. </span></a>
-            <a class=newSurveyLink href='#page=newRequest'> Request for Proposals:
-                <span class=newSurveyLinkDetail>Get solutions to your problem. </span></a>
-            <a class=newSurveyLink href='#page=newProposal'> Proposal Pro & Con:
-                <span class=newSurveyLinkDetail>Get feedback on your idea. </span></a>
-            <a class=newSurveyLink href='#page=budgetNew'> Participatory Budget:
-                <span class=newSurveyLinkDetail>Negotiate a budget with a group. </span></a>
+            <a class=newSurveyLink href='#page=newAutocomplete'>
+                <span class=newSurveyLinkDetail> 1: </span>
+                Auto-complete Survey:
+                <span class=newSurveyLinkDetail> Discover what problems people care about. </span></a>
+            <a class=newSurveyLink href='#page=newRequest'>
+                <span class=newSurveyLinkDetail> 2: </span>
+                Request for Proposals:
+                <span class=newSurveyLinkDetail> Get solutions to your problem. </span></a>
+            <a class=newSurveyLink href='#page=newProposal'>
+                <span class=newSurveyLinkDetail> 3: </span>
+                Proposal Pro & Con:
+                <span class=newSurveyLinkDetail> Get feedback on your solution. </span></a>
+            <a class=newSurveyLink href='#page=budgetNew'>
+                <span class=newSurveyLinkDetail> 4: </span>
+                Participatory Budget:
+                <span class=newSurveyLinkDetail> Negotiate a budget with a group. </span></a>
 
             <p>
                 To grow your understanding of your group's needs, it is often useful to run these survey-types in order.
@@ -96,6 +104,10 @@
                         <label for=experimentalPasswordForRequest> Password </label>
                         <input type=password class=experimentalPasswordInput id=experimentalPasswordForRequest
                             placeholder='Secret to enable experimental options' />
+                    </div>
+                    <div>
+                        <label for=doneLinkInput> Done-link </label>
+                        <input type=text class=doneLinkInput id=doneLinkInput  placeholder='Relative-link to next survey' />
                     </div>
                     <div>
                         <label for=hideReasonsForRequest> Hide reasons </label>
@@ -404,8 +416,7 @@
                         <li>
                             <a target=_blank href='https://en.wikipedia.org/wiki/Shared_information_bias'> Shared information bias </a>
                             <ul>
-                                <li> Fix:  All users see a variety of reasons. </li>
-                                <li> Fix:  All users can add new reasons. </li>
+                                <li> Fix:  All discussion must be in the form of shared information. </li>
                             </ul>
                         </li>
                     </ul>
@@ -518,16 +529,27 @@
                 </details>
 
                 <details class=aboutDetails>
-                    <summary> Accessibility </summary>
+                    <summary> Background documents </summary>
+                    <ul>
+                        <li> <a href='{{ url_for('static', filename='doc/experimentSummary.html') }}' target=_blank> Experiment summary </a>
+                        <li> <a href='{{ url_for('static', filename='doc/openVoterId.html') }}' target=_blank> Open voter ID </a>
+                    </ul>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Intellectual property </summary>
                     <div>
-                        This website is periodically reviewed for accessibility.  The goal is to
-                        support keyboard navigation, and screen-reader navigation with:
-                        <ul>
-                            <li> VoiceOver on MacOS
-                            <li> VoiceOver on iOS
-                            <li> Talkback on Android
-                            <li> ChromeVox on ChromeOS
-                        </ul>
+                        You may copy this site.
+                        These ideas are unpatented, straightforward applications of prior art from projects like Consider.it, Tricider, and more.
+                    </div>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Open-source code </summary>
+                    <div>
+                        The code for this site is open-source, under Apache license, at: 
+                        <br><a href='https://github.com/converj/reasonSurvey' target=_blank
+                            > https://github.com/converj/reasonSurvey </a>
                     </div>
                 </details>
 
@@ -540,19 +562,16 @@
                 </details>
 
                 <details class=aboutDetails>
-                    <summary> Intellectual property </summary>
+                    <summary> Accessibility </summary>
                     <div>
-                        You may copy from this site.
-                        These ideas are unpatented, straightforward applications of prior art from projects like Consider.it, Tricider, and more.
-                    </div>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Open-source code </summary>
-                    <div>
-                        The code for this site is open-source, under Apache license, at: 
-                        <br><a href='https://github.com/converj/reasonSurvey' target=_blank
-                            > https://github.com/converj/reasonSurvey </a>
+                        This website is periodically reviewed for accessibility.  The goal is to
+                        support keyboard navigation, and screen-reader navigation with:
+                        <ul>
+                            <li> VoiceOver on MacOS
+                            <li> VoiceOver on iOS
+                            <li> Talkback on Android
+                            <li> ChromeVox on ChromeOS
+                        </ul>
                     </div>
                 </details>
 
@@ -616,26 +635,26 @@
 
 </script>
 
-<script src='jquery-3.4.1.min.js'></script>
-<script src='shared.js'></script>
+<script src='{{ url_for('static', filename='jquery-3.4.1.min.js') }}'></script>
+<script src='{{ url_for('static', filename='shared.js') }}'></script>
 
-<script src='newRequest.js'></script>
-<script src='newProposal.js'></script>
-<script src='recent.js'></script>
-<script src='requestForProposals.js'></script>
+<script src='{{ url_for('static', filename='newRequest.js') }}'></script>
+<script src='{{ url_for('static', filename='newProposal.js') }}'></script>
+<script src='{{ url_for('static', filename='recent.js') }}'></script>
+<script src='{{ url_for('static', filename='requestForProposals.js') }}'></script>
 
-<script src='/autocomplete/shared.js'></script>
-<script src='/autocomplete/newSurvey.js'></script>
-<script src='/autocomplete/editSurvey.js'></script>
-<script src='/autocomplete/viewSurvey.js'></script>
-<script src='/autocomplete/surveyResults.js'></script>
+<script src='{{ url_for('static', filename='autocomplete/shared.js') }}'></script>
+<script src='{{ url_for('static', filename='autocomplete/newSurvey.js') }}'></script>
+<script src='{{ url_for('static', filename='autocomplete/editSurvey.js') }}'></script>
+<script src='{{ url_for('static', filename='autocomplete/viewSurvey.js') }}'></script>
+<script src='{{ url_for('static', filename='autocomplete/surveyResults.js') }}'></script>
 
-<script src='/budget/new.js'></script>
-<script src='/budget/edit.js'></script>
-<script src='/budget/view.js'></script>
-<script src='/budget/results.js'></script>
+<script src='{{ url_for('static', filename='budget/new.js') }}'></script>
+<script src='{{ url_for('static', filename='budget/edit.js') }}'></script>
+<script src='{{ url_for('static', filename='budget/view.js') }}'></script>
+<script src='{{ url_for('static', filename='budget/results.js') }}'></script>
 
-<script src='main.js'></script>
+<script src='{{ url_for('static', filename='main.js') }}'></script>
 
 
 </body>

@@ -7,6 +7,7 @@
     let newRequestSubmitMessage = document.getElementById('newRequestSubmitMessage');
     let experimentalPasswordForRequest = document.getElementById('experimentalPasswordForRequest');
     let hideReasonsForRequest = document.getElementById('hideReasonsForRequest');
+    let doneLinkInput = document.getElementById('doneLinkInput');
 
 
 
@@ -18,6 +19,7 @@
         loginRequiredForRequestCheckbox.checked = false;
         experimentalPasswordForRequest.value = '';
         hideReasonsForRequest.checked = false;
+        doneLinkInput.value = '';
 
         // Clear messages
         showMessage( '', GREY, null, newRequestSubmitMessage );
@@ -66,7 +68,8 @@
 
         function
     newRequestExperimentalOptionsInput( ){
-        if ( hideReasonsForRequest.checked  &&  (! experimentalPasswordForRequest.value) ){
+        let isExperiment = doneLinkInput.value  ||  hideReasonsForRequest.checked;
+        if ( isExperiment  &&  ! experimentalPasswordForRequest.value ){
             let message = 'Experimental password required';
             experimentalPasswordForRequest.setCustomValidity( message );
         }
@@ -77,6 +80,7 @@
     }
     experimentalPasswordForRequest.oninput = newRequestExperimentalOptionsInput;
     hideReasonsForRequest.onclick = newRequestExperimentalOptionsInput;
+    doneLinkInput.oninput = newRequestExperimentalOptionsInput;
 
 
 
@@ -93,7 +97,8 @@
         }
 
         // Require experiment-password for experiment-options like hide-reasons
-        if ( hideReasonsForRequest.checked  &&  (! experimentalPasswordForRequest.value) ){
+        let isExperiment = doneLinkInput.value  ||  hideReasonsForRequest.checked;
+        if ( isExperiment  &&  ! experimentalPasswordForRequest.value ){
             let message = 'Experimental password required';
             showMessage( message, RED, null, newRequestSubmitMessage );
             experimentalPasswordForRequest.setCustomValidity( message );
@@ -118,7 +123,8 @@
             crumb:crumb , fingerprint:fingerprint ,
             title:newRequestInputTitle.value , detail:newRequestInputDetail.value ,
             loginRequired:loginRequiredForRequestCheckbox.checked ,
-            experimentalPassword:experimentalPasswordForRequest.value , hideReasons:hideReasonsForRequest.checked
+            experimentalPassword:experimentalPasswordForRequest.value , hideReasons:hideReasonsForRequest.checked ,
+            doneLink:doneLinkInput.value
         };
         let url = 'newRequest';
         ajaxPost( dataSend, url, function(error, status, data){

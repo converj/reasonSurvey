@@ -27,32 +27,33 @@
 # Import external modules
 from collections import Counter
 from google.appengine.ext import ndb
-from google.appengine.api import search
+# from google.appengine.api import search
 import hashlib
 import logging
 import re
 # Import app modules
-import answerVote
-from configAutocomplete import const as conf
+from autocomplete import answerVote
+from autocomplete.configAutocomplete import const as conf
 from constants import Constants
-import question
-import stats
+from autocomplete import question
+from autocomplete import stats
 import text
 
 
 
-# Constants
+# Constants for use only inside this file/module
 const = Constants()
-const.MAX_RETRY = 3
+# const.MAX_RETRY = 3
 const.MAX_VOTE_RETRY = 3
 const.CHAR_LENGTH_UNIT = 100
-const.MAX_ANSWER_SUGGESTIONS = 3
-const.NUM_FREQ_ANSWER_SUGGESTIONS = min( 1, const.MAX_ANSWER_SUGGESTIONS - 1 )  # Should be less than MAX_ANSWER_SUGGESTIONS
+# const.MAX_ANSWER_SUGGESTIONS = 3
+# const.NUM_FREQ_ANSWER_SUGGESTIONS = min( 1, const.MAX_ANSWER_SUGGESTIONS - 1 )  # Should be less than MAX_ANSWER_SUGGESTIONS
 const.SEARCH_INDEX_NAME = 'answersearchindex'
 const.MAX_SEARCH_RESULTS = 100
-const.USE_SEARCH_INDEX = False
+const.USE_SEARCH_INDEX = False   # Expensive in money, and no better for incremental vote-weighted matching
 const.MAX_SEARCH_QUERY_WORDS = 10
 
+# Global constants
 conf.ANSWER_REASON_DELIMITER = '\t'
 
 
@@ -73,10 +74,10 @@ def parseAnswerAndReason( answerAndReasonStr ):
 
 
 # Persistent record
-class Answer(ndb.Model):
-    questionId = ndb.StringProperty()   # Search index, to retrieve popular answers for question.
-
+class Answer( ndb.Model ):
+    questionId = ndb.StringProperty()   # Search index, to retrieve popular answers for question
     surveyId = ndb.StringProperty()   # To verify answer belongs to survey
+
     content = ndb.StringProperty()
     creator = ndb.StringProperty()
     fromEditPage = ndb.BooleanProperty()  # To keep answers from survey-creator only from edit-page
@@ -242,7 +243,7 @@ def vote( questionId, surveyId, answerContent, userId, questionCreator ):
     if not voteCountIncrements:  return None, voteRecord
     
     # For each answer vote-count increment, apply increment...
-    for incAnswerId, voteCountIncrement in voteCountIncrements.iteritems():
+    for incAnswerId, voteCountIncrement in voteCountIncrements.items():
         if incAnswerId is None:  continue               # No record exists for empty answer
         isVotedAnswer = (incAnswerId == answerId)
         if isNewAnswer and isVotedAnswer:  continue     # voteCount already set to 1 during record creation

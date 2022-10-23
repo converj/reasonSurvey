@@ -1,12 +1,14 @@
 # Shared functions for all http request service classes.
 
-
-# Import external modules.
-import jinja2
+# Import external modules
+import flask
+import google.appengine.api
 import json
 import logging
 import os
-# Import app modules.
+from werkzeug.routing import BaseConverter
+# Import app modules
+import common
 from configuration import const as conf
 import cookie
 import linkKey
@@ -14,16 +16,76 @@ import user
 
 
 
-JINJA_ENVIRONMENT = jinja2.Environment(
-    loader = jinja2.FileSystemLoader( os.path.dirname(__file__) ),
-    extensions = ['jinja2.ext.autoescape'],
-    autoescape = True
-)
-
 log = False
+
+########################################################################
+# HTTP-server configuration
+
+# JINJA_ENVIRONMENT = jinja2.Environment(
+#     loader = jinja2.FileSystemLoader( os.path.dirname(__file__) ),
+#     extensions = ['jinja2.ext.autoescape'],
+#     autoescape = True
+# )
+
+def createFlaskApp( filename ):
+    app = flask.Flask( filename, static_url_path='' )  # Use static_url_path to maintain the existing path to docs
+    app.wsgi_app = google.appengine.api.wrap_wsgi_app( app.wsgi_app )
+    return app
+
+app = createFlaskApp( __name__ )
+
+
+# Page-routing parameter types 
+class AlphaNumericUrlParamConverter( BaseConverter ):
+    regex = r'[0-9A-Za-z]+'
+
+app.url_map.converters['alphanumeric'] = AlphaNumericUrlParamConverter
+
+class SliceKeyUrlParamConverter( BaseConverter ):
+    regex = r'[0-9A-Za-z:\-]+'
+
+app.url_map.converters['slicekey'] = SliceKeyUrlParamConverter
+
 
 
 ########################################################################
+# Methods
+
+class HttpRequest( object ):
+
+    def __init__( self ):
+        self.flaskRequest = flask.request
+
+    def getUrlParams( self ):
+#         return self.webapp2Request.GET
+        return self.flaskRequest.args
+
+    def getUrlParam( self, name, defaultValue ):
+#         return self.webapp2Request.get( name, defaultValue )
+        return self.flaskRequest.args.get( name, defaultValue )
+
+    def postFormParams( self ):
+#         return urllib.parse.parse_qs( self.webapp2.request.body )
+        return self.flaskRequest.form
+
+    def postJsonData( self ):
+#         return json.loads( self.webapp2Request.body )
+        return self.flaskRequest.get_json()   # Error 400 if accessed from a GET request
+
+    @property
+    def cookies( self ):
+#         return self.webapp2Request.cookies
+        return self.flaskRequest.cookies
+
+    @property
+    def headers( self ):
+#         return self.webapp2Request.headers
+        return self.flaskRequest.headers
+
+
+def requestAndResponse( ):  return HttpRequest(), flask.make_response()
+
+
 
 # Checks title + detail length
 def isLengthOk( title, detail, lengthMin ):
@@ -45,7 +107,7 @@ def validate( httpRequest, httpInput, responseData, httpResponse,
     if conf.isDev and log:  logging.debug( 'type(httpInput)__name__=' + str( type(httpInput).__name__ ) )
     if not isinstance( httpInput, dict ):
         # httpInput may be UnicodeMultiDict, or other custom mapping class from webapp2.RequestHandler.request.GET
-        httpInput = {  i[0] : httpRequest.GET[ i[0] ]  for i in httpRequest.GET.items()  }
+        httpInput = {  i[0] : httpRequest.getUrlParams()[ i[0] ]  for i in httpRequest.getUrlParams().items()  }
 
     cookieData = user.validate( httpRequest, httpInput, crumbRequired=crumbRequired, signatureRequired=signatureRequired, 
         makeValid=makeValid )
@@ -78,9 +140,10 @@ def outputTemplate( templateFilepath, templateValues, httpResponse, cookieData=N
         cookie.setCookieData( cookieData.data, cookieData.dataNew, getUseSecureCookie(), httpResponse )
 
     __setStandardHeaders( httpResponse )
-
-    template = JINJA_ENVIRONMENT.get_template( templateFilepath )
-    httpResponse.write( template.render(templateValues) ) 
+#     template = JINJA_ENVIRONMENT.get_template( templateFilepath )
+#     httpResponse.write( template.render(templateValues) )
+    httpResponse.data = flask.render_template( templateFilepath, **templateValues )
+    return httpResponse
 
 
 # Modifies responseData and httpResponse
@@ -100,8 +163,11 @@ def outputJson( cookieData, responseData, httpResponse, errorMessage=None ):
         cookie.setCookieData( cookieData.data, cookieData.dataNew, getUseSecureCookie(), httpResponse )
 
     __setStandardHeaders( httpResponse )
-    httpResponse.out.write( json.dumps( responseData ) )
-    return None   # Allow function to be called as a return-value
+#     httpResponse.out.write( json.dumps( responseData ) )
+#     return None   # Allow function to be called as a return-value
+    logging.warn( 'httpServer.outputJson() responseData=' + str(responseData) )
+    httpResponse.data = json.dumps(responseData)
+    return httpResponse
 
 
 def __setStandardHeaders( httpResponse ):
@@ -145,39 +211,58 @@ def requestToDisplay( requestRecord, userId ):
         'id': str(requestRecord.key.id()),
         'title': requestRecord.title,
         'detail': requestRecord.detail,
-        'mine': (requestRecord.creator == userId),
-        'allowEdit': (userId == requestRecord.creator) and requestRecord.allowEdit ,
-        'freezeUserInput': requestRecord.freezeUserInput
+        'mine': ( requestRecord.creator == userId ),
+        'allowEdit': ( userId == requestRecord.creator ) and requestRecord.allowEdit ,
+        'freezeUserInput': requestRecord.freezeUserInput ,
+        'freezeNewProposals': requestRecord.freezeNewProposals ,
+        'adminHistory': common.decodeChangeHistory( requestRecord.adminHistory ) ,
     }
     # Only set if used
     if requestRecord.hideReasons:  display['hideReasons'] = requestRecord.hideReasons
+    if requestRecord.doneLink:  display['doneLink'] = requestRecord.doneLink
     return display
 
 # Accepts requestRecord to copy top-level-attributes like freeze and hide-reasons
 def proposalToDisplay( proposalRecord, userId, requestRecord=None ):
+    mySurvey = (requestRecord.creator == userId)  if requestRecord  else  (proposalRecord.creator == userId)
+    freezeUserInput = proposalRecord.freezeUserInput or (requestRecord and requestRecord.freezeUserInput)
+    sendVoteCounts = mySurvey or freezeUserInput
     display = {
         'id': str(proposalRecord.key.id()),
         'title': proposalRecord.title,
         'detail': proposalRecord.detail,
         'mine': (proposalRecord.creator == userId),
+        'mySurvey': mySurvey ,
         'allowEdit': (userId == proposalRecord.creator) and proposalRecord.allowEdit ,
-        'freezeUserInput': proposalRecord.freezeUserInput or (requestRecord and requestRecord.freezeUserInput) ,
+        'freezeUserInput': freezeUserInput ,
+        'adminHistory': common.decodeChangeHistory( proposalRecord.adminHistory ) ,
     }
     # Only set if used
     if proposalRecord.emptyProId:  display['emptyProId'] = str(proposalRecord.emptyProId)
     if proposalRecord.emptyConId:  display['emptyConId'] = str(proposalRecord.emptyConId)
     if proposalRecord.hideReasons or (requestRecord and requestRecord.hideReasons):  display['hideReasons'] = True
+    if sendVoteCounts:
+        display['sendVoteCounts'] = True
+        display['numPros'] = proposalRecord.numPros
+        display['numCons'] = proposalRecord.numCons
     return display
 
-def reasonToDisplay( reasonRecord, userId ):
-    return {
+def reasonToDisplay( reasonRecord, userId, proposal=None, request=None ):
+    proposalRecord = proposal
+    requestRecord = request
+    mySurvey = (requestRecord.creator == userId)  if requestRecord  else  (proposalRecord.creator == userId)
+    freezeUserInput = (requestRecord and requestRecord.freezeUserInput) or (proposalRecord and proposalRecord.freezeUserInput)
+    sendVoteCounts = mySurvey or freezeUserInput
+    display = {
         'proposalId': reasonRecord.proposalId,
         'id': str(reasonRecord.key.id()),
         'content': reasonRecord.content,
         'proOrCon': reasonRecord.proOrCon,
         'mine': (reasonRecord.creator == userId),
         'allowEdit': (userId == reasonRecord.creator) and reasonRecord.allowEdit,
-        'voteCount': reasonRecord.voteCount,
         'score': reasonRecord.score
     }
-
+    if sendVoteCounts:
+        display['sendVoteCounts'] = True
+        display['voteCount'] = reasonRecord.voteCount
+    return display

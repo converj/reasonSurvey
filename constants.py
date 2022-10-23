@@ -3,7 +3,7 @@ class Constants:
 
     # Prevent member variables from being changed.
     def __setattr__(self, name, value):
-        if self.__dict__.has_key(name):
+        if ( name in self.__dict__ ):
             raise TypeError('Trying to change a constant')
         self.__dict__[name]=value
 

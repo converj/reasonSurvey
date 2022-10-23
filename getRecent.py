@@ -3,30 +3,33 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
-import webapp2
 # Import app modules
 import autocomplete.survey
 import budget.budget
 from configuration import const as conf
 import httpServer
+from httpServer import app
 import linkKey
 import proposal
 import requestForProposals
 import user
 
 
-class GetRecent(webapp2.RequestHandler):
-    def get(self):
+
+@app.get('/getRecent')
+def recent( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+
         # Collect inputs
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, crumbRequired=False, signatureRequired=False )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, {}, responseData, httpResponse, crumbRequired=False, signatureRequired=False )
+        if not cookieData.valid():  return httpResponse
 
         recentDestSummaries = []
 
         # Retrieve link-key records from cookie.
-        recentLinkKeyToTime = user.retrieveRecentLinkKeys( self.request )
+        recentLinkKeyToTime = user.retrieveRecentLinkKeys( httpRequest )
         if recentLinkKeyToTime:
             recentLinkKeyRecordKeys = [ ndb.Key(conf.LINK_KEY_CLASS_NAME, k) for k in recentLinkKeyToTime ]
             recentLinkKeyRecords = ndb.get_multi( recentLinkKeyRecordKeys )
@@ -57,6 +60,7 @@ class GetRecent(webapp2.RequestHandler):
                 detail = r.introduction  if introVsDetail  else r.detail
                 recentDestSummary['detail'] = detail  if detail  else ''
                 recentDestSummary['frozen'] = r.freezeUserInput
+                recentDestSummary['freezeNewProposals'] = ( r.key.kind() == requestForProposals.RequestForProposals.__name__ ) and r.freezeNewProposals
                 recentDestSummary['hideReasons'] = r.hideReasons
                 recentDestSummaries.append( recentDestSummary )
 
@@ -68,12 +72,6 @@ class GetRecent(webapp2.RequestHandler):
         logging.debug( 'getRecent.GetRecent() recentDestSummaries=' + str(recentDestSummaries) )
         
         responseData.update( { 'success':True, 'recents':recentDestSummaries } )
-        httpServer.outputJson( cookieData, responseData, self.response )
-
-
-# Route HTTP request
-app = webapp2.WSGIApplication([
-    ('/getRecent', GetRecent)
-])
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 

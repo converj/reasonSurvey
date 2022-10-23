@@ -3,10 +3,13 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
-import webapp2
+import time
+import urllib.parse
 # Import app modules
+import common
 from configuration import const as conf
 import httpServer
+from httpServer import app
 import linkKey
 import requestForProposals
 import secrets
@@ -16,16 +19,13 @@ import user
 
 
 
-
-class SubmitNewRequest(webapp2.RequestHandler):
-
-    def post(self):  # Not a transaction, because it is ok to fail link creation, and orphan the request.
-
-        logging.debug(LogMessage('SubmitNewRequest', 'request.body=', self.request.body))
+@app.post('/newRequest')
+def submitNewRequest( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(LogMessage('SubmitNewRequest', 'inputData=', inputData))
 
         title = text.formTextToStored( inputData.get('title', '') )
@@ -33,6 +33,7 @@ class SubmitNewRequest(webapp2.RequestHandler):
         loginRequired = bool( inputData.get('loginRequired', False) )
         experimentalPassword = inputData.get( 'experimentalPassword', None )
         hideReasons = bool( inputData.get('hideReasons', False) )
+        doneLink = inputData.get( 'doneLink', None )
         browserCrumb = inputData.get( 'crumb', '' )
         loginCrumb = inputData.get( 'crumbForLogin', '' )
         logging.debug(LogMessage('SubmitNewRequest', 'title=', title, 'detail=', detail, 'browserCrumb=', browserCrumb, 'loginCrumb=', loginCrumb,
@@ -40,21 +41,29 @@ class SubmitNewRequest(webapp2.RequestHandler):
 
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response, loginRequired=loginRequired )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, loginRequired=loginRequired )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Check request length
         if not httpServer.isLengthOk( title, detail, conf.minLengthRequest ):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
         # Check experimental password (low-risk secret)
-        if ( hideReasons or loginRequired or experimentalPassword )  and  ( experimentalPassword != secrets.experimentalPassword ):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
+        isExperimental = hideReasons  or  doneLink  or  loginRequired  or  experimentalPassword
+        if isExperimental  and  ( experimentalPassword != secrets.experimentalPassword ):
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
+
+        # Clean up done-link
+        doneLinkFields = urllib.parse.urlparse( doneLink )
+        hasDoneLink = doneLinkFields.path  or  doneLinkFields.query  or  doneLinkFields.fragment
+        doneLinkRelative = ( doneLinkFields.path + '?' + doneLinkFields.query + '#' + doneLinkFields.fragment )  if hasDoneLink  else None
+        if ( doneLinkRelative  and  (doneLinkRelative[0] != '/') ):  doneLinkRelative = '/' + doneLinkRelative
 
         # Construct new request record
         requestRecord = requestForProposals.RequestForProposals(
-            creator=userId , title=title , detail=detail , allowEdit=True , hideReasons=hideReasons )
+            creator=userId , title=title , detail=detail , allowEdit=True , hideReasons=hideReasons, doneLink=doneLinkRelative,
+            adminHistory=common.initialChangeHistory() )
         # Store request record
         requestRecordKey = requestRecord.put()
         logging.debug(LogMessage('SubmitNewRequest', 'requestRecordKey.id=', requestRecordKey.id()))
@@ -67,17 +76,17 @@ class SubmitNewRequest(webapp2.RequestHandler):
         linkKeyDisplay = httpServer.linkKeyToDisplay( linkKeyRecord )
         requestDisplay = httpServer.requestToDisplay( requestRecord, userId )
         responseData.update(  { 'success':True, 'linkKey':linkKeyDisplay, 'request':requestDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
-class SubmitEditRequest(webapp2.RequestHandler):
 
-    def post(self):
-        logging.debug(LogMessage('SubmitEditRequest', 'request.body=', self.request.body))
+@app.post('/editRequest')
+def submitEditRequest( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(LogMessage('SubmitEditRequest', 'inputData=', inputData))
 
         title = text.formTextToStored( inputData.get('inputTitle', '') )
@@ -89,37 +98,37 @@ class SubmitEditRequest(webapp2.RequestHandler):
 
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Require link-key, and convert it to requestId.
         linkKeyRec = linkKey.LinkKey.get_by_id( linkKeyString )
         logging.debug(LogMessage('SubmitEditRequest', 'linkKeyRec=', linkKeyRec))
 
-        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
-        if linkKeyRec.destinationType != conf.REQUEST_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not a request' )
+        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
+        if linkKeyRec.destinationType != conf.REQUEST_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not a request' )
         requestId = int(linkKeyRec.destinationId)
         logging.debug(LogMessage('SubmitEditRequest', 'requestId=', requestId))
 
-        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Check request length.
         if not httpServer.isLengthOk( title, detail, conf.minLengthRequest ):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.TOO_SHORT )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
         
         # Retrieve request record.
         requestForProposalsRec = requestForProposals.RequestForProposals.get_by_id( requestId )
         logging.debug(LogMessage('SubmitEditRequest', 'requestForProposalsRec=', requestForProposalsRec))
-        if requestForProposalsRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='requestForProposalsRec not found' )
+        if requestForProposalsRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='requestForProposalsRec not found' )
 
         # Verify that request is editable.
         if userId != requestForProposalsRec.creator:
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
         if not requestForProposalsRec.allowEdit:
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.HAS_RESPONSES )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
         if requestForProposalsRec.freezeUserInput:
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.FROZEN )
 
         # Update request record.
         requestForProposalsRec.title = title
@@ -129,18 +138,17 @@ class SubmitEditRequest(webapp2.RequestHandler):
         linkKeyDisplay = httpServer.linkKeyToDisplay( linkKeyRec )
         requestDisplay = httpServer.requestToDisplay( requestForProposalsRec, userId )
         responseData.update(  { 'success':True, 'linkKey':linkKeyDisplay, 'request':requestDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
-class SubmitFreezeRequest(webapp2.RequestHandler):
-
-    def post(self):
-        logging.debug(LogMessage('SubmitFreezeRequest', 'request.body=', self.request.body))
+@app.post('/freezeRequest')
+def submitFreezeRequest( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(LogMessage('SubmitFreezeRequest', 'inputData=', inputData))
 
         freeze = bool( inputData.get('freezeUserInput', False) )
@@ -149,46 +157,89 @@ class SubmitFreezeRequest(webapp2.RequestHandler):
 
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Retrieve link-key record
         linkKeyRec = linkKey.LinkKey.get_by_id( linkKeyString )
         logging.debug(LogMessage('SubmitFreezeRequest', 'linkKeyRec=', linkKeyRec))
 
-        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not found' )
-        if linkKeyRec.destinationType != conf.REQUEST_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='linkKey not a request' )
+        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
+        if linkKeyRec.destinationType != conf.REQUEST_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not a request' )
         requestId = int(linkKeyRec.destinationId)
         logging.debug(LogMessage('SubmitFreezeRequest', 'requestId=', requestId))
 
-        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Retrieve request record
         requestForProposalsRec = requestForProposals.RequestForProposals.get_by_id( int(requestId) )
         logging.debug(LogMessage('SubmitFreezeRequest', 'requestForProposalsRec=', requestForProposalsRec))
-        if requestForProposalsRec is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='requestForProposalsRec not found' )
+        if requestForProposalsRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='requestForProposalsRec not found' )
 
         # Verify that user is authorized
         if userId != requestForProposalsRec.creator:
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
 
         # Update request record
         requestForProposalsRec.freezeUserInput = freeze
+        common.appendFreezeInputToHistory( freeze, requestForProposalsRec.adminHistory )
         requestForProposalsRec.put()
         
         linkKeyDisplay = httpServer.linkKeyToDisplay( linkKeyRec )
         requestDisplay = httpServer.requestToDisplay( requestForProposalsRec, userId )
         responseData.update(  { 'success':True, 'linkKey':linkKeyDisplay, 'request':requestDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
-# Route HTTP request
-app = webapp2.WSGIApplication([
-    ('/newRequest', SubmitNewRequest),
-    ('/editRequest', SubmitEditRequest) ,
-    ('/freezeRequest', SubmitFreezeRequest)
-])
+@app.post('/freezeNewProposals')
+def freezeNewProposals( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+
+        # Collect inputs
+        requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
+        inputData = httpRequest.postJsonData()
+        logging.debug(LogMessage('FreezeNewProposals', 'inputData=', inputData))
+
+        freeze = bool( inputData.get('freezeNewProposals', False) )
+        linkKeyString = inputData.get( 'linkKey', None )
+        logging.debug(LogMessage('FreezeNewProposals', 'freeze=', freeze, 'linkKeyString=', linkKeyString))
+
+        # User id from cookie, crumb...
+        responseData = { 'success':False, 'requestLogId':requestLogId }
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
+        userId = cookieData.id()
+
+        # Retrieve link-key record
+        linkKeyRec = linkKey.LinkKey.get_by_id( linkKeyString )
+        logging.debug(LogMessage('FreezeNewProposals', 'linkKeyRec=', linkKeyRec))
+
+        if linkKeyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not found' )
+        if linkKeyRec.destinationType != conf.REQUEST_CLASS_NAME:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='linkKey not a request' )
+        requestId = int(linkKeyRec.destinationId)
+        logging.debug(LogMessage('FreezeNewProposals', 'requestId=', requestId))
+
+        if linkKeyRec.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
+
+        # Retrieve request record
+        requestForProposalsRec = requestForProposals.RequestForProposals.get_by_id( int(requestId) )
+        logging.debug(LogMessage('FreezeNewProposals', 'requestForProposalsRec=', requestForProposalsRec))
+        if requestForProposalsRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='requestForProposalsRec not found' )
+
+        # Verify that user is authorized
+        if userId != requestForProposalsRec.creator:
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
+
+        # Update request record
+        requestForProposalsRec.freezeNewProposals = freeze
+        common.appendFreezeProposalsToHistory( freeze, requestForProposalsRec.adminHistory )
+        requestForProposalsRec.put()
+        
+        linkKeyDisplay = httpServer.linkKeyToDisplay( linkKeyRec )
+        requestDisplay = httpServer.requestToDisplay( requestForProposalsRec, userId )
+        responseData.update(  { 'success':True, 'linkKey':linkKeyDisplay, 'request':requestDisplay }  )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 

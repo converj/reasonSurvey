@@ -6,7 +6,7 @@ import random
 import re
 import sys
 # Import app modules
-from configAutocomplete import const as conf
+from autocomplete.configAutocomplete import const as conf
 
 
 
@@ -14,7 +14,7 @@ from configAutocomplete import const as conf
 def medianKey( keyToCount ):
     if keyToCount is None:  return None
     # Sum half the counts
-    sumCount = sum(  [ count  for key, count in keyToCount.iteritems() ]  )
+    sumCount = sum(  [ count  for key, count in keyToCount.items() ]  )
     halfSumCount = float(sumCount) / 2.0
     logging.debug( 'medianKey() halfSumCount=' + str(halfSumCount) + ' keyToCount=' + str(keyToCount) )
     # Return key matching half the count, ordered by key as integer
@@ -88,7 +88,7 @@ def computeInvDocFreq( documentMatches, queryWords ):
 
     logging.debug( 'wordToDocCount=' + str(wordToDocCount) )
 
-    return { word: 1.0 / float(count)  for word,count in wordToDocCount.iteritems() }
+    return { word: 1.0 / float(count)  for word,count in wordToDocCount.items() }
 
 
 

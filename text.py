@@ -10,9 +10,21 @@ from configuration import const as conf
 
 def isAscii( text ):
     if not text:  return False
-    try:  text.decode('ascii')
-    except ( UnicodeDecodeError, UnicodeEncodeError ):  return False
-    else:  return True
+
+    try:
+        if isUnicode( text ):
+            text.encode('ascii')
+        else:
+            text.decode('ascii')
+        return True
+    except ( UnicodeDecodeError, UnicodeEncodeError ):
+        return False
+
+def isBytes( text ):
+    return isinstance( text, str )  if ( conf.pythonVersion <= 2 )  else isinstance( text, bytes )
+
+def isUnicode( text ):
+    return isinstance( text, unicode )  if ( conf.pythonVersion <= 2 )  else isinstance( text, str )
 
 
 
@@ -28,12 +40,17 @@ class LogMessage( object ):
     def __str__( self ):
         parts = [ ]
         for a in self.args:
-            if isinstance( a, str ):
+            if isBytes( a ):
                 if ( a[-1:] == '=' ):  parts.append( a )   # If string is a label for following value... print it plainly
-                else:                  parts += [ '\'', a, '\' ' ]
-            elif isinstance( a, unicode ):
-                if isAscii( a ):  parts += [ repr(a), ' ' ]
-                else:             parts += [ repr(a), '=utf8:\'', utf8(a), '\' ' ]
+                elif not parts:        parts += [ a, ' ' ]  # If string is the log-tag... print it plainly, with following space
+                else:                  parts += [ repr(a), ' ' ]   # parts+=['\'',a,'\' '] fails in python-3, because bytes cannot be concatenated by join()
+            elif isUnicode( a ):
+                if isAscii( a ):
+                    if ( a[-1:] == '=' ):  parts.append( a )
+                    elif not parts:        parts += [ a, ' ' ]
+                    else:                  parts += [ repr(a), ' ' ]
+                else:
+                    parts += [ repr(a), '=utf8:\'', utf8(a), '\' ' ]
             else:
                 parts += [ repr(a), ' ' ]
         return ''.join( parts )
@@ -43,6 +60,9 @@ class LogMessage( object ):
 # Encode unicode-object-sequence into utf8-bytes (in ascii-range)
 def utf8( unicodeObjects ):
     return unicodeObjects.encode('utf-8')  if unicodeObjects  else None
+
+def toAscii( unicodeObjects ):
+    return unicodeObjects.encode('ascii')  if unicodeObjects  else None
 
 # Convert utf8-bytes to unicode-object-sequence
 def toUnicode( utf8Bytes ):
@@ -60,7 +80,7 @@ def formTextToStored( formText ):
     if formText is None:  return None
     html = formText
     # Ensure converted to unicode
-    if not isinstance( html, unicode ):  html = toUnicode( html )
+    if not isUnicode( html ):  html = toUnicode( html )
     # Trim leading/trailing whitespace
     html = html.strip()
     # Remove html tags
@@ -109,14 +129,36 @@ class TestText(unittest.TestCase):
 
     def test(self):
         # Test encoding detection
-        textWithNonAscii = u'don\u2019t \t log'
+        textWithNonAscii = '\xe3\x81\xa8\xe3\x81\xaf'
+        textUnicode = u'\u3068\u306f'
+        textAscii = 'abc123'
         self.assertFalse( isAscii(textWithNonAscii) )
-        self.assertTrue( isAscii("abc123") )
+        self.assertFalse( isAscii(textUnicode) )
+        self.assertTrue( isAscii(textAscii) )
+
+        if ( conf.pythonVersion <= 2 ):
+            self.assertTrue( isBytes(textWithNonAscii) )
+            self.assertFalse( isBytes(textUnicode) )
+            self.assertTrue( isBytes(textAscii) )
+        else:
+            self.assertFalse( isBytes(textWithNonAscii) )
+            self.assertFalse( isBytes(textUnicode) )
+            self.assertFalse( isBytes(textAscii) )
+
+        if ( conf.pythonVersion <= 2 ):
+            self.assertFalse( isUnicode(textWithNonAscii) )
+            self.assertTrue( isUnicode(textUnicode) )
+            self.assertFalse( isUnicode(textAscii) )
+        else:
+            self.assertTrue( isUnicode(textWithNonAscii) )
+            self.assertTrue( isUnicode(textUnicode) )
+            self.assertTrue( isUnicode(textAscii) )
 
         # Test unicode encoding
-        utf8( textWithNonAscii )  # Should not error
-        with self.assertRaises( UnicodeEncodeError ):
-            str( textWithNonAscii )
+        utf8( textUnicode )  # Should not error
+        if ( conf.pythonVersion <= 2 ):
+            with self.assertRaises( UnicodeEncodeError ):
+                str( textUnicode )
 
         # Test date to string.
         t = datetime.datetime.fromtimestamp(1483257600)

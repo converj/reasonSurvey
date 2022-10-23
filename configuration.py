@@ -1,13 +1,22 @@
 # Import external modules
 import logging
 import os
+import sys
 # Import app modules
 from constants import Constants
 
 
+# Call this during unit-tests, to configure visible logs
+def logForUnitTest():
+    logging.basicConfig( stream=sys.stdout, level=logging.DEBUG, format='%(filename)s %(funcName)s():  %(message)s' )
+
+
+# Constants
 const = Constants()
 
-const.isDev = os.path.isfile('configurationDev.py')
+const.pythonVersion = sys.version_info[0]
+
+const.isDev = os.path.isfile('configurationDev.py')  or  ( not os.getenv('GAE_ENV', '').startswith('standard') )
 if const.isDev:  import configurationDev
 
 if not const.isDev:  logging.getLogger().setLevel( logging.WARNING )
@@ -22,6 +31,13 @@ const.COOKIE_FIELD_RECENTS = 'recent'
 
 const.PRO = 'pro'
 const.CON = 'con'
+
+const.CHANGE_CREATE_SURVEY = 'CHANGE_CREATE_SURVEY'
+const.CHANGE_FREEZE_USER_INPUT = 'CHANGE_FREEZE_USER_INPUT'
+const.CHANGE_THAW_USER_INPUT = 'CHANGE_THAW_USER_INPUT'
+const.CHANGE_FREEZE_NEW_PROPOSALS = 'CHANGE_FREEZE_NEW_PROPOSALS'
+const.CHANGE_THAW_NEW_PROPOSALS = 'CHANGE_THAW_NEW_PROPOSALS'
+
 
 # Login parameters
 const.LOGIN_URL = 'https://openvoterid.net/login'
@@ -47,6 +63,7 @@ const.NO_COOKIE = 'NO_COOKIE'
 const.NO_LOGIN = 'NO_LOGIN'
 const.BAD_LINK = 'BAD_LINK'
 const.NOT_OWNER = 'NOT_OWNER'
+const.NOT_HOST = 'NOT_HOST'
 const.HAS_RESPONSES = 'HAS_RESPONSES'
 const.FROZEN = 'FROZEN'
 const.OVER_BUDGET = 'OVER_BUDGET'

@@ -9,10 +9,12 @@ import string
 import sys
 import time
 # Import app modules
+import configuration
 from configuration import const as conf
 from constants import Constants
 import cookie
 import secrets
+import text
 
 
 ########################################################################
@@ -44,7 +46,7 @@ def loginResponseSignature( applicationResponseSigningSecret, requestId, applica
     return hashForSignature( applicationResponseSigningSecret , requestId + applicationId + voterId + city )
 
 def hashForSignature( secret, data ):
-    return base64.b32encode( hmac.new(secret, data, digestmod=hashlib.sha512).digest() )
+    return text.toUnicode(   base64.b32encode(  hmac.new( text.utf8(secret), text.utf8(data), digestmod=hashlib.sha512 ).digest()  )   )
 
 
 
@@ -54,7 +56,7 @@ def hashForSignature( secret, data ):
 
 def createCrumb( userId, loginRequired=False ):
     hasher = hashlib.md5()
-    hasher.update( userId + secrets.crumbSalt )
+    hasher.update(  text.utf8( userId + secrets.crumbSalt )  )
     return hasher.hexdigest()
 
 def checkCrumb( userId, browserCrumb, loginRequired=False, loginCrumb=None ):
@@ -291,14 +293,15 @@ class TestUser(unittest.TestCase):
         id = generateCookieId()
         self.assertEqual( const.ID_COOKIE_LENGTH, len(id) )
         useSecureCookie = False
-        cookieData = CookieData( browserId=id, data={conf.COOKIE_FIELD_BROWSER_ID:id}, fingerprint=browserFingerprint(httpRequest, {}) )
+        javascriptFingerprint = '...'
+        cookieData = CookieData( browserId=id, data={conf.COOKIE_FIELD_BROWSER_ID:id}, fingerprint=browserFingerprint(httpRequest, {'fingerprint':javascriptFingerprint}) )
         cookieData.sign()
         logging.debug( 'cookieData=' + str(cookieData) )
 
         cookie.setCookieData( cookieData.data, cookieData.dataNew, useSecureCookie, httpResponse )
         logging.debug( 'httpResponse.cookies=' + str(httpResponse.cookies) )
 
-        cookieData = validate( httpRequest, {'crumb':createCrumb(id)} )
+        cookieData = validate( httpRequest, {'fingerprint':javascriptFingerprint , 'crumb':createCrumb(id)} )
         logging.debug( 'cookieData=' + str(cookieData) )
 
         self.assertEqual( id, cookieData.browserId )
@@ -312,6 +315,6 @@ class TestUser(unittest.TestCase):
         self.assertEqual( maxValues, len(valueToTime) )
 
 if __name__ == '__main__':
-    logging.basicConfig( stream=sys.stdout, level=logging.DEBUG, format='%(filename)s %(funcName)s():  %(message)s' )
+    configuration.logForUnitTest()
     unittest.main()
 

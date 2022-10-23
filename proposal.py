@@ -10,21 +10,31 @@ from constants import Constants
 import text
 
 
+# Constants for use only inside this file/module
 const = Constants()
 const.MAX_RETRY = 3
 const.MIN_REAGGREGATE_DELAY_SEC = 60
+# const.NUM_CLEANING_BINS = 10
 
 
 # Parent key: RequestForProposals?   No, use KeyProperty instead.
-class Proposal(ndb.Model):
+class Proposal( ndb.Model ):
     requestId = ndb.StringProperty()   # May be null
 
     title = ndb.StringProperty()
     detail = ndb.StringProperty()
+
     creator = ndb.StringProperty()
     allowEdit = ndb.BooleanProperty()
     freezeUserInput = ndb.BooleanProperty( default=False )
-    
+    adminHistory = ndb.JsonProperty( default=[] )  # group[ {text:conf.CHANGE*, time:seconds} ]
+
+    # For cleaning up unused records
+    timeModified = ndb.DateTimeProperty( auto_now=True )
+    hasResponses = ndb.ComputedProperty( lambda record: not record.allowEdit )  # Cannot compute from lastSumUpdateTime, because lastSumUpdateTime only changes if a reason has votes
+#     cleaningBin = ndb.IntegerProperty( default=0 )
+#     timeCleaned = ndb.IntegerProperty( default=0 )
+
     voteAggregateStartTime = ndb.IntegerProperty()
     numPros = ndb.IntegerProperty( default=0 )
     numCons = ndb.IntegerProperty( default=0 )
@@ -40,6 +50,7 @@ class Proposal(ndb.Model):
     emptyProId = ndb.StringProperty()
     emptyConId = ndb.StringProperty()
 
+
     def setContent( self, title, detail ):
         self.title = title
         self.detail = detail
@@ -48,17 +59,25 @@ class Proposal(ndb.Model):
         words = words[ 0 : conf.MAX_WORDS_INDEXED ]  # Limit number of words indexed 
         self.words = text.tuples( words, maxSize=2 )
 
+#     def setCleaningBin( self ):
+#         self.cleaningBin = randomCleaningBin()
+
     def updateScore( self ):
         contentLen = ( len(self.title) if self.title else 0 ) + ( len(self.detail) if self.detail else 0 )
         self.score = float( self.netPros ) / float( contentLen + 100.0 )
 
 
 
-@ndb.transactional( retries=const.MAX_RETRY )
-def setEditable( proposalId, editable ):
-    proposalRecord = Proposal.get_by_id( int(proposalId) )
-    proposalRecord.allowEdit = editable
-    proposalRecord.put()
+# def randomCleaningBin( ):
+#     return random.integer( const.NUM_CLEANING_BINS )
+
+
+# @ndb.transactional( retries=const.MAX_RETRY )
+# def setEditable( proposalId, editable ):
+#     proposalRecord = Proposal.get_by_id( int(proposalId) )
+#     if proposalRecord.allowEdit != editable:
+#         proposalRecord.allowEdit = editable
+#         proposalRecord.put()
 
 
 # Returns records, cursor, more-flag
@@ -220,7 +239,7 @@ def __setNumProsAndConsImp( proposalId, numPros, numCons, now ):
     proposalRecord.netPros = numPros - numCons
     proposalRecord.updateScore()
     proposalRecord.lastSumUpdateTime = now
-    proposalRecord.allowEdit = False  # If votes have been given to proposal's empty reasons... do not allow editing proposal
+    proposalRecord.allowEdit = False  # If votes have been given to proposal's empty / reasons... do not allow editing proposal
     proposalRecord.put()
 
 

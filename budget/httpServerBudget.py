@@ -4,9 +4,10 @@
 import json
 import logging
 # Import app modules
-from configBudget import const as conf
+import common
+from budget.configBudget import const as conf
 import linkKey
-import slice
+from budget import slice
 import user
 
 
@@ -21,7 +22,8 @@ def budgetToDisplay( budgetRecord, userId ):
         'total': budgetRecord.total ,
         'mine': (budgetRecord.creator == userId) ,
         'allowEdit': (userId == budgetRecord.creator) and budgetRecord.allowEdit ,
-        'freezeUserInput': budgetRecord.freezeUserInput
+        'freezeUserInput': budgetRecord.freezeUserInput ,
+        'adminHistory': common.decodeChangeHistory( budgetRecord.adminHistory ) ,
     }
     # Only set if used
     if budgetRecord.hideReasons:  display['hideReasons'] = budgetRecord.hideReasons

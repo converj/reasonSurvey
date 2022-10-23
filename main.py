@@ -9,27 +9,53 @@
 #     Store cookie in database only when user tries to store data.
 
 
+
 # Import external modules
+from google.appengine.datastore.datastore_query import Cursor
+from google.appengine.ext import ndb
+import flask
 import json
 import logging
 import os
-import webapp2
 # Import local modules
+import autocomplete.answer
 import autocomplete.configAutocomplete
+import autocomplete.getAnswers
+import autocomplete.getQuestion
+import autocomplete.getSurvey
+import autocomplete.submitAnswer
+import autocomplete.submitQuestion
+import autocomplete.submitSurvey
+import autocomplete.survey
+import autocomplete.question
 import budget.configBudget
+import budget.getBudget
+import budget.getSlice
+import budget.submitBudget
+import budget.submitSlice
+import cleanup
 from configuration import const as conf
+import getProposalData
+import getRecent
+import getRequestData
 import httpServer
+from httpServer import app
 import secrets
+import submitLogin
+import submitProposal
+import submitReason
+import submitRequest
+import submitVote
+from text import LogMessage
 import user
 
 
 
-# Main page generator
-class MainPage( webapp2.RequestHandler ):
 
-    def get(self):
-    
-        logging.debug( 'self.request=' + str(self.request) )
+@app.get('/')
+def mainPage( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+        logging.debug( 'mainPage() httpRequest=' + str(httpRequest) )
 
         templateValues = {
             # Pass configuration data from server to client
@@ -65,36 +91,36 @@ class MainPage( webapp2.RequestHandler ):
             'IS_DEV':  'true' if conf.isDev  else 'false' ,
         }
         # Dont set cookie at this time, because javascript-browser-fingerprint not available to sign cookie
-        httpServer.outputTemplate( 'main.html', templateValues, self.response )
+        return httpServer.outputTemplate( 'main.html', templateValues, httpResponse )
 
 
 
 # Serve cookie on page load
-class InitialCookie( webapp2.RequestHandler ):
-
-    def post( self ):
-
-        logging.debug( 'self.request=' + str(self.request) )
+@app.post('/initialCookie')
+def initialCookie( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+        logging.debug( 'initialCookie() httpRequest=' + str(httpRequest) )
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
 
         # Set cookie with signature based on browser-fingerprint from javascript
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response, idRequired=False, makeValid=True )
-        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='cookieData invalid' )
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, idRequired=False, makeValid=True )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='cookieData invalid' )
         responseData['success'] = True
         responseData['crumb'] = user.createCrumb( cookieData.browserId )  if cookieData.valid()  else ''
 
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
         
 
 
-class TermsOfService( webapp2.RequestHandler ):
+@app.get('/termsOfService.html')
+def termsOfService( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+        logging.debug( 'httpRequest=' + str(httpRequest) )
 
-    def get( self ):
-        logging.debug( 'self.request=' + str(self.request) )
         templateValues = {
             'TITLE': 'Terms of Service' ,
             'COMPANY_NAME': 'Converj LLC' ,
@@ -102,30 +128,83 @@ class TermsOfService( webapp2.RequestHandler ):
             'THE_ADDRESS': '506 S Spring St #13308, Los Angeles CA 90013' ,
             'THE_LOCATION': 'Los Angeles, California, United States' ,
         }
-        httpServer.outputTemplate( 'termsOfService.html', templateValues, self.response )
+        return httpServer.outputTemplate( 'termsOfService.html', templateValues, httpResponse )
 
 
-class PrivacyPolicy( webapp2.RequestHandler ):
+@app.get('/privacyPolicy.html')
+def privacyPolicy( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+        logging.debug( 'httpRequest=' + str(httpRequest) )
 
-    def get( self ):
-        logging.debug( 'self.request=' + str(self.request) )
         templateValues = {
             'TITLE': 'Privacy Policy' ,
             'COMPANY_NAME': 'Converj LLC' ,
             'THE_LOCATION': 'Los Angeles, California, United States' ,
         }
-        httpServer.outputTemplate( 'privacyPolicy.html', templateValues, self.response )
+        return httpServer.outputTemplate( 'privacyPolicy.html', templateValues, httpResponse )
+
+
+
+# Find records needing cleanup, initial form
+# @app.get('/clean')
+def cleanGet( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+        logging.debug(LogMessage('Clean', 'get()'))
+
+        templateValues = { }
+        return httpServer.outputTemplate( 'cleanup.html', templateValues, httpResponse )
+
+# Find records needing cleanup, paged
+# @app.post('/clean' )
+def cleanPost( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+        logging.debug(LogMessage('Clean.post()', 'httpRequest=', httpRequest))
+
+        # Collect inputs
+        inputData = httpServer.postFormParams( httpRequest )
+        logging.debug(LogMessage('Clean', 'inputData=', inputData))
+        secret = inputData.get( 'secret', [''] )[0]
+        type = inputData.get( 'type', [''] )[0]
+        cursor = inputData.get( 'cursor', [''] )[0]
+
+        cursor = Cursor( urlsafe=cursor )  if cursor  else None
+        doDelete = True
+        templateValues = { 'cursor':(text.toUnicode(cursor.urlsafe()) if cursor else ''), 'type':type, 'secret':secret }
+
+        # Check admin-secret, because this service risks exposing private data
+        if ( secret != secrets.adminSecret ):
+            templateValues['errorMessage'] = 'Admin secret mismatch'
+            return httpServer.outputTemplate( 'cleanup.html', templateValues, httpResponse )
+
+        # Clean 1 page of records
+        if ( type == 'proposal' ):
+            cursor, displayTuples = cleanup.removeProposalsWithoutRequest( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'proposalshard' ):
+            cursor, displayTuples = cleanup.removeProposalShardsWithoutProposal( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'reason' ):
+            cursor, displayTuples = cleanup.removeReasonsWithoutProposal( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'reasonvote' ):
+            cursor, displayTuples = cleanup.removeReasonVotesWithoutReason( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'question' ):
+            cursor, displayTuples = cleanup.removeQuestionsWithoutSurvey( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'answer' ):
+            cursor, displayTuples = cleanup.removeAnswersWithoutQuestion( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'answervote' ):
+            cursor, displayTuples = cleanup.removeAnswerVotesWithoutAnswer( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'slice' ):
+            cursor, displayTuples = cleanup.removeSlicesWithoutBudget( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'slicevote' ):
+            cursor, displayTuples = cleanup.removeSliceVotesWithoutBudget( cursor=cursor, doDelete=doDelete )
+        elif ( type == 'link' ):
+            cursor, displayTuples = cleanup.removeLinkKeysWithoutDestination( cursor=cursor, doDelete=doDelete )
+        else:
+            templateValues['errorMessage'] = 'Unhandled type'
+            return httpServer.outputTemplate( 'cleanup.html', templateValues, httpResponse )
+
+        # Display cleaning results
+        templateValues['cursor'] = text.toUnicode(cursor.urlsafe())  if cursor  else ''
+        templateValues['records'] = displayTuples
+        return httpServer.outputTemplate( 'cleanup.html', templateValues, httpResponse )
 
         
-
-# Route URLs to page generators
-app = webapp2.WSGIApplication(
-    [
-        ('/', MainPage) ,
-        ('/initialCookie', InitialCookie) ,
-        ('/termsOfService.html', TermsOfService) ,
-        ('/privacyPolicy.html', PrivacyPolicy) ,
-    ],
-    debug=conf.isDev
-)
 

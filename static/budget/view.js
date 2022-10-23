@@ -146,6 +146,9 @@
         // Set attributes
         this.setAttribute( 'TitleInput', 'disabled', (topDisp.isFrozen() ? TRUE : null) );
         this.setAttribute( 'ReasonInput', 'disabled', (topDisp.isFrozen() ? TRUE : null) );
+        this.setAttribute( 'SizeInput', 'disabled', (topDisp.isFrozen() ? TRUE : null) );
+        this.setAttribute( 'SliceDelete', 'disabled', (topDisp.isFrozen() ? TRUE : null) );
+
         let hasFocus =  this.topDisp  &&  (this.topDisp.lastFocusedSlice == this);
         this.setAttribute( 'Slice', 'hasFocus', ( hasFocus? TRUE : FALSE ) );
 
@@ -631,7 +634,7 @@
         ElementWrap.call( this );  // Inherit member data
 
         this.createFromHtml( budgetId, '\n\n' + [
-            '   <h1 class=title> View Budget </h1>' ,
+            '   <h1 class=title> Budget </h1>' ,
             '   <div class=Budget id=Budget>' ,
             '       <div class=Message id=Message aria-live=polite></div>' ,
             '       <div class=Message id=freezeMessage aria-live=polite></div>' ,
@@ -665,7 +668,14 @@
             '           </div>' ,
             '       </div>' ,
             '       <button class=BudgetResultsButton id=BudgetResultsButton onclick=onBudgetResults> Budget Results </button>' ,
-'<svg class=lines id=lines width=100% height=100% ></svg>' ,
+
+            // Admin change history
+            '       <details class=adminHistory id=adminHistory> ',
+            '           <summary class=adminHistoryLast id=adminHistoryLast></summary> ',
+            '           <div class=adminHistoryFull id=adminHistoryFull></div> ',
+            '       </details> ',
+
+            '       <svg class=lines id=lines width=100% height=100% ></svg>' ,
             '   </div>'
         ].join('\n') );
     }
@@ -723,12 +733,14 @@
 
         this.setAttribute( 'Budget', 'mine', (this.budget.mine ? TRUE : null) );
         this.setAttribute( 'Budget', 'hidereasons', (this.budget.hideReasons ? TRUE : null) );
-        this.setAttribute( 'NewSliceTitleInput', 'disabled', ((100 <= this.totalUsed) ? 'true' : null) );
+        this.setAttribute( 'NewSliceTitleInput', 'disabled', ( this.isFrozen() || (100 <= this.totalUsed) ? TRUE : null) );
 
         this.setInnerHtml( 'BudgetTitle', this.budget.title );
         this.setInnerHtml( 'BudgetIntroduction', storedTextToHtml(this.budget.introduction) );
         this.setInnerHtml( 'TotalAvailable', 'Total budget: ' + this.budget.total );
         this.setInnerHtml( 'TotalUsed', 'Percent used: ' + (this.totalUsed ?  ''+this.totalUsed+'%'  : '') );
+
+        displayAdminHistory( this.budget.adminHistory, this.getSubElement('adminHistoryLast'), this.getSubElement('adminHistoryFull') );
 
         // For each slice...
         let slicesDiv = this.getSubElement('Slices');
@@ -888,6 +900,7 @@
                     thisCopy.budget.title = receiveData.budget.title;
                     thisCopy.budget.introduction = receiveData.budget.introduction;
                     thisCopy.budget.allowEdit = receiveData.budget.allowEdit;
+                    thisCopy.budget.adminHistory = receiveData.budget.adminHistory;
                     thisCopy.budget.freezeUserInput = receiveData.budget.freezeUserInput;
                     thisCopy.budget.id = receiveData.budget.id;
                     thisCopy.budget.mine = receiveData.budget.mine;

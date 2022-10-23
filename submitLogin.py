@@ -15,36 +15,33 @@ import logging
 import os
 import re
 import time
-import urllib
-import urlparse
-import webapp2
 # Import app modules
 import browser
 import cookie
 from configuration import const as conf
 import httpServer
+from httpServer import app
 import linkKey
 import user
 
 
-class SignLoginRequest(webapp2.RequestHandler):
 
-    def post(self):
-
-        logging.debug( 'SignLoginRequest.post() request.body=' + self.request.body )
+@app.post('/signLoginRequest')
+def signLoginRequest( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug( 'SignLoginRequest.post() inputData=' + str(inputData) )
 
         loginRequestId = user.randomStringWithLength( conf.VOTER_ID_LOGIN_REQUEST_ID_LENGTH )
         signature = user.signLoginRequest( loginRequestId )
 
         # Store login-request-id, to later check against spoofed login-return
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response )
-        if not cookieData.browserId:  return
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
+        if not cookieData.browserId:  return httpResponse
         browserId = cookieData.browserId
 
         browserRecord = browser.BrowserRecord.get_by_id( browserId )
@@ -58,21 +55,19 @@ class SignLoginRequest(webapp2.RequestHandler):
         browserRecord.put()
 
         responseData.update(  { 'success':True , 'loginRequestId':loginRequestId, 'signature':signature }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
 # Login receiving service, storing browserId+requestId->loginId with 10-minute expiration time
-class LoginReturn(webapp2.RequestHandler):
-
-    def post(self):
-
-        logging.debug( 'LoginReturn.post() request.body=' + self.request.body )
+@app.post('/loginReturn')
+def loginReturn( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        inputData = urlparse.parse_qs( self.request.body )
+        inputData = httpRequest.postFormParams()
         logging.debug( 'LoginReturn.post() inputData=' + str(inputData) )
 
         requestId = inputData['requestId'][0]
@@ -83,24 +78,24 @@ class LoginReturn(webapp2.RequestHandler):
         # Check that browser-id exists
         # Cannot check browser crumb/fingerprint, because they do not exist in the referring page
         # Send fingerprint via ajax before auto-closing tab
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response, crumbRequired=False, signatureRequired=False )
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, crumbRequired=False, signatureRequired=False )
 
-        if not cookieData.browserId:  return
+        if not cookieData.browserId:  return httpResponse
         browserId = cookieData.browserId
 
         # Check responseSignature
         expectedResponseSignature = user.signLoginResult( requestId, voterId, city )
         logging.debug( 'LoginReturn.post() expectedResponseSignature=' + str(expectedResponseSignature) )
-        if (responseSignature != expectedResponseSignature):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='responseSignature does not match expected' )
+        if (responseSignature != expectedResponseSignature):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='responseSignature does not match expected' )
 
         # Check stored browserId -> loginRequestId , check timeout, then delete record
         browserRecord = browser.BrowserRecord.get_by_id( browserId )
         logging.debug( 'LoginReturn.post() browserRecord=' + str(browserRecord) )
         
         now = int( time.time() )
-        if not browserRecord:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='login browserRecord=null' )
-        if browserRecord.voterLoginRequestId != requestId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='login requestId does not match expected' )
-        if browserRecord.loginRequestTime + conf.VOTER_ID_TIMEOUT_SEC < now:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='login past timeout' )
+        if not browserRecord:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='login browserRecord=null' )
+        if browserRecord.voterLoginRequestId != requestId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='login requestId does not match expected' )
+        if browserRecord.loginRequestTime + conf.VOTER_ID_TIMEOUT_SEC < now:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='login past timeout' )
 
         browserRecordKey = ndb.Key( browser.BrowserRecord, browserId )
         browserRecordKey.delete()
@@ -119,41 +114,30 @@ class LoginReturn(webapp2.RequestHandler):
             'crumb': user.createCrumb( browserId ) ,
             'city': city
         } )
-        httpServer.outputTemplate( 'loginReturn.html', responseData, self.response, cookieData=cookieData )
+        return httpServer.outputTemplate( 'loginReturn.html', responseData, httpResponse, cookieData=cookieData )
 
 
 
 # Crumb/fingerprint not required, to enable user to logout even if browser crumb is lost or fingerprint changed.
 # But browser crumb/fingerprint could be required for logout, since they can be regenerated by page reload.
-class SubmitLogout(webapp2.RequestHandler):
-
-    def post(self):
-
-        logging.debug( 'SubmitLogout.post() request.body=' + self.request.body )
+@app.post('/submitLogout')
+def submitLogout( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'requestLogId':requestLogId }
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug( 'SubmitLogout.post() inputData=' + str(inputData) )
 
-        cookieData = httpServer.validate( self.request, inputData, responseData, self.response, crumbRequired=False, signatureRequired=False )
-        if not cookieData.valid():  return   # Cookie already reset, no need to clear cookie fields
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, crumbRequired=False, signatureRequired=False )
+        if not cookieData.valid():  return httpResponse   # Cookie already reset, no need to clear cookie fields
 
         # Remove voter-id from persistent cookie, even if cookie is already invalid
         cookieData.dataNew[ conf.COOKIE_FIELD_VOTER_ID ] = None
         cookieData.dataNew[ conf.COOKIE_FIELD_VOTER_CITY ] = None
 
         responseData.update(  { 'success':True }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
-
-
-
-# Route HTTP request
-app = webapp2.WSGIApplication([
-    ('/signLoginRequest', SignLoginRequest),
-    ('/loginReturn', LoginReturn),
-    ('/submitLogout', SubmitLogout)
-])
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 

@@ -14,9 +14,8 @@ import reasonVote
 import text
 
 
-# Constants
+# Constants for use only inside this file/module
 const = Constants()
-const.MAX_RETRY = 3
 const.MAX_VOTE_RETRY = 3
 const.CHAR_LENGTH_UNIT = 100
 
@@ -142,7 +141,7 @@ def __voteTransaction( requestId, proposalId, reasonId, userId, voteUp ):
     reasonRecord = None
     prosInc = 0
     consInc = 0
-    for incReasonId, voteCountIncrement in voteCountIncrements.iteritems():
+    for incReasonId, voteCountIncrement in voteCountIncrements.items():
         incReasonRecord = __incrementVoteCount( incReasonId, voteCountIncrement )  # Contested lightly
         if str(incReasonRecord.key.id()) == reasonId:  reasonRecord = incReasonRecord
 

@@ -175,15 +175,14 @@
         let url = 'submitVote';
         ajaxSendAndUpdate( sendData, url, this.topDisp, function(error, status, receiveData){
             if ( receiveData  &&  receiveData.success ){
-                let message = 'Saved vote' + ( myNewVote?  '. (Limit 1 vote per proposal.)'  :  '' );  // Hint about vote-limit
+                let hint = ( myNewVote  &&  ! proposalDisplay.areReasonsHidden() )?  '. (Limit 1 vote per proposal.)'  :  '';
+                let message = 'Saved vote' + hint;
                 thisCopy.message = { text:message, color:GREEN, ms:3000 };
                 // update vote count (includes votes from other users since last data refresh)
                 let newVoteCount = ( receiveData.reason && receiveData.reason.voteCount )?  parseInt( receiveData.reason.voteCount )  :  0;
                 reasonData.voteCount = newVoteCount;
                 reasonData.score = ( receiveData.reason )?  receiveData.reason.score  :  null;
                 reasonData.allowEdit = receiveData.reason.allowEdit;
-                proposalDisplay.dataUpdated();
-                thisCopy.onInput();
             }
             else {
                 // revert my vote & vote count
@@ -191,9 +190,9 @@
                 if ( error ){  thisCopy.message = { text:'Failed: '+error, color:RED, ms:10000 };  }
                 else {  thisCopy.message = { text:'Failed to save vote.', color:RED, ms:10000 };  }
                 proposalData.reasons.map( function(r,i){ r.voteCount = oldReasonVoteCounts[i]; r.myVote = oldMyVotes[i]; } );
-                proposalDisplay.dataUpdated();
-                thisCopy.onInput();
             }
+            thisCopy.topDisp.dataUpdated();
+            thisCopy.onInput();
         } );
     };
 
@@ -307,6 +306,12 @@
     stopEditing = function( ){ 
         this.editing = FALSE;
         this.wordToCount = null;
+
+        let contentInput = this.getSubElement('Content');
+        contentInput.defaultValue = this.data.content;
+        contentInput.value = contentInput.defaultValue;
+        contentInput.setSelectionRange(0, 0);
+
         this.dataUpdated();
         this.proposalDisplay.expandOrCollapseForEditing();
     };
@@ -372,6 +377,9 @@
     // Update this.element
         TitleAndDetailDisplay.prototype.
     dataUpdated = function( ){
+
+// console.log('TitleAndDetailDisplay.dataUpdated() data=', this.data);
+
         // Set editing state on element
         this.setAttribute( 'TitleAndDetail', 'editing', this.editing );
         // Set editing aria expand/collapse state
@@ -393,8 +401,8 @@
         this.setProperty( 'EditIcon', 'title', titleClickToEdit );
         // Title
         this.setProperty( 'TitleInput', 'defaultValue', this.data.title );
-        this.setProperty( 'Title', 'placeholder', this.data.titlePlaceholder );
-        this.setInnerHtml( 'Title', this.data.title );
+        this.setProperty( 'TitleInput', 'placeholder', this.data.titlePlaceholder );
+        this.setInnerHtml( 'Title', defaultTo(this.data.title, 'Loading...') );
         this.setProperty( 'Title', 'title', titleClickToEdit );
         // Detail
         // Do not set title because it overrides content for screen-reader.
@@ -410,7 +418,7 @@
         detailInput.setCustomValidity( defaultTo(this.contentValidity, '') );
 
         this.match = false;
-        this.match |= displayHighlightedContent( this.data.title, this.highlightWords, this.getSubElement('Title') );
+        this.match |= displayHighlightedContent( defaultTo(this.data.title, 'Loading...'), this.highlightWords, this.getSubElement('Title') );
         this.match |= displayHighlightedContent( storedTextToHtml(this.data.detail), this.highlightWords, this.getSubElement('Detail') );
     };
 
@@ -436,7 +444,7 @@
             return false;
         }
         else {
-            parentDiv.innerHTML = content;
+            parentDiv.innerHTML = defaultTo( content, '' );
             return true;
         }
     }
@@ -549,7 +557,8 @@
         var titleInput = this.getSubElement('TitleInput');
         var detailInput = this.getSubElement('DetailInput');
         titleInput.value = this.data.title;
-        detailInput.value = storedTextToHtml(this.data.detail);
+        detailInput.value = detailInput.defaultValue;
+        detailInput.setSelectionRange(0, 0);
         // stop editing
         this.stopEditing();
     };
@@ -646,18 +655,46 @@
             '    <div id=Message class="Message ProposalMessage" aria-live=polite></div>' ,
             '    <div class=loginStatus id=loginStatus></div>' ,
             '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
-            '    <div class=freezeText id=freezeText>Frozen</div>' ,  // Shown for single-proposal-from-request, and shown to participants
-            '    <button class=freezeButton id=freezeButton onclick=clickFreezeButton aria-live=polite></button>' ,
+            '   <div id=freezeUserInput class=freezeUserInput> ',
+            '       <label for=freezeUserInputCheckbox oninput=clickFreezeUserInput> Block all input </label> ',
+            '       <input id=freezeUserInputCheckbox type=checkbox oninput=clickFreezeUserInput /> ',
+            '       <div id=freezeUserInputMessage class=Message></div> ',
+            '   </div> ',
             '    <div class=ProposalContentReasonsNew id=ProposalContentReasonsNew>' ,
-            '       <div class=Collapseable id=Collapseable>' ,
+            '       <div class=Collapseable id=Collapseable>' ,  // No longer needed
             // Title and detail
-            '           <div class=ProposalContent id=ProposalContent subdisplay=titleAndDetailDisp></div>' ,
-            // Reasons
-            '           <div class=Reasons id=reasons>' ,
-            '               <div class=ReasonsPro id=ReasonsPro></div>' ,
-            '               <div class=ReasonsCon id=ReasonsCon></div>' ,
+            '           <div class=ProposalContentWrap>' ,
+            '               <div class=ProposalContentCover id=ProposalContentCover onclick=clickProposalContent></div>' ,
+            '               <div class=ProposalContent id=ProposalContent subdisplay=titleAndDetailDisp></div>' ,
             '           </div>' ,
-            '       </div>' ,
+            // New reason form
+            '           <div class=NewReasonForm id=NewReasonForm role=form >' ,
+            '               <div class="Message NewReasonMessage" id=NewReasonMessage aria-live=polite></div>' ,
+            '               <div class=NewReason>' ,
+            '                   <label for=NewReasonInput> Find or add reason to dis/agree with the proposal </label>' ,
+            '                   <textarea class=NewReasonInput id=NewReasonInput placeholder="I agree because..." ' ,
+            '                       oninput=onInput onfocus=handleNewReasonClick onblur=handleNewReasonBlur ' ,
+            '                       aria-expanded=false aria-controls=NewReasonButtons ></textarea>' ,
+            '               </div>' ,
+            '               <div class=NewReasonButtons id=NewReasonButtons>' ,
+            '                   <button class=NewReasonButton id=NewReasonButtonPro onclick=handleNewPro onblur=handleNewReasonBlur> Agree </button>' ,
+            '                   <button class=NewReasonButton id=NewReasonButtonCon onclick=handleNewCon onblur=handleNewReasonBlur> Disagree </button>' ,
+            '               </div>' ,
+            '           </div>' ,
+            // Vote counts for proposal
+            '           <div class=ProposalVoteSums id=ProposalVotes>' ,
+            '               <div class=ProposalVotePro><span class=VoteSumLabel>Votes pro:</span><span id=ProposalVotePro></span></div>' ,
+            '               <div class=ProposalVoteCon><span class=VoteSumLabel>Votes con:</span><span id=ProposalVoteCon></span></div>' ,
+            '           </div>' ,
+            // Reasons
+            '           <div class=ReasonsWrap> ' ,  // Allow setting max-height on reasons, which cannot use max-height because it is a table
+            '               <div class=Reasons id=reasons>' ,
+            '                   <div class=ReasonsPro id=ReasonsPro></div>' ,
+            '                   <div class=ReasonsCon id=ReasonsCon></div>' ,
+            '               </div>' ,
+            '           </div> ' ,
+            '       </div>' ,  // end Collapseable
+            //      Button to go to single-proposal-page
             '       <div class=ProposalExpandBottomRelative>' ,   // relative-absolute positioning for enclosed elements
             '           <div class=ProposalExpandBottomWrap>' ,  // crop shadow overflow
             '               <div class=ProposalExpandBottom onclick=handleExpandSeparatePage>' ,  // generates shadow, has hover-highlight and background arrows
@@ -665,22 +702,15 @@
             '               </div>' ,
             '           </div>' ,
             '       </div>' ,
+            //      Button to load more proposals on single-proposal-page
             '       <div class=moreReasonsDiv><button id=moreReasonsButton aria-live=polite onclick=retrieveMoreReasons> More reasons </button></div>' ,
-            // New reason form
-            '       <div class=NewReasonForm id=NewReasonForm role=form >' ,
-            '           <div class="Message NewReasonMessage" id=NewReasonMessage aria-live=polite></div>' ,
-            '           <div class=NewReason>' ,
-            '               <textarea class=NewReasonInput id=NewReasonInput placeholder="New reason to agree (pro) or disagree (con) with the proposal above" ' ,
-            '                   oninput=onInput onfocus=handleNewReasonClick onblur=handleNewReasonBlur ' ,
-            '                   aria-expanded=false aria-controls=NewReasonButtons ></textarea>' ,
-            '           </div>' ,
-            '           <div class=NewReasonButtons id=NewReasonButtons>' ,
-            '               <button class=NewReasonButton id=NewReasonButtonPro onclick=handleNewPro onblur=handleNewReasonBlur> Agree </button>' ,
-            '               <button class=NewReasonButton id=NewReasonButtonCon onclick=handleNewCon onblur=handleNewReasonBlur> Disagree </button>' ,
-            '           </div>' ,
-            '       </div>' ,
-            '   </div>' ,  // ProposalContentReasonsNew
-            '   <div class=backButtonDiv><button class=backButton id=backButton onclick=onClickBack onkeyup=onKeyUpBack> Back to proposals </button></div>' ,
+            '   </div>' ,  // end ProposalContentReasonsNew
+            '   <div class=backButtonDiv><button class=backButton id=backButton onclick=onClickBack onkeyup=onKeyUpBack> &larr; Back to proposals </button></div>' ,
+            // Admin change history
+            '   <details class=adminHistory id=adminHistory> ',
+            '       <summary class=adminHistoryLast id=adminHistoryLast></summary> ',
+            '       <div class=adminHistoryFull id=adminHistoryFull></div> ',
+            '   </details> ',
             '</div>' ,
         ].join('\n') );
     };
@@ -722,7 +752,7 @@
     
     // Update html from data.
         ProposalDisplay.prototype.
-    dataUpdated = function( ){
+    dataUpdated = function( redisplayReasons=false ){
         let width = jQuery(window).width();
         let use1Column = ( width <= MAX_WIDTH_1_COLUMN ) && ( ! this.proposal.hideReasons );
         let columnsChanged = ( use1Column !== this.use1Column );
@@ -767,13 +797,16 @@
         this.setAttribute( 'Proposal', 'fromRequest', (this.proposal.fromRequest ? TRUE : FALSE) );
         this.setAttribute( 'Proposal', 'singleProposal', (this.proposal.singleProposal ? TRUE : null) );
         this.setAttribute( 'Proposal', 'mine', (this.proposal.mine ? TRUE : null) );
+        this.setAttribute( 'Proposal', 'mysurvey', (this.proposal.mySurvey ? TRUE : null) );
         this.setAttribute( 'Proposal', 'hidereasons', (this.proposal.hideReasons ? TRUE : FALSE) );
+        let hasVoteCount = (this.proposal.numPros != undefined)  ||  (this.proposal.numCons != undefined);
+        this.setAttribute( 'Proposal', 'votecounts', (hasVoteCount ? TRUE : null ) );
         this.setInnerHtml( 'expandButton', (this.proposal.hideReasons ? 'More proposal details' : 'More reasons') );
 
         // Show freeze-message in freeze button
         // Freeze-message text display (next to button) may be better for accessibility and maintainability
-        if ( this.freezeMessage ){  this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeButton') );  }
-        else {  this.setInnerHtml( 'freezeButton' , (this.proposal.freezeUserInput ? 'Frozen' : 'Unfrozen') );  }
+        this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeUserInputMessage') );
+        this.getSubElement('freezeUserInputCheckbox').checked = ( this.proposal.freezeUserInput == true );
 
         // Update title and detail.
         this.titleAndDetailDisp.data.title = this.proposal.title;
@@ -791,6 +824,12 @@
         else {
             this.setInnerHtml( 'loginStatus', (this.proposal.mine ? 'Browser login only' : null) );
         }
+
+        displayAdminHistory( this.proposal.adminHistory, this.getSubElement('adminHistoryLast'), this.getSubElement('adminHistoryFull') );
+
+        // Display vote-counts
+        this.setInnerHtml( 'ProposalVotePro', this.proposal.numPros );
+        this.setInnerHtml( 'ProposalVoteCon', this.proposal.numCons );
 
         // Either display suggested-reasons or top-reasons
         let hasMatches =  this.suggestions  &&  ( 0 < this.suggestions.length );
@@ -823,7 +862,7 @@
         // Keep reasons before input, for mobile.  Put best match closest to new-reason input, sorting matches by match-score ascending.
         // Only re-sort reasons if necessary.  dataUpdated() may run many times between ordering by vote-score vs by match-score.
         if ( hasMatches ){  this.sortReasonsByMatchScore();  columnsChanged = true;  }
-        else if ( this.hadMatches ) {  this.sortReasonsByVoteScore();  columnsChanged = true;  }
+        else if ( this.hadMatches || redisplayReasons ) {  this.sortReasonsByVoteScore();  columnsChanged = true;  }
         this.hadMatches = hasMatches;
 
         // Rearrange reason displays in columns.
@@ -854,13 +893,23 @@
         }
         
         // Set collapse properties
-        this.setStyle( 'ProposalContent', 'maxHeight', this.maxPropHeight );
         this.setAttribute( 'Proposal', 'collapse', this.collapse );
     };
 
 
         ProposalDisplay.prototype.
-    onClickBack = function( e ){  e.preventDefault();  window.history.back();  };
+    clickProposalContent = function( e ){
+        e.stopPropagation();
+        app.startEdit = true;
+        this.handleExpandSeparatePage();
+    };
+
+
+        ProposalDisplay.prototype.
+    onClickBack = function( e ){
+        e.preventDefault();
+        setFragmentFields( {page:FRAG_PAGE_ID_REQUEST, proposal:null} );
+    };
 
         ProposalDisplay.prototype.
     onKeyUpBack = enterToClick;
@@ -876,62 +925,64 @@
     isFrozen = function(){
         // How can we know that proposal-from-request is frozen, when request-display is not present?
         // Need to retrieve frozen-flag with proposal?
-        return this.proposal.freezeUserInput  ||  (reqPropData && reqPropData.request && reqPropData.request.freezeUserInput);
+        return ( this.proposal.fromRequest )?  (reqPropData && reqPropData.request && reqPropData.request.freezeUserInput)  :  this.proposal.freezeUserInput;
     };
 
-
         ProposalDisplay.prototype.
-    clickFreezeButton = function( ){
+    clickFreezeUserInput = function( ){
 
         if ( this.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
-        // save via ajax
-        var freeze =  ! this.proposal.freezeUserInput;
+        // Save via ajax
+        let checkbox = this.getSubElement('freezeUserInputCheckbox');
+        let freeze =  checkbox.checked;
         this.freezeMessage = {  color:GREY , text:(freeze ? 'Freezing' : 'Unfreezing')  };
         this.dataUpdated();
-        var sendData = {
-            crumb:crumb , fingerprint:fingerprint , linkKey:this.linkKey.id , proposalId:this.proposal.id ,
-            freezeUserInput:freeze
-        };
-        var url = 'freezeProposal';
-        var thisCopy = this;
-        var freezeMessageDefault = this.proposal.freezeUserInput ? 'Frozen' : 'Unfrozen';
-        var freezeMessageMillisec = 5000;
+        let sendData = {  crumb:crumb , fingerprint:fingerprint , linkKey:this.linkKey.id , proposalId:this.proposal.id , freezeUserInput:freeze  };
+        let url = 'freezeProposal';
+        let thisCopy = this;
         ajaxSendAndUpdate( sendData, url, this, function(error, status, receiveData){
-            if ( error ){
-                thisCopy.freezeMessage = { color:RED , text:'Failed to ' + (freeze ? 'freeze' : 'unfreeze') , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
-            }
-            else if ( receiveData &&  receiveData.success ){
-                // Update data
-                thisCopy.proposal.freezeUserInput = receiveData.proposal.freezeUserInput;
+            if ( !error  &&  receiveData &&  receiveData.success ){
+                updateProposal( thisCopy.proposal, receiveData.proposal );
                 let freezeLabel = thisCopy.proposal.freezeUserInput ? 'Frozen' : 'Unfrozen';
-                let color = thisCopy.proposal.freezeUserInput ? RED : GREEN;
-                thisCopy.freezeMessage = { color:color , text:freezeLabel , textDefault:freezeLabel , ms:freezeMessageMillisec };
-            }
-            else if ( receiveData  &&  receiveData.message == NOT_OWNER ){
-                thisCopy.freezeMessage = { color:RED , text:'Cannot un/freeze proposal created by someone else.' , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
+                thisCopy.freezeMessage = { color:GREEN , text:freezeLabel , ms:5000 };
             }
             else {
-                thisCopy.freezeMessage = { color:RED , text:'Failed to freeze proposal.' , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
+                let message = 'Failed to ' + (freeze ? 'freeze' : 'unfreeze');
+                if ( !error && receiveData ){
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot un/freeze proposal created by someone else.';  }
+                }
+                thisCopy.freezeMessage = { color:RED , text:message , ms:5000 };
             }
             thisCopy.dataUpdated();
         } );
-
     };
+
 
         ProposalDisplay.prototype.
     sortReasonsByVoteScore = function( ){
-        console.log( 'sortReasonsByVoteScore()' );
-        this.proDisplays.sort(  function(a,b){ return (b.data.score - a.data.score); }  );
-        this.conDisplays.sort(  function(a,b){ return (b.data.score - a.data.score); }  );
+        // Give priority to new reasons, just added in the current display
+        this.proDisplays.sort(  (a,b) => compareInOrder( [(a.isMyNewReason? 1 : 0), (b.isMyNewReason? 1 : 0)] , [a.data.score, b.data.score] )  );
+        this.conDisplays.sort(  (a,b) => compareInOrder( [(a.isMyNewReason? 1 : 0), (b.isMyNewReason? 1 : 0)] , [a.data.score, b.data.score] )  );
     };
 
         ProposalDisplay.prototype.
     sortReasonsByMatchScore = function( ){
-        console.log( 'sortReasonsByMatchScore()' );
-        this.proDisplays.sort(  function(a,b){ return (a.matchScore - b.matchScore); }  );
-        this.conDisplays.sort(  function(a,b){ return (a.matchScore - b.matchScore); }  );
+        this.proDisplays.sort(  (a,b) => compareInOrder( [(a.isMyNewReason? 1 : 0), (b.isMyNewReason? 1 : 0)] , [a.data.matchScore, b.data.matchScore] )  );
+        this.conDisplays.sort(  (a,b) => compareInOrder( [(a.isMyNewReason? 1 : 0), (b.isMyNewReason? 1 : 0)] , [a.data.matchScore, b.data.matchScore] )  );
     };
+
+    // Inputs series[ pair(a,b) , pair(a,b) ... ], and outputs { negative if a sorts first, zero if equal, positive if b sorts first }
+        function
+    compareInOrder( ){
+        for ( let p = 0;  p < arguments.length;  ++p ){
+            let pair = arguments[ p ];
+            let valueA = defaultTo( pair[0], 0 );
+            let valueB = defaultTo( pair[1], 0 );
+            if ( valueA != valueB ){  return valueB - valueA;  }
+        }
+        return 0;
+    }
 
 
         ProposalDisplay.prototype.
@@ -946,6 +997,7 @@
         else if ( reasonData.proOrCon == CON ){  this.conDisplays.push( reasonDisp );  }
         return reasonDisp;
     };
+
 
         ProposalDisplay.prototype.
     expandOrCollapseForEditing = function( ){
@@ -1006,12 +1058,7 @@
     };
 
         ProposalDisplay.prototype.
-    scrollToProposal = function( ){
-        var proposalObj = jQuery('#'+this.getId('Proposal'));
-        jQuery('html, body').animate({
-            scrollTop: $(proposalObj).offset().top + 'px'
-        }, 'fast');
-    };
+    scrollToProposal = function( ){  scrollToHtmlElement( this.element, 200 );  };
 
         ProposalDisplay.prototype.
     handleEditProposalSave = function( ){
@@ -1093,22 +1140,32 @@
 
         if ( this.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
+        // Check that new-reason is non-empty
         let reasonInput = this.getSubElement('NewReasonInput');
-        if ( reasonInput.value == '' ){
-            this.newReasonValidity = '';
-            this.dataUpdated();
-            return;
+        let errorMessage = null;
+        if ( ! reasonInput.value ){
+            errorMessage = '';
         }
-
         // Check new-reason length
-        if ( reasonInput.value.length < minLengthReason ){
-            this.newReasonValidity = 'Reason is too short';
-            this.newReasonMessage = {  color:RED , text:this.newReasonValidity  };
+        else if ( reasonInput.value.length < minLengthReason ){
+            errorMessage = 'Reason is too short';
+        }
+        // Check that new-reason matches pro/con button
+        else if ( (proOrCon == CON)  &&  reasonInput.value.match( /^\s*I\s+agree\b/ ) ){
+            errorMessage = 'The reason says "I agree" -- did you mean to click the "disagree" button?';
+        }
+        else if ( (proOrCon == PRO)  &&  reasonInput.value.match( /^\s*I\s+disagree\b/ ) ){
+            errorMessage = 'The reason says "I disagree" -- did you mean to click the "agree" button?';
+        }
+        // Display error message
+        if ( errorMessage != null ){
+            this.newReasonValidity = errorMessage;
+            this.newReasonMessage = {  color:RED , text:errorMessage  };
             this.dataUpdated();
             return;
         }
 
-        // save via ajax
+        // Save via ajax
         let proposalData = this.proposal;
         this.newReasonMessage = { color:GREY, text:'Saving changes...' };
         this.newReasonValidity = '';
@@ -1122,7 +1179,7 @@
         let thisCopy = this;
         ajaxSendAndUpdate( sendData, url, this.topDisp, function(error, status, receiveData){
             if ( !error  &&  receiveData  &&  receiveData.success ){
-                thisCopy.newReasonMessage = { color:GREEN, text:'Saved reason', ms:3000 };
+                thisCopy.newReasonMessage = { color:GREEN, text:'' };  // Do not show saved-message here, but rather by the new reason
                 // Update data
                 let newReason = receiveData.reason;
                 if ( ! newReason.voteCount ) {  newReason.voteCount = 0;  }
@@ -1136,8 +1193,17 @@
                 thisCopy.editingNewReason = FALSE;
                 thisCopy.onInput();  // Clear keyword match highlights
                 thisCopy.dataUpdated();
+                // Flag newly added reasons, but only store flag in display, so flag expires when page changes
+                // This only works for proposal-page, not when request-page jumps to proposal-page
+                let newReasonDisplay = thisCopy.reasonIdToDisp[ newReason.id ];
+                if ( newReasonDisplay ){  newReasonDisplay.isMyNewReason = true;  }
+                thisCopy.dataUpdated( true ); // redisplayReasons=true
                 if ( thisCopy.isProposalInRequest() ){
+                    app.scrollToReasonId = newReason.id;
                     thisCopy.handleExpandSeparatePage();
+                }
+                else {
+                    thisCopy.scrollToReasonId( newReason.id );
                 }
             }
             else {
@@ -1156,6 +1222,17 @@
                 thisCopy.dataUpdated();
             }
         } );
+    };
+
+    // Scroll to new reason, so that reason-creator votes for their own reason, and considers existing reasons
+        ProposalDisplay.prototype.
+    scrollToReasonId = function( reasonId ){
+        let reasonDisplay = this.reasonDisplays.find( (r) => (r.data  &&  r.data.id == reasonId) );
+        if ( reasonDisplay && reasonDisplay.element ){
+            scrollToHtmlElement( reasonDisplay.element, 100 );
+            reasonDisplay.message = { color:GREEN, text:'Saved reason. Now vote for the best reason.', ms:3000 };
+            reasonDisplay.dataUpdated();
+        }
     };
 
         ProposalDisplay.prototype.
@@ -1350,7 +1427,8 @@
 
         ProposalDisplay.prototype.
     retrieveData = function( onlyTopReasons=false ){
-        retrieveProposalReasons( this, onlyTopReasons );
+        let nextPage = false;
+        retrieveProposalReasons( this, onlyTopReasons, nextPage );
     };
 
         ProposalDisplay.prototype.
@@ -1399,21 +1477,26 @@
         this.createFromHtml( requestId, '\n' + [
             '<div class=ReqProp id=RequestForProposals>',
             // Status messages
-            '    <h1 class=title role=status> Request For Proposals </h1>' ,
-            '    <div class="Message RequestMessage" id=RequestMessage aria-live=polite></div>' ,
-            '    <div class=loginStatus id=loginStatus></div>',
-            '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
-            '    <div class=freezeText id=freezeText aria-live=polite>Frozen</div>' ,  // Shown to participants
-            '    <button class=freezeButton id=freezeButton onclick=clickFreezeButton></button>' ,
-            // Request and proposals
+            '   <h1 class=title role=status> Request For Proposals </h1>' ,
+            '   <div class="Message RequestMessage" id=RequestMessage aria-live=polite></div>' ,
+            '   <div class=loginStatus id=loginStatus></div>',
+            '   <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
+            '   <div class=doneLink><div class=doneLinkLabel> Done link: </div><a id=doneLinkUrl></a></div> ',
+            '   <div id=freezeUserInput class=freezeUserInput> ',
+            '       <label for=freezeUserInputCheckbox oninput=clickFreezeUserInput> Block all input </label> ',
+            '       <input id=freezeUserInputCheckbox type=checkbox oninput=clickFreezeUserInput /> ',
+            '       <div id=freezeUserInputMessage class=Message></div> ',
+            '   </div> ',
+            '   <div id=freezeNewProposals class=freezeNewProposals> ',
+            '       <label for=freezeNewProposalsCheckbox oninput=clickFreezeNewProposals> Block new proposals </label> ',
+            '       <input id=freezeNewProposalsCheckbox type=checkbox oninput=clickFreezeNewProposals /> ',
+            '       <div id=freezeProposalsMessage class=Message></div> ',
+            '   </div> ',
+            // Request
             '    <div class=Request id=Request subdisplay=titleAndDetailDisp></div>',
-            '    <div class=Proposals id=Proposals></div>',
-            '    <div class=MoreProposalsWrap>',
-            '        <button id=MoreProposals onclick=clickMoreProposals aria-live=polite> More proposals </button>',
-            '    </div>',
-            //   New proposal form.  Do not use TitleAndDetailDisplay because need customizations like initial reasons.
+            //   New/find proposal form.  Do not use TitleAndDetailDisplay because need customizations like initial reasons.
             '    <div class=NewProposalForm id=NewProposalForm>',
-            '        <div class=NewProposalSectionTitle> New Proposal </div>',
+            '        <div class=NewProposalSectionTitle> Find or Add Proposal </div>',
             //       Insert a few new-proposal match summary snippets before new-proposal input, because
             //       filtered proposals are too distant from new-proposal input (because of reasons).
             '        <div id=matches class="Matches matches" aria-live=polite></div>',
@@ -1455,6 +1538,17 @@
             '        </div>',
             '        <div class="Message TitleAndDetailMessage" id=newProposalMessage aria-live=polite></div>' ,
             '    </div>',
+            // Proposals
+            '    <div class=Proposals id=Proposals></div>',
+            '    <div class=MoreProposalsWrap>',
+            '        <button id=MoreProposals onclick=clickMoreProposals aria-live=polite> More proposals </button>',
+            '    </div>',
+            '   <a id=doneLinkForParticipants class=doneLinkForParticipants><div> This step is done. Go to next step... </div></a> ',
+            // Admin change history
+            '   <details class=adminHistory id=adminHistory> ',
+            '       <summary class=adminHistoryLast id=adminHistoryLast></summary> ',
+            '       <div class=adminHistoryFull id=adminHistoryFull></div> ',
+            '   </details> ',
             '</div>'
         ].join('\n') );
     };
@@ -1464,12 +1558,14 @@
         RequestForProposalsDisplay.prototype.
     setAllData = function( reqPropData ){
 
+// console.log( 'RequestForProposalsDisplay.setAllData() reqPropData=', JSON.stringify(reqPropData) );
+
         // Set proposals data. No need to create/update proposal display here, because dataUpdated() will do it.
         this.reqPropData = reqPropData;
 
         // Set title and detail.
-        var thisCopy = this;
-        var titleAndDetailData = {
+        let thisCopy = this;
+        let titleAndDetailData = {
             title: reqPropData.request.title,
             detail: reqPropData.request.detail,
             minLength: minLengthRequest,
@@ -1489,8 +1585,9 @@
     
     // Update html from data.
         RequestForProposalsDisplay.prototype.
-    dataUpdated = function( retrieveReasons=false ){
-        // retrieveReasons:boolean, default false
+    dataUpdated = function( retrieveReasons=false, addProposalFirst=false ){
+
+// console.info( 'RequestForProposalsDisplay.dataUpdated() reqPropData=', JSON.stringify(this.reqPropData) );
 
         document.title = SITE_TITLE + ': Request for Proposals: ' + this.reqPropData.request.title;
 
@@ -1541,14 +1638,34 @@
 
         // Set request-for-proposals attributes
         this.setAttribute( 'RequestForProposals', 'frozen', (this.reqPropData.request.freezeUserInput ? TRUE : null) );
+        this.setAttribute( 'RequestForProposals', 'freezenewproposals', (this.reqPropData.request.freezeNewProposals ? TRUE : null) );
         this.setAttribute( 'RequestForProposals', 'mine', (this.reqPropData.request.mine ? TRUE : null) );
+        this.setAttribute( 'RequestForProposals', 'mysurvey', (this.reqPropData.request.mine ? TRUE : null) );
         this.setAttribute( 'RequestForProposals', 'hidereasons', (this.reqPropData.request.hideReasons ? TRUE : null) );
+        this.setAttribute( 'RequestForProposals', 'hasdonelink', (this.reqPropData.request.doneLink ? TRUE : null) );
+        this.setAttribute( 'RequestForProposals', 'done', (this.isSurveyDone() ? TRUE : null) );
 
         // Show freeze-message
-        if ( this.freezeMessage ){  this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeButton') );  }
-        else {  this.setInnerHtml( 'freezeButton' , (this.reqPropData.request.freezeUserInput ? 'Frozen' : 'Unfrozen') );  }
+        this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeUserInputMessage') );
+        this.getSubElement('freezeUserInputCheckbox').checked = ( this.reqPropData.request.freezeUserInput == true );
+
+        this.freezeProposalsMessage = showMessageStruct( this.freezeProposalsMessage, this.getSubElement('freezeProposalsMessage') );
+        this.getSubElement('freezeNewProposalsCheckbox').checked = ( this.reqPropData.request.freezeNewProposals == true );
 
         this.setInnerHtml( 'hideReasonsStatus', (this.reqPropData.request.hideReasons ? 'Reasons hidden' : null) );
+        this.getSubElement('doneLinkUrl').href = this.reqPropData.request.doneLink;
+        this.setInnerHtml( 'doneLinkUrl', this.reqPropData.request.doneLink );
+        this.getSubElement('doneLinkForParticipants').href = this.reqPropData.request.doneLink;
+
+        displayAdminHistory( this.reqPropData.request.adminHistory, this.getSubElement('adminHistoryLast'), this.getSubElement('adminHistoryFull') );
+
+        // Populate new-proposal inputs, if returning from single-proposal-page
+        this.ensureNewProposalStructExists();
+        this.setProperty( 'NewProposalTitle', 'defaultValue', this.reqPropData.newProposalInput.title );
+        this.setProperty( 'NewProposalDetail', 'defaultValue', this.reqPropData.newProposalInput.detail );
+        this.setProperty( 'NewProposalInitialReasonInput1', 'defaultValue', this.reqPropData.newProposalInput.reason1 );
+        this.setProperty( 'NewProposalInitialReasonInput2', 'defaultValue', this.reqPropData.newProposalInput.reason2 );
+        this.setProperty( 'NewProposalInitialReasonInput3', 'defaultValue', this.reqPropData.newProposalInput.reason3 );
 
         // For each proposal data...
         let proposals = this.reqPropData.proposals;
@@ -1561,7 +1678,7 @@
                 proposalDisp.setAllData( proposalData, this.reqPropData.reasons, this, this.reqPropData.linkKey );
             }
             else {
-                this.addProposalDisplay( proposalData );
+                this.addProposalDisplay( proposalData, addProposalFirst );
             }
         }
 
@@ -1617,6 +1734,11 @@
         this.colorNextInput();  // Update input field highlights.
     };
 
+        RequestForProposalsDisplay.prototype.
+    isSurveyDone = function( ){
+        // Are there zero proposals without a vote?
+        return  ! this.reqPropData.proposals.find( p => ! p.reasons.find(r => r.myVote) );
+    };
 
         RequestForProposalsDisplay.prototype.
     editable = function(){  return this.reqPropData.request.allowEdit && !this.isFrozen();  }
@@ -1629,7 +1751,7 @@
 
 
         RequestForProposalsDisplay.prototype.
-    addProposalDisplay = function( proposalData ){  // returns ProposalDisplay
+    addProposalDisplay = function( proposalData, addProposalFirst=false ){  // returns ProposalDisplay
         // Create display
         proposalData.fromRequest = true;
         if ( proposalData.reasons == null ){  proposalData.reasons = [ ];  }
@@ -1639,8 +1761,15 @@
         this.proposalDisplays.push( proposalDisp );
         this.proposalIdToDisp[ proposalData.id ] = proposalDisp;
         // Add display DOM element to layout
-        var proposalsDiv = this.getSubElement('Proposals');
-        proposalsDiv.appendChild( proposalDisp.element );
+        // Insert user's newly-added reasons first
+        let proposalsDiv = this.getSubElement('Proposals');
+        if ( addProposalFirst ){
+            proposalsDiv.prepend( proposalDisp.element );
+        }
+        else {
+            proposalsDiv.appendChild( proposalDisp.element );
+        }
+
         proposalDisp.handleCollapse();
         return proposalDisp;
     };
@@ -1668,43 +1797,66 @@
 
 
         RequestForProposalsDisplay.prototype.
-    clickFreezeButton = function( ){
+    clickFreezeUserInput = function( ){
 
         if ( this.reqPropData.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
 
-        // save via ajax
-        var freeze =  ! this.reqPropData.request.freezeUserInput;
+        // Save via ajax
+        let checkbox = this.getSubElement('freezeUserInputCheckbox');
+        let freeze =  checkbox.checked;
         this.freezeMessage = { color:GREY, text:(freeze ? 'Freezing' : 'Unfreezing') };
         this.dataUpdated();
-        var sendData = {
-            crumb:crumb , fingerprint:fingerprint , linkKey:this.reqPropData.linkKey.id ,
-            freezeUserInput:freeze
-        };
-        var url = 'freezeRequest';
-        var thisCopy = this;
-        var freezeMessageDefault = this.reqPropData.request.freezeUserInput ? 'Frozen' : 'Unfrozen';
-        var freezeMessageMillisec = 5000;
+        let sendData = {  crumb:crumb , fingerprint:fingerprint , linkKey:this.reqPropData.linkKey.id , freezeUserInput:freeze  };
+        let url = 'freezeRequest';
+        let thisCopy = this;
         ajaxSendAndUpdate( sendData, url, this, function(error, status, receiveData){
-            if ( error ){
-                thisCopy.freezeMessage = { color:RED , text:'Failed to ' + (freeze ? 'freeze' : 'unfreeze') , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
-            }
-            else if ( receiveData &&  receiveData.success ){
-                // update data
+            if ( !error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.reqPropData.request = receiveData.request;
-                let freezeLabel = thisCopy.reqPropData.request.freezeUserInput ? 'Frozen' : 'Unfrozen';
-                let color = thisCopy.reqPropData.request.freezeUserInput ? RED : GREEN;
-                thisCopy.freezeMessage = { color:color , text:freezeLabel , textDefault:freezeLabel , ms:freezeMessageMillisec };
-            }
-            else if ( receiveData  &&  receiveData.message == NOT_OWNER ){
-                thisCopy.freezeMessage = { color:RED , text:'Cannot un/freeze request created by someone else.' , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
+                let message = thisCopy.reqPropData.request.freezeUserInput ? 'Frozen' : 'Unfrozen';
+                thisCopy.freezeMessage = { color:GREEN , text:message , ms:5000 };
             }
             else {
-                thisCopy.freezeMessage = { color:RED , text:'Failed to freeze request.' , textDefault:freezeMessageDefault , ms:freezeMessageMillisec };
+                let message = 'Failed to ' + (freeze ? 'freeze' : 'unfreeze');
+                if ( !error  &&  receiveData ){
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot un/freeze request created by someone else.';  }
+                }
+                thisCopy.freezeMessage = { color:RED , text:message , ms:5000 };
             }
             thisCopy.dataUpdated();
         } );
+    };
 
-    }
+
+        RequestForProposalsDisplay.prototype.
+    clickFreezeNewProposals = function( ){
+
+        if ( this.reqPropData.linkKey.loginRequired  &&  ! requireLogin() ){  return;  }
+
+        // Save via ajax
+        let checkbox = this.getSubElement('freezeNewProposalsCheckbox');
+        let freeze =  checkbox.checked;
+        this.freezeProposalsMessage = { color:GREY, text:(freeze ? 'Freezing' : 'Unfreezing') };
+        this.dataUpdated();
+        let sendData = { crumb:crumb , fingerprint:fingerprint , linkKey:this.reqPropData.linkKey.id , freezeNewProposals:freeze };
+        let url = 'freezeNewProposals';
+        let thisCopy = this;
+        ajaxSendAndUpdate( sendData, url, this, function(error, status, receiveData){
+            if ( !error  &&  receiveData  &&  receiveData.success ){
+                thisCopy.reqPropData.request = receiveData.request;
+                let message = thisCopy.reqPropData.request.freezeNewProposals ? 'Frozen' : 'Unfrozen';
+                thisCopy.freezeProposalsMessage = { color:GREEN , text:message , ms:5000 };
+            }
+            else {
+                let message = 'Failed to ' + (freeze ? 'freeze' : 'unfreeze');
+                if ( !error  &&  receiveData ){
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot un/freeze request created by someone else.';  }
+                }
+                thisCopy.freezeProposalsMessage = { color:RED , text:message , ms:5000 };
+            }
+            thisCopy.dataUpdated();
+        } );
+    };
+
 
         RequestForProposalsDisplay.prototype.
     clickMoreProposals = function( ){
@@ -1872,18 +2024,22 @@
                     newProposal.reasons = receiveData.reasons;
                     for ( r in receiveData.reasons ){  thisCopy.reqPropData.reasons.push( receiveData.reasons[r] );  }
                 }
-
+                // Cause new proposal-display to be first
                 thisCopy.reqPropData.proposals.push( newProposal );
-                thisCopy.dataUpdated();
+                 // Proposal-displays are never re-ordered, so only need to cause the new proposal-display to insert first, once
+                thisCopy.dataUpdated( false, true );  // retrieveReasons=false, addProposalFirst=true
                 // Scroll to newly added proposal
                 proposalDisp = thisCopy.proposalIdToDisp[ newProposal.id ];
                 if ( proposalDisp ){  proposalDisp.scrollToProposal();  }
+                let hint = ( thisCopy.areReasonsHidden() )?  'Now vote for or against proposals.'  :  'Now add a reason to agree with your proposal, and vote for the best reason.';
+                proposalDisp.message = { color:GREEN, text:hint, ms:9000 }
                 // clear form 
                 titleInput.value = '';
                 detailInput.value = '';
                 reasonInput1.value = '';
                 reasonInput2.value = '';
                 reasonInput3.value = '';
+                thisCopy.clearNewProposalStruct();
                 thisCopy.onInput();
                 // stop editing
                 thisCopy.editingNewProposal = FALSE;
@@ -2002,6 +2158,9 @@
             this.dataUpdated();  
         }
 
+        // Copy new-reason input to restore after visiting single-proposal-page
+        this.reqPropData.newProposalInput = { title:titleInput.value, detail:detailInput.value, reason1:reasonInput1.value, reason2:reasonInput2.value, reason3:reasonInput3.value };
+
         // If no user-input... hide suggested-proposals
         let rawInput = [ titleInput, detailInput, reasonInput1, reasonInput2, reasonInput3 ].map( i => i.value.trim() ).filter( Boolean ).join(' ');
         if ( ! rawInput ){  this.suggestions = [ ];  }
@@ -2014,7 +2173,6 @@
         if ( !event  ||  !event.data  ||  ! event.data.match( /[\s\p{P}]/u ) ){  return;  }  // Require that current input is whitespace or punctuation
 
         // Suggest only if input is changed since last suggestion
-        console.log( 'this.lastContentStartRetrieved=', this.lastContentStartRetrieved );
         let contentStart = words.join(' ');
         if ( contentStart == this.lastContentStartRetrieved ){  return;   }
         this.lastContentStartRetrieved = contentStart;
@@ -2023,6 +2181,18 @@
         this.retrieveProposalSuggestions( words, contentStart );
     };
 
+        RequestForProposalsDisplay.prototype.
+    clearNewProposalStruct = function( ){
+        this.reqPropData.newProposalInput = null;
+        this.ensureNewProposalStructExists();
+    };
+
+        RequestForProposalsDisplay.prototype.
+    ensureNewProposalStructExists = function( ){
+        if ( ! this.reqPropData.newProposalInput ){
+            this.reqPropData.newProposalInput = { title:'', detail:'', reason1:'', reason2:'', reason3:'' };
+        }
+    };
 
         RequestForProposalsDisplay.prototype.
     retrieveProposalSuggestions = function( words, contentStart ){
@@ -2110,7 +2280,7 @@
 
         RequestForProposalsDisplay.prototype.
     retrieveData = function( getReasons, nextPage ){
-        retrieveRequestProposalsReasons( this, getReasons, nextPage );
+        retrieveRequestProposalsAndReasons( this, getReasons, nextPage );
     };
 
 
@@ -2119,10 +2289,10 @@
 // Data retrieval
 
         function
-    retrieveRequestProposalsReasons( reqPropDisp, getReasons=false, nextPage=false ){
+    retrieveRequestProposalsAndReasons( reqPropDisp, getReasons=false, nextPage=false ){
         // getReasons:boolean
 
-        console.log( 'retrieveRequestProposalsReasons() getReasons=', getReasons );
+        console.log( 'retrieveRequestProposalsAndReasons() getReasons=', getReasons );
 
         // proposals:series[proposal] , modified
         // reasons:series[reason] , modified
@@ -2155,10 +2325,14 @@
                         request.detail = data.request.detail;
                         request.allowEdit = data.request.allowEdit;
                         request.freezeUserInput = data.request.freezeUserInput;
+                        request.freezeNewProposals = data.request.freezeNewProposals;
+                        request.adminHistory = data.request.adminHistory;
                         request.mine = data.request.mine;
                         request.hideReasons = data.request.hideReasons;
+                        request.doneLink = data.request.doneLink;
                     }
-                    // update each proposal
+                    // Update each proposal
+                    let hasNewProposals = false;
                     if ( data.proposals ){
                         for ( let p = 0;  p < data.proposals.length;  ++p ){
                             let updatedProposal = data.proposals[p];
@@ -2169,8 +2343,13 @@
                             else {
                                 updatedProposal.reasons = [];
                                 proposals.push( updatedProposal );
+                                hasNewProposals = true;
                             }
                         }
+                    }
+                    // Let user know that there are no new proposals
+                    if ( ! hasNewProposals ){
+                        reqPropDisp.moreProposalsMessage = { color:GREY, text:'No more proposals yet', ms:9000, textDefault:'More proposals' };
                     }
                     // update each reason
                     if ( data.reasons ){
@@ -2212,9 +2391,9 @@
         ajaxGet( sendData, url, function(error, status, receiveData){
             console.log( 'ajaxGet() error=', error, '  status=', status, '  receiveData=', receiveData );
             proposalDisp.moreReasonsMessage = { color:BLACK, text:'More reasons' };
-
             if ( !error  &&  receiveData ){
                 if ( receiveData.success ){
+                    let hasNewReasons = false;
                     proposalData.linkOk = true;
                     if ( ! proposalData.linkKey ){  proposalData.linkKey = {};  }
                     if ( receiveData.linkKey ){  proposalData.linkKey.loginRequired = receiveData.linkKey.loginRequired;  }
@@ -2224,32 +2403,60 @@
                     }
                     // update each reason
                     if ( receiveData.reasons ){
-                        updateReasons( [proposalData], proposalDisp.allReasons, receiveData.reasons );
+                        hasNewReasons = updateReasons( [proposalData], proposalDisp.allReasons, receiveData.reasons );
                         proposalDisp.dataUpdated();  // Add new reasons to proposal-display
                         proposalDisp.refreshCollapse();  // Resize proposal preview
                     }
                     proposalDisp.cursorPro = receiveData.cursorPro;
                     proposalDisp.cursorCon = receiveData.cursorCon;
+
+                    // Let user know if no new reasons are available
+                    if ( nextPage  &&  ! hasNewReasons ){
+                        proposalDisp.moreReasonsMessage = { color:GREY, text:'No more reasons yet', ms:9000, textDefault:'More reasons' };
+                    }
+
+                    // Guide user to next action
+                    if ( app.startEdit ){
+                        // Start editing newly-added reason
+                        app.startEdit = false;
+                        proposalDisp.titleAndDetailDisp.handleEditTitleClick();
+                    }
+                    else if ( app.scrollToReasonId ){
+                        // Flag new-reason
+                        let newReasonDisplay = proposalDisp.reasonIdToDisp[ app.scrollToReasonId ];
+                        if ( newReasonDisplay ){
+                            newReasonDisplay.isMyNewReason = true;
+                            newReasonDisplay.message = { color:GREEN, text:'Saved reason. Now vote for the best reason.', ms:5000 };
+                        }
+                        // Force reasons re-sort, with new-reason first
+                        proposalDisp.dataUpdated( true );
+                        // Scroll to new-reason
+                        proposalDisp.scrollToReasonId( app.scrollToReasonId );
+                        app.scrollToReasonId = null;
+                    }
                 }
                 else if ( receiveData.message == BAD_LINK ){
                     proposalData.linkOk = false;
                 }
             }
-            proposalDisp.dataUpdated();
+            proposalDisp.topDisp.dataUpdated();
         } );
     }
 
         function
     updateReasons( proposals, reasons, newReasons ){
-        // for each new reason data... 
-        for ( var r = 0;  r < newReasons.length;  ++r ){
-            var updatedReason = newReasons[r];
+        // Returns hasNewReasons:boolean
+        let hasNewReasons = false;
+
+        // For each new reason data... 
+        for ( let r = 0;  r < newReasons.length;  ++r ){
+            let updatedReason = newReasons[r];
             // Clean up new-reason fields
             if ( ! updatedReason.voteCount ){  updatedReason.voteCount = 0;  }
             if ( ! updatedReason.score ){  updatedReason.score = 0;  }
 
             // Merge new reason with existing reasons
-            var existingReason = reasons.find( function(e){ return e.id == updatedReason.id; } );
+            let existingReason = reasons.find( e => (e.id == updatedReason.id) );
             if ( existingReason ){
                 // Update existing reason
                 existingReason.content = updatedReason.content;
@@ -2261,17 +2468,19 @@
             else {
                 // Collect new reason
                 reasons.push( updatedReason );
+                hasNewReasons = true;
             }
 
             // Collect reason in existing proposal
-            var existingProposal = proposals.find( function(e){ return e.id == updatedReason.proposalId; } );
+            let existingProposal = proposals.find( e => (e.id == updatedReason.proposalId) );
             if ( existingProposal ) {
                 // More efficient lookup if each proposal has a map[ reason id -> reason data ]
                 // But map provides less stable ordering for display
-                var existingReasonInProposal = existingProposal.reasons.find( function(e){ return e.id == updatedReason.id; } );
+                let existingReasonInProposal = existingProposal.reasons.find( e => (e.id == updatedReason.id) );
                 if ( ! existingReasonInProposal ){  existingProposal.reasons.push( updatedReason );  }
             }
         }
+        return hasNewReasons;
     }
 
         function
@@ -2280,10 +2489,14 @@
         existingProposal.detail = updatedProposal.detail;
         existingProposal.allowEdit = updatedProposal.allowEdit;
         existingProposal.mine = updatedProposal.mine;
+        existingProposal.mySurvey = updatedProposal.mySurvey;
         existingProposal.id = updatedProposal.id;  // Need linkKey to load proposal data.
         existingProposal.loginRequired = updatedProposal.loginRequired;
         existingProposal.freezeUserInput = updatedProposal.freezeUserInput;
+        existingProposal.adminHistory = updatedProposal.adminHistory;
         existingProposal.hideReasons = updatedProposal.hideReasons;
+        existingProposal.numPros = updatedProposal.numPros;
+        existingProposal.numCons = updatedProposal.numCons;
     }
 
         function
@@ -2303,4 +2516,27 @@
         } );
     }
 
+
+        function
+    displayAdminHistory( adminHistory, divAdminHistoryLast, divAdminHistoryFull ){
+        if ( adminHistory ){
+            // Last change
+            let lastChange = adminHistory.reduce( (agg, c) => (agg['time'] < c['time'])? c : agg , {time:0} );
+            let lastChangeText = ( lastChange && lastChange['time'] )?  toLocalDateTimeString(lastChange['time']) + ' &nbsp; ' + lastChange['text']  :  '';
+            divAdminHistoryLast.innerHTML = 'Last admin change: ' + lastChangeText;
+            // All changes
+            let changesDescending = adminHistory.sort( (a, b) => b['time'] - a['time'] );
+            let changeDivs = changesDescending.map(  c  =>  html('div').class('change').innerHtml( toLocalDateTimeString(c['time']) + ' &nbsp; ' + c['text'] ).build()  );
+            setChildren( divAdminHistoryFull, changeDivs );
+        }
+        else {
+            divAdminHistoryLast.innerHTML = '';
+            divAdminHistoryFull.innerHTML = '';
+        }
+    }
+
+        function
+    toLocalDateTimeString( timeSeconds ){
+        return new Date( timeSeconds * 1000 ).toLocaleString();
+    }
 

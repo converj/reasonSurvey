@@ -4,26 +4,25 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
-import webapp2
 # Import app modules
-from configBudget import const as conf
-import budget
-import slice
+from budget.configBudget import const as conf
+from budget import budget
+from budget import slice
 import httpServer
-import httpServerBudget
+from httpServer import app
+from budget import httpServerBudget
 import linkKey
 import text
 import user
 
 
-class SlicesForPrefix( webapp2.RequestHandler ):
-    # Use POST (versus GET) to keep user-input private
-    def post( self, linkKeyStr ):
-
-        logging.debug(('SlicesForPrefix', 'linkKeyStr=', linkKeyStr))
+# Use POST (versus GET) to keep user-input private
+@app.post( r'/budget/slicesForPrefix/<alphanumeric:linkKeyStr>' )
+def slicesForPrefix( linkKeyStr ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(('SliceSizeReasons', 'inputData=', inputData))
         title = budget.standardizeContent( inputData.get( 'title', '' ) )
         reason = budget.standardizeContent( inputData.get( 'reason', '' ) )
@@ -33,23 +32,23 @@ class SlicesForPrefix( webapp2.RequestHandler ):
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
 
         # No user-id required, works for any user with the link-key
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, idRequired=False )
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, idRequired=False )
         userId = cookieData.id()
         
         # Retrieve and check linkKey
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
         if (linkKeyRecord is None) or (linkKeyRecord.destinationType != conf.BUDGET_CLASS_NAME):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.BAD_LINK )
         budgetId = linkKeyRecord.destinationId
 
         # No need to enforce login-required in GET calls, only on write operations that create/use link-key
         # But enforcing here because the search is expensive, and part of a write flow
-        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Check that budget is not frozen, to reduce the cost of unnecessary search
         budgetRecord = budget.Budget.get_by_id( int(budgetId) )
-        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='budget is null' )
-        if budgetRecord.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
+        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='budget is null' )
+        if budgetRecord.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.FROZEN )
 
         # Retrieve best suggested slices for this slice-start
         sliceStart = ' '.join(  [ title if title else '' , reason if reason else '' ]  )
@@ -60,20 +59,19 @@ class SlicesForPrefix( webapp2.RequestHandler ):
 
         # Display slices data
         responseData.update(  { 'success':True , 'slices':sliceDisplays }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
 SliceAndSums = namedtuple( 'SliceAndSums', 'record sumBelow sumAbove' )
 
-class SliceSizeReasons( webapp2.RequestHandler ):
-    # Use POST (versus GET) to keep user-input private
-    def post( self, linkKeyStr ):
-
-        logging.debug(('SliceSizeReasons', 'linkKeyStr=', linkKeyStr))
+# Use POST (versus GET) to keep user-input private
+@app.post( r'/budget/sliceSizeReasons/<alphanumeric:linkKeyStr>' )
+def sliceSizeReasons( linkKeyStr ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
-        inputData = json.loads( self.request.body )
+        inputData = httpRequest.postJsonData()
         logging.debug(('SliceSizeReasons', 'inputData=', inputData))
         title = budget.standardizeContent( inputData.get( 'title', '' ) )
         size = int( inputData.get('size', 0) )
@@ -83,28 +81,28 @@ class SliceSizeReasons( webapp2.RequestHandler ):
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
 
         # No user-id required, works for any user with the link-key
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, idRequired=False )
+        cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, idRequired=False )
         userId = cookieData.id()
 
-        if not title:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='title is null' )
-        if not size:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='size is null' )
-        if ( size < conf.SLICE_SIZE_MIN ) or ( conf.SLICE_SIZE_MAX < size ):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='Size out of bounds' )
+        if not title:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='title is null' )
+        if not size:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='size is null' )
+        if ( size < conf.SLICE_SIZE_MIN ) or ( conf.SLICE_SIZE_MAX < size ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Size out of bounds' )
         
         # Retrieve and check linkKey
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
         if (linkKeyRecord is None) or (linkKeyRecord.destinationType != conf.BUDGET_CLASS_NAME):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.BAD_LINK )
         budgetId = linkKeyRecord.destinationId
 
         # No need to enforce login-required in GET calls, only on write operations that create/use link-key
         # But enforcing here because the search is expensive, and part of a write flow
-        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Check that budget is not frozen, to reduce the cost of unnecessary search
         budgetRecord = budget.Budget.get_by_id( int(budgetId) )
-        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='budget is null' )
-        if budgetRecord.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.FROZEN )
-        if budgetRecord.hideReasons:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='reasons hidden' )
+        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='budget is null' )
+        if budgetRecord.freezeUserInput:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.FROZEN )
+        if budgetRecord.hideReasons:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='reasons hidden' )
 
         # Retrieve top-scoring slice-reasons for title
         slicesByScore = slice.retrieveTopSliceReasonsByScore( budgetId, title, maxSlices=10 )
@@ -112,7 +110,7 @@ class SliceSizeReasons( webapp2.RequestHandler ):
 
 # TODO: Filter out suggestions that are from the same budget/user
 # Retrieve SliceVotes
-# votedSliceIds = [ s.key.id()  for sliceId, count in voteRecord.sliceVotes.iteritems() ]  if (voteRecord and voteRecord.sliceVotes)  else []
+# votedSliceIds = [ s.key.id()  for sliceId, count in voteRecord.sliceVotes.items() ]  if (voteRecord and voteRecord.sliceVotes)  else []
 # votedSliceIds = set( votedSliceIds )
 # slicesFiltered = [ s  for s in slicesByScore  if s not in votedSliceIds ]
 
@@ -138,33 +136,32 @@ class SliceSizeReasons( webapp2.RequestHandler ):
         sliceBelowDisplay = httpServerBudget.sliceToDisplay( sliceBelow.record, userId )  if sliceBelow  else None
         sliceAboveDisplay = httpServerBudget.sliceToDisplay( sliceAbove.record, userId )  if sliceAbove  else None
         responseData.update(  { 'success':True , 'sliceSmaller':sliceBelowDisplay , 'sliceBigger':sliceAboveDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
 # Retrieves slices currently voted by user, not necessarily created by user
-class SlicesForUser( webapp2.RequestHandler ):
-    def get( self, linkKeyStr ):
-
-        if conf.isDev:  logging.debug( 'SlicesForUser.get() linkKeyStr=' + linkKeyStr )
+@app.get( r'/budget/slicesForUser/<alphanumeric:linkKeyStr>' )
+def slicesForUser( linkKeyStr ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
         
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, crumbRequired=False, signatureRequired=False )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, {}, responseData, httpResponse, crumbRequired=False, signatureRequired=False )
+        if not cookieData.valid():  return httpResponse
         userId = cookieData.id()
 
         # Retrieve and check linkKey
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
         if (linkKeyRecord is None) or (linkKeyRecord.destinationType != conf.BUDGET_CLASS_NAME):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.BAD_LINK )
         budgetId = linkKeyRecord.destinationId
 
         # Retrieve all slices for this budget and voter
         sliceVoteRecord = slice.SliceVotes.get( budgetId, userId )
-        sliceRecordKeys = [ ndb.Key( slice.Slice, sliceId )  for sliceId, size  in sliceVoteRecord.slices.iteritems() ]  if sliceVoteRecord  else []
+        sliceRecordKeys = [ ndb.Key( slice.Slice, sliceId )  for sliceId, size  in sliceVoteRecord.slices.items() ]  if sliceVoteRecord  else []
         sliceRecords = ndb.get_multi( sliceRecordKeys )
         if conf.isDev:  logging.debug( 'SlicesForUser.get() sliceRecords=' + str(sliceRecords) )
 
@@ -175,36 +172,35 @@ class SlicesForUser( webapp2.RequestHandler ):
 
         # Display slices data.
         responseData.update(  { 'success':True , 'slices':sliceIdToDisplay, 'votes':votesDisplay }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
 # Retrieves slices created by budget-creator
-class SlicesFromCreator( webapp2.RequestHandler ):
-    def get( self, linkKeyStr ):
-
-        if conf.isDev:  logging.debug( 'SlicesFromCreator.get() linkKeyStr=' + str(linkKeyStr) )
+@app.get( r'/budget/slicesFromCreator/<alphanumeric:linkKeyStr>' )
+def slicesFromHost( linkKeyStr ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
         
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, crumbRequired=False, signatureRequired=False )
-        if not cookieData.valid():  return
+        cookieData = httpServer.validate( httpRequest, {}, responseData, httpResponse, crumbRequired=False, signatureRequired=False )
+        if not cookieData.valid():  return httpResponse
         userId = cookieData.id()
 
         # Retrieve and check linkKey
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
         if conf.isDev:  logging.debug( 'SlicesFromCreator.get() linkKeyRecord=' + str(linkKeyRecord) )
         if (linkKeyRecord is None) or (linkKeyRecord.destinationType != conf.BUDGET_CLASS_NAME):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.BAD_LINK )
         budgetId = linkKeyRecord.destinationId
 
         # Check that user is budget-creator
         budgetRecord = budget.Budget.get_by_id( int(budgetId) )
         if conf.isDev:  logging.debug( 'SlicesFromCreator.get() budgetRecord=' + str(budgetRecord) )
-        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='budget is null' )
-        if ( budgetRecord.creator != userId ):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NOT_OWNER )
+        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='budget is null' )
+        if ( budgetRecord.creator != userId ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
 
         # Retrieve all slices for this budget and creator
         sliceRecords = slice.Slice.query( 
@@ -214,37 +210,35 @@ class SlicesFromCreator( webapp2.RequestHandler ):
 
         # Display slices data
         responseData = { 'success':True , 'slices':sliceDisplays }
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
-class SliceTitleResults( webapp2.RequestHandler ):
-    def get( self, linkKeyStr ):
-
-        if conf.isDev:  logging.debug( 'SliceTitleResults.get() linkKeyStr=' + str(linkKeyStr) )
+@app.get( r'/budget/sliceTitleResults/<alphanumeric:linkKeyStr>' )
+def sliceTitleResults( linkKeyStr ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
-
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
 
         # No user-id required, works for any user with the link-key
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, idRequired=False )
+        cookieData = httpServer.validate( httpRequest, {}, responseData, httpResponse, idRequired=False )
         userId = cookieData.id()
         
         # Retrieve and check linkKey
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
         if (linkKeyRecord is None) or (linkKeyRecord.destinationType != conf.BUDGET_CLASS_NAME):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.BAD_LINK )
         budgetId = linkKeyRecord.destinationId
 
         # No need to enforce login-required in GET calls, only on write operations that create/use link-key
         # But enforcing here because the search is expensive
-        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Check that budget is valid
         budgetRecord = budget.Budget.get_by_id( int(budgetId) )
-        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='budget is null' )
+        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='budget is null' )
 
         # Retrieve best suggested slices for this slice-start
         maxTitles = 20   # With minimum-size 5%, cannot have more than 20 top slices
@@ -254,43 +248,42 @@ class SliceTitleResults( webapp2.RequestHandler ):
         # Display slices data
         titleDisplays = [ t.toDisplay(userId) for t in titlesOrdered ]
         responseData.update(  { 'success':True , 'titles':titleDisplays }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 
-class SliceReasonResults( webapp2.RequestHandler ):
-    def get( self, linkKeyStr, sliceTitleId ):
-
-        if conf.isDev:  logging.debug( 'SliceReasonResults.get() sliceTitleId=' + str(sliceTitleId) + ' linkKeyStr=' + str(linkKeyStr) )
+@app.get( r'/budget/sliceReasonResults/<alphanumeric:linkKeyStr>/<slicekey:sliceTitleId>' )
+def sliceReasonResults( linkKeyStr, sliceTitleId ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
 
         # Collect inputs
-        page = int( self.request.get('page', 0) )
+        page = int( httpRequest.getUrlParam('page', 0) )
 
         httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
         responseData = { 'success':False, 'httpRequestId':httpRequestId }
 
         # No user-id required, works for any user with the link-key
-        cookieData = httpServer.validate( self.request, self.request.GET, responseData, self.response, idRequired=False )
+        cookieData = httpServer.validate( httpRequest, {}, responseData, httpResponse, idRequired=False )
         userId = cookieData.id()
         
         # Retrieve and check linkKey
         linkKeyRecord = linkKey.LinkKey.get_by_id( linkKeyStr )
         if (linkKeyRecord is None) or (linkKeyRecord.destinationType != conf.BUDGET_CLASS_NAME):
-            return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.BAD_LINK )
+            return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.BAD_LINK )
         budgetId = linkKeyRecord.destinationId
 
         # No need to enforce login-required in GET calls, only on write operations that create/use link-key
         # But enforcing here because the search is expensive, and part of a write flow
-        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage=conf.NO_LOGIN )
+        if linkKeyRecord.loginRequired  and  not cookieData.loginId:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
         # Check that budget is valid
         budgetRecord = budget.Budget.get_by_id( int(budgetId) )
-        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='budget is null' )
+        if budgetRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='budget is null' )
 
         # Retrieve slice-title record
         sliceTitleRecord = slice.SliceTitle.get_by_id( sliceTitleId )
-        if sliceTitleRecord is None:  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='sliceTitleRecord is null' )
-        if (sliceTitleRecord.budgetId != budgetId):  return httpServer.outputJson( cookieData, responseData, self.response, errorMessage='sliceTitleRecord.budgetId mismatch' )
+        if sliceTitleRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='sliceTitleRecord is null' )
+        if (sliceTitleRecord.budgetId != budgetId):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='sliceTitleRecord.budgetId mismatch' )
 
         # Retrieve top-voted slice-reasons for given slice-title
         maxSlices = 1  if (page <= 0)  else 100
@@ -303,18 +296,6 @@ class SliceReasonResults( webapp2.RequestHandler ):
         # Display slices data
         responseData.update(  { 'success':True , 'slices':sliceDisplays , 'hasMoreReasons':hasMore , 
             'totalBudget':budgetRecord.total, 'medianSize':sliceTitleRecord.medianSize() }  )
-        httpServer.outputJson( cookieData, responseData, self.response )
-
-
-
-# Route HTTP request
-app = webapp2.WSGIApplication( [
-    ( r'/budget/slicesForPrefix/([0-9A-Za-z]+)' , SlicesForPrefix ) ,
-    ( r'/budget/sliceSizeReasons/([0-9A-Za-z]+)' , SliceSizeReasons ) ,
-    ( r'/budget/slicesForUser/([0-9A-Za-z]+)' , SlicesForUser ) ,
-    ( r'/budget/slicesFromCreator/([0-9A-Za-z]+)' , SlicesFromCreator ) ,
-    ( r'/budget/sliceTitleResults/([0-9A-Za-z]+)' , SliceTitleResults ) ,
-    ( r'/budget/sliceReasonResults/([0-9A-Za-z]+)/([0-9A-Za-z:]+)' , SliceReasonResults ) ,
-] )
+        return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 

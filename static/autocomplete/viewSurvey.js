@@ -395,7 +395,7 @@
         ElementWrap.call( this );  // Inherit member data from ElementWrap.
 
         this.createFromHtml( surveyId, '\n\n' + [
-            '<h1 class=title> View Survey </h1>',
+            '<h1 class=title> Auto-complete Survey </h1>',
             '<div class=Survey id=Survey>',
             '    <div class=Message id=Message aria-live=polite></div>' ,
             '    <div class=Message id=freezeMessage aria-live=polite></div>' ,
@@ -406,6 +406,11 @@
             '    <div class=Questions id=Questions></div>',
             '    <div class=Message id=bottomMessage aria-live=polite></div>' ,
             '    <button class=SurveyResultsButton id=SurveyResultsButton onclick=onSurveyResults> Survey Results </button>',
+            // Admin change history
+            '   <details class=adminHistory id=adminHistory> ',
+            '       <summary class=adminHistoryLast id=adminHistoryLast></summary> ',
+            '       <div class=adminHistoryFull id=adminHistoryFull></div> ',
+            '   </details> ',
             '</div>'
         ].join('\n') );
     }
@@ -465,6 +470,8 @@
         this.freezeMessage = showMessageStruct( this.freezeMessage, this.getSubElement('freezeMessage') );
         this.setAttribute( 'Survey', 'frozen', (this.isFrozen() ? TRUE : null) );
         this.setInnerHtml( 'hideReasonsStatus', (this.survey.hideReasons ? 'Reasons hidden' : null) );
+
+        displayAdminHistory( this.survey.adminHistory, this.getSubElement('adminHistoryLast'), this.getSubElement('adminHistoryFull') );
 
         // Set content
         this.setInnerHtml( 'SurveyTitle', this.survey.title );
@@ -566,6 +573,7 @@
                         thisCopy.survey.title = receiveData.survey.title;
                         thisCopy.survey.introduction = receiveData.survey.introduction;
                         thisCopy.survey.allowEdit = receiveData.survey.allowEdit;
+                        thisCopy.survey.adminHistory = receiveData.survey.adminHistory;
                         thisCopy.survey.freezeUserInput = receiveData.survey.freezeUserInput;
                         thisCopy.survey.id = receiveData.survey.id;
                         thisCopy.survey.mine = receiveData.survey.mine;
