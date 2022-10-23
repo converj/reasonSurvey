@@ -1,0 +1,14 @@
+notes
+private
+test*
+
+.git
+.gitignore
+
+Makefile
+*.tsv
+*.pyc
+devInstance.txt
+*Dev.py
+exe*.py
+
