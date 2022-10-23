@@ -14,7 +14,6 @@ import text
 const = Constants()
 const.MAX_RETRY = 3
 const.MIN_REAGGREGATE_DELAY_SEC = 60
-# const.NUM_CLEANING_BINS = 10
 
 
 # Parent key: RequestForProposals?   No, use KeyProperty instead.
@@ -32,8 +31,6 @@ class Proposal( ndb.Model ):
     # For cleaning up unused records
     timeModified = ndb.DateTimeProperty( auto_now=True )
     hasResponses = ndb.ComputedProperty( lambda record: not record.allowEdit )  # Cannot compute from lastSumUpdateTime, because lastSumUpdateTime only changes if a reason has votes
-#     cleaningBin = ndb.IntegerProperty( default=0 )
-#     timeCleaned = ndb.IntegerProperty( default=0 )
 
     voteAggregateStartTime = ndb.IntegerProperty()
     numPros = ndb.IntegerProperty( default=0 )
@@ -59,25 +56,9 @@ class Proposal( ndb.Model ):
         words = words[ 0 : conf.MAX_WORDS_INDEXED ]  # Limit number of words indexed 
         self.words = text.tuples( words, maxSize=2 )
 
-#     def setCleaningBin( self ):
-#         self.cleaningBin = randomCleaningBin()
-
     def updateScore( self ):
         contentLen = ( len(self.title) if self.title else 0 ) + ( len(self.detail) if self.detail else 0 )
         self.score = float( self.netPros ) / float( contentLen + 100.0 )
-
-
-
-# def randomCleaningBin( ):
-#     return random.integer( const.NUM_CLEANING_BINS )
-
-
-# @ndb.transactional( retries=const.MAX_RETRY )
-# def setEditable( proposalId, editable ):
-#     proposalRecord = Proposal.get_by_id( int(proposalId) )
-#     if proposalRecord.allowEdit != editable:
-#         proposalRecord.allowEdit = editable
-#         proposalRecord.put()
 
 
 # Returns records, cursor, more-flag
@@ -122,39 +103,6 @@ def retrieveTopProposalsForStart( requestId, proposalStart ):
 
     return recordsUnique.values()
 
-
-
-#####################################################################################
-# Use tasklets for async counting pros/cons per proposal.
-
-# @ndb.tasklet
-# def maybeUpdateProConAggs( proposalId ):
-#     now = int( time.time() )
-#     allowAgg = yield __setVoteAggStartTime( proposalId, now )   # Async, transaction
-#     if allowAgg:
-#         __updateVoteAggs( proposalId, now )
-# 
-# # If enough delay since voteAggregateStartTime... updates voteAggregateStartTime and returns flag.
-# @ndb.transactional( retries=const.MAX_RETRY )
-# def __setVoteAggStartTime( proposalId, now ):
-#     proposalRecord = Proposal.get_by_id( int(proposalId) )
-#     if proposalRecord.voteAggregateStartTime + const.MIN_REAGGREGATE_DELAY_SEC > now:
-#         return False
-#     proposalRecord.voteAggregateStartTime = now
-#     proposalRecord.put()
-#     return True
-# 
-# # Retrieves all reason vote counts for a proposal, sums their pro/con counts, and updates proposal pro/con counts.
-# @ndb.tasklet
-# def __updateVoteAggs( proposalId, now ):
-#     reasons = yield Reason.query( Reason.proposalId==proposalId ).fetch_async()   # Async
-#     numPros = sum( reason.voteCount for reason in reasons  if reason.proOrCon == conf.PRO )
-#     numCons = sum( reason.voteCount for reason in reasons  if reason.proOrCon == conf.CON )
-#     __setNumProsAndConsTransact( proposalId, numPros, numCons, now )    # Transaction
-# 
-# @ndb.transactional( retries=const.MAX_RETRY )
-# def __setNumProsAndConsTransact( proposalId, numPros, numCons, now ):
-#     __setNumProsAndConsImp( proposalId, numPros, numCons, now )
 
 
 #####################################################################################

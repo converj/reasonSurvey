@@ -161,7 +161,6 @@ window.onhashchange = function(){
         // If link-key is unchanged...
         const DUMMY_REQUEST_ID = 'REQUEST_ID';
         let haveOldReqData = ( linkKey  &&  reqPropData  &&  reqPropData.linkKey  &&  (reqPropData.linkKey.id == linkKey)  &&  reqPropData.request  &&
-//             (reqPropData.request.id != DUMMY_REQUEST_ID)  &&
             ('title' in reqPropData.request) );
         if ( haveOldReqData ){
             // Re-use request data when returning from proposal to request.
@@ -473,9 +472,7 @@ toggleMenu( showMenu ){
 }
 
 // Back links go back from proposal to enclosing request.
-// jQuery('#menuItemLinkBackProposals').click(  function(e){ e.preventDefault(); window.history.back(); }  );
 jQuery('#menuItemLinkBackProposals').click(  function(e){ e.preventDefault(); setFragmentFields( {page:FRAG_PAGE_ID_REQUEST} ); }  );
-// jQuery('#menuItemLinkBackResults').click(  function(e){ e.preventDefault(); window.history.back(); }  );
 jQuery('#menuItemLinkBackResults').click(  function(e){
             e.preventDefault();
             let fragKeyToValue = parseFragment();

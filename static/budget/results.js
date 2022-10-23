@@ -211,7 +211,7 @@
                     ).build()
                 ).build() ,
 
-htmlToElement( '<svg class=lines id=lines width=100% height=100% ></svg>' )  // HtmlBuilder does not work for this type, probably because it requires namespaced setters
+                htmlToElement( '<svg class=lines id=lines width=100% height=100% ></svg>' )  // HtmlBuilder does not work for this type, probably because it requires namespaced setters
 
             ).build()
         );

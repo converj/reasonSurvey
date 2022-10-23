@@ -11,8 +11,6 @@ class RequestForProposals( ndb.Model ):
     detail = ndb.StringProperty()
 
     creator = ndb.StringProperty()
-#     maxProposalsPerUser = ndb.IntegerProperty( default=3 )
-#     maxReasonsPerUser = ndb.IntegerProperty( default=10 )
     allowEdit = ndb.BooleanProperty( default=True )
     
     # Store frozen-flag in request-for-proposals record, because storing frozen-flag in link-key-record

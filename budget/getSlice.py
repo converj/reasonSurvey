@@ -108,12 +108,6 @@ def sliceSizeReasons( linkKeyStr ):
         slicesByScore = slice.retrieveTopSliceReasonsByScore( budgetId, title, maxSlices=10 )
         logging.debug(('SliceSizeReasons', 'slicesByScore=', slicesByScore))
 
-# TODO: Filter out suggestions that are from the same budget/user
-# Retrieve SliceVotes
-# votedSliceIds = [ s.key.id()  for sliceId, count in voteRecord.sliceVotes.items() ]  if (voteRecord and voteRecord.sliceVotes)  else []
-# votedSliceIds = set( votedSliceIds )
-# slicesFiltered = [ s  for s in slicesByScore  if s not in votedSliceIds ]
-
         # For each slice... sum scores across sizes
         slicesAndSums = [  SliceAndSums( s, s.sumScoreBelowSize(size), s.sumScoreAboveSize(size) )  for s in slicesByScore ]
         logging.debug(('SliceSizeReasons', 'slicesAndSums=', slicesAndSums))
@@ -165,8 +159,6 @@ def slicesForUser( linkKeyStr ):
         sliceRecords = ndb.get_multi( sliceRecordKeys )
         if conf.isDev:  logging.debug( 'SlicesForUser.get() sliceRecords=' + str(sliceRecords) )
 
-# TODO: If slice-record does not exist for slice in slice-votes... remove that vote
-        
         sliceIdToDisplay = { s.key.id() : httpServerBudget.sliceToDisplay(s, userId)  for s in sliceRecords  if s }
         votesDisplay = httpServerBudget.sliceVotesToDisplay( sliceVoteRecord, userId )
 

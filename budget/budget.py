@@ -6,7 +6,6 @@ import text
 
 
 class Budget( ndb.Model ):
-#     surveyId = ndb.StringProperty()   # Primary key
 
     title = ndb.StringProperty()
     introduction = ndb.StringProperty()

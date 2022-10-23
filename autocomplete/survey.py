@@ -1,14 +1,12 @@
-# Import external modules.
+# Import external modules
 from google.appengine.ext import ndb
 import logging
-# Import local modules.
+# Import local modules
 from autocomplete.configAutocomplete import const as conf
-# from constants import Constants
 
 
 
 class Survey( ndb.Model ):
-#     surveyId = ndb.StringProperty()   # Primary key
 
     title = ndb.StringProperty()
     introduction = ndb.StringProperty()

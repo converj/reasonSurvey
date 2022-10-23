@@ -179,14 +179,6 @@
             this.dataUpdated();
             return;
         }
-//         // Require that answer has reason
-//         if ( inputReason.value.length <= 0 ){
-//             this.editMessage = { color:RED, text:REASON_TOO_SHORT_MESSAGE };
-//             this.reasonValidity = REASON_TOO_SHORT_MESSAGE;
-//             this.reasonTooShort = true;
-//             this.dataUpdated();
-//             return;
-//         }
 
         // Require that answer/reason changed
         if ( inputValue == this.answer.content ){  return;  }

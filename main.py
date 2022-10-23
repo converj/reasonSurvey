@@ -116,35 +116,6 @@ def initialCookie( ):
         
 
 
-@app.get('/termsOfService.html')
-def termsOfService( ):
-        httpRequest, httpResponse = httpServer.requestAndResponse()
-        logging.debug( 'httpRequest=' + str(httpRequest) )
-
-        templateValues = {
-            'TITLE': 'Terms of Service' ,
-            'COMPANY_NAME': 'Converj LLC' ,
-            'THE_CONTACT': 'LEGALCORP SOLUTIONS INC' ,
-            'THE_ADDRESS': '506 S Spring St #13308, Los Angeles CA 90013' ,
-            'THE_LOCATION': 'Los Angeles, California, United States' ,
-        }
-        return httpServer.outputTemplate( 'termsOfService.html', templateValues, httpResponse )
-
-
-@app.get('/privacyPolicy.html')
-def privacyPolicy( ):
-        httpRequest, httpResponse = httpServer.requestAndResponse()
-        logging.debug( 'httpRequest=' + str(httpRequest) )
-
-        templateValues = {
-            'TITLE': 'Privacy Policy' ,
-            'COMPANY_NAME': 'Converj LLC' ,
-            'THE_LOCATION': 'Los Angeles, California, United States' ,
-        }
-        return httpServer.outputTemplate( 'privacyPolicy.html', templateValues, httpResponse )
-
-
-
 # Find records needing cleanup, initial form
 # @app.get('/clean')
 def cleanGet( ):

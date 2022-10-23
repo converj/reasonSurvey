@@ -378,8 +378,6 @@
         TitleAndDetailDisplay.prototype.
     dataUpdated = function( ){
 
-// console.log('TitleAndDetailDisplay.dataUpdated() data=', this.data);
-
         // Set editing state on element
         this.setAttribute( 'TitleAndDetail', 'editing', this.editing );
         // Set editing aria expand/collapse state
@@ -1558,8 +1556,6 @@
         RequestForProposalsDisplay.prototype.
     setAllData = function( reqPropData ){
 
-// console.log( 'RequestForProposalsDisplay.setAllData() reqPropData=', JSON.stringify(reqPropData) );
-
         // Set proposals data. No need to create/update proposal display here, because dataUpdated() will do it.
         this.reqPropData = reqPropData;
 
@@ -1586,8 +1582,6 @@
     // Update html from data.
         RequestForProposalsDisplay.prototype.
     dataUpdated = function( retrieveReasons=false, addProposalFirst=false ){
-
-// console.info( 'RequestForProposalsDisplay.dataUpdated() reqPropData=', JSON.stringify(this.reqPropData) );
 
         document.title = SITE_TITLE + ': Request for Proposals: ' + this.reqPropData.request.title;
 
