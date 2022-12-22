@@ -11,7 +11,7 @@
         this.createFromHtml( displayId, '\n\n' + [
             '<div class=Answer id=Answer>',
             '   <div class=AnswerEdit>' , 
-            '       <label for=AnswerContentInput> Answer </label>' ,
+            '       <label for=AnswerContentInput> Suggested Answer </label>' ,
             '       <input class=AnswerContentInput id=AnswerContentInput placeholder="" ' ,
             '           onblur=handleEditAnswerBlur oninput=handleEditAnswerInput onkeydown=handleAnswerKey />' ,
             '       <label class=AnswerReasonLabel for=AnswerReasonInput> Reason </label>' ,
@@ -344,7 +344,7 @@
             // Answers
             '    <div class=Answers id=Answers></div>',
             '    <div class=NewAnswer>', 
-            '        <label for=NewAnswerInput> New answer </label>',
+            '        <label for=NewAnswerInput> Suggest Answer </label>',
             '        <textarea class=NewAnswerInput id=NewAnswerInput placeholder="" ',
             '            oninput=handleNewAnswerInput></textarea>',
             '    </div>',
@@ -795,7 +795,7 @@
             '    </div>',
             '    <h2> Questions </h2>' ,
             '    <p> Add survey questions here. </p>' ,
-            '    <p> You can suggest answers here, but participants will also be able to enter any answer they want. </p>' ,
+            '    <p> You can suggest answers here.  Participants will also be able to enter any answer they want, or copy each other\'s answers. </p>' ,
             '    <div class=Questions id=Questions></div>',
             '    <div class=NewQuestion>', 
             '        <label for=NewQuestionInput> New question </label>',

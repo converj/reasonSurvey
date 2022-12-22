@@ -15,4 +15,6 @@ const.SLICE_SIZE_SUM_MAX = 100
 const.BUDGET_CLASS_NAME = 'Budget'
 const.SLICE_CLASS_NAME = 'Slice'
 
+# HTTP JSON error codes
+const.OVER_BUDGET = 'OVER_BUDGET'
 

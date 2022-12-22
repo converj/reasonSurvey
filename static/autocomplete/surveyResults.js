@@ -81,27 +81,24 @@
 
             // Build answer-without-reason table-row
             // Use html-builder instead of text-to-html which fails on partial table
-            var answerRow = html('tr').class('Answer').children( 
+            let answerRow = html('details').children(  html('summary').children(  html('table').class('Answer').children(  html('tr').children( 
                 html('td').class('AnswerCell').class('AnswerCountBarBack').children(
                     html('div').class('AnswerCountBar').style('width', parseInt(voteFrac * 100) + '%').innerHtml('&nbsp;').build()
                 ).build() ,
                 html('td').class('AnswerCell').class('AnswerCount').innerHtml(sumAnswerVotes).build() ,
                 html('td').class('AnswerCell').class('AnswerContent').style('opacity', opacityFrac).innerHtml(answerGroupData.answerText).build()
-            ).build();
+            ).build()  ).build()  ).build()  ).build();
             answersDiv.appendChild( answerRow );
 
             // Build answers-with-reasons expander
             // Use separate table for answers-with-reasons, because expander cannot work on just some table-rows
-            var reasonsDiv = html('div').class('AnswerReasons').build();
-            var expandableRow = html('tr').class('ReasonsRow').children(
-                html('td').attribute('colspan', 3).children(
-                    html('details').children(
-                        html('summary').innerHtml('&nbsp;').build() ,
-                        reasonsDiv
-                    ).build()
+            let reasonsDiv = html('div').class('AnswerReasons').children(
+                html('tr').class('AnswerReason').children(
+                    html('th').class('AnswerCell').class('AnswerCount').innerHtml('Count').build() ,
+                    html('th').class('AnswerCell').class('AnswerContent').innerHtml('Reason').build() ,
                 ).build()
             ).build();
-            answersDiv.appendChild( expandableRow );
+            answerRow.appendChild( reasonsDiv );
 
             // For each answer-reason...
             for ( var r = 0;  r < answerGroupData.reasons.length;  ++r ){
@@ -114,14 +111,12 @@
                 opacityFrac = (voteFrac * 1.5) + 0.25;
                 reasonsDiv.appendChild(  htmlToElement( '\n' + [
                     '       <div class=AnswerReason>' ,
-                    '           <div class="AnswerCell AnswerCountBarBack"></div>' ,
                     '           <div class="AnswerCell AnswerCount">' + reasonData.voteCount + '</div>' ,
                     '           <div class="AnswerCell AnswerContent" style="opacity:' + opacityFrac + ';">' + reasonText + '</div>' ,
                     '       </div>'
                 ].join('\n') )  );
             }
         }
-
     };
 
         QuestionResultDisplay.prototype.

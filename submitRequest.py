@@ -61,9 +61,10 @@ def submitNewRequest( ):
         if ( doneLinkRelative  and  (doneLinkRelative[0] != '/') ):  doneLinkRelative = '/' + doneLinkRelative
 
         # Construct new request record
+        now = int( time.time() )
         requestRecord = requestForProposals.RequestForProposals(
             creator=userId , title=title , detail=detail , allowEdit=True , hideReasons=hideReasons, doneLink=doneLinkRelative,
-            adminHistory=common.initialChangeHistory() )
+            adminHistory=common.initialChangeHistory() , timeCreated=now )
         # Store request record
         requestRecordKey = requestRecord.put()
         logging.debug(LogMessage('SubmitNewRequest', 'requestRecordKey.id=', requestRecordKey.id()))

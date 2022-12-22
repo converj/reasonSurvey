@@ -5,7 +5,6 @@ import logging
 from autocomplete.configAutocomplete import const as conf
 
 
-
 class Question( ndb.Model ):
 
     surveyId = ndb.StringProperty()  # Search index to find all questions in a survey

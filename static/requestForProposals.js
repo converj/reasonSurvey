@@ -400,7 +400,8 @@
         // Title
         this.setProperty( 'TitleInput', 'defaultValue', this.data.title );
         this.setProperty( 'TitleInput', 'placeholder', this.data.titlePlaceholder );
-        this.setInnerHtml( 'Title', defaultTo(this.data.title, 'Loading...') );
+        let titleText = this.loaded() ?  this.data.title  :  'Loading...';
+        this.setInnerHtml( 'Title', titleText );
         this.setProperty( 'Title', 'title', titleClickToEdit );
         // Detail
         // Do not set title because it overrides content for screen-reader.
@@ -416,10 +417,13 @@
         detailInput.setCustomValidity( defaultTo(this.contentValidity, '') );
 
         this.match = false;
-        this.match |= displayHighlightedContent( defaultTo(this.data.title, 'Loading...'), this.highlightWords, this.getSubElement('Title') );
+        this.match |= displayHighlightedContent( titleText, this.highlightWords, this.getSubElement('Title') );
         this.match |= displayHighlightedContent( storedTextToHtml(this.data.detail), this.highlightWords, this.getSubElement('Detail') );
     };
 
+
+        TitleAndDetailDisplay.prototype.
+    loaded = function(){  return  this.data  &&  ( this.data.linkOk || this.data.title || this.data.detail );  }
 
         TitleAndDetailDisplay.prototype.
     editable = function(){  return this.data.allowEdit && !this.topDisp.isFrozen();  }
@@ -700,7 +704,7 @@
             '               </div>' ,
             '           </div>' ,
             '       </div>' ,
-            //      Button to load more proposals on single-proposal-page
+            //      Button to load more reasons on single-proposal-page
             '       <div class=moreReasonsDiv><button id=moreReasonsButton aria-live=polite onclick=retrieveMoreReasons> More reasons </button></div>' ,
             '   </div>' ,  // end ProposalContentReasonsNew
             '   <div class=backButtonDiv><button class=backButton id=backButton onclick=onClickBack onkeyup=onKeyUpBack> &larr; Back to proposals </button></div>' ,

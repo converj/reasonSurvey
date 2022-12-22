@@ -12,6 +12,7 @@ import common
 from configuration import const as conf
 import cookie
 import linkKey
+import time
 import user
 
 
@@ -131,8 +132,12 @@ def validate( httpRequest, httpInput, responseData, httpResponse,
 
 # Writes instantiated template to httpResponse
 # Requires templateFilepath relative to this directory -- sub-directories must qualify path
-def outputTemplate( templateFilepath, templateValues, httpResponse, cookieData=None ):
+def outputTemplate( templateFilepath, templateValues, httpResponse, cookieData=None, errorMessage=None ):
     logging.debug( 'httpServer.outputTemplate() templateFilepath=' + templateFilepath )
+
+    if errorMessage:
+        if conf.isDev:  logging.error( 'outputTemplate() errorMessage=' + errorMessage )
+        templateValues['errorMessage'] = errorMessage
 
     if cookieData:
         # Signing modified cookies requires javascript-browser-fingerprint
@@ -185,6 +190,7 @@ def createAndStoreLinkKey( destClassName, destinationId, loginRequired, cookieDa
 
     linkKeyRecord = linkKey.LinkKey(
         id = linkKeyString,
+        timeCreated = int( time.time() ) ,
         destinationType = destClassName,
         destinationId = destinationId,
         loginRequired = loginRequired
@@ -209,6 +215,7 @@ def linkKeyToDisplay( linkKeyRecord ):
 def requestToDisplay( requestRecord, userId ):
     display = {
         'id': str(requestRecord.key.id()),
+        'timeCreated': requestRecord.timeCreated ,
         'title': requestRecord.title,
         'detail': requestRecord.detail,
         'mine': ( requestRecord.creator == userId ),
@@ -229,6 +236,7 @@ def proposalToDisplay( proposalRecord, userId, requestRecord=None ):
     sendVoteCounts = mySurvey or freezeUserInput
     display = {
         'id': str(proposalRecord.key.id()),
+        'timeCreated': proposalRecord.timeCreated ,
         'title': proposalRecord.title,
         'detail': proposalRecord.detail,
         'mine': (proposalRecord.creator == userId),

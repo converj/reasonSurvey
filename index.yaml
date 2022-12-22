@@ -35,6 +35,17 @@ indexes:
 - kind: Proposal
   properties:
   - name: requestId
+  - name: timeCreated
+
+- kind: Proposal
+  properties:
+  - name: requestId
+  - name: timeCreated
+    direction: desc
+
+- kind: Proposal
+  properties:
+  - name: requestId
   - name: words
   - name: score
     direction: desc

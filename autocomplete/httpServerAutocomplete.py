@@ -16,6 +16,7 @@ import user
 def surveyToDisplay( surveyRecord, userId ):
     display = {
         'id': str(surveyRecord.key.id()),
+        'timeCreated': surveyRecord.timeCreated ,
         'title': surveyRecord.title ,
         'introduction': surveyRecord.introduction,
         'mine': (surveyRecord.creator == userId),

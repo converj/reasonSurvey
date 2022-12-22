@@ -10,6 +10,7 @@ class RequestForProposals( ndb.Model ):
     title = ndb.StringProperty()
     detail = ndb.StringProperty()
 
+    timeCreated = ndb.IntegerProperty( default=0 )
     creator = ndb.StringProperty()
     allowEdit = ndb.BooleanProperty( default=True )
     

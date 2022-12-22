@@ -3,6 +3,7 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
+import time
 # Import app modules
 import common
 from configuration import const as conf
@@ -41,11 +42,11 @@ def submitNewProposal( ):
 
         # Voter login not required to create initial proposal, though login may be required to use proposal
         cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, loginRequired=loginRequired )
-        if not cookieData.valid():  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.NO_COOKIE )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Check proposal length
-        if not httpServer.isLengthOk( title, detail, conf.minLengthProposal ):  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.TOO_SHORT )
+        if not httpServer.isLengthOk( title, detail, conf.minLengthProposal ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
         # Check experimental password (low-risk secret)
         if ( hideReasons or loginRequired or experimentalPassword )  and  ( experimentalPassword != secrets.experimentalPassword ):
@@ -54,7 +55,9 @@ def submitNewProposal( ):
         # No need to prevent duplicates, because this is a top-level single proposal
         
         # Construct new proposal record
-        proposalRecord = proposal.Proposal( creator=userId , allowEdit=True , hideReasons=hideReasons , adminHistory=common.initialChangeHistory() )
+        now = int( time.time() )
+        proposalRecord = proposal.Proposal( creator=userId , allowEdit=True , hideReasons=hideReasons , adminHistory=common.initialChangeHistory() ,
+            timeCreated=now )
         proposalRecord.setContent( title, detail )
         # Store proposal record
         proposalRecordKey = proposalRecord.put()
@@ -105,7 +108,7 @@ def submitNewProposalForRequest( ):
         logging.debug(LogMessage('SubmitNewProposalForRequest', 'requestLinkKeyStr=', requestLinkKeyStr, 'title=', title, 'detail=', detail, 'browserCrumb=', browserCrumb, 'loginCrumb=', loginCrumb))
 
         cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
-        if not cookieData.valid():  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.NO_COOKIE )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Check proposal length
@@ -139,7 +142,8 @@ def submitNewProposalForRequest( ):
 
         # Construct new proposal record
         hasReasons = ( 0 < len(initialReasons) )
-        proposalRecord = proposal.Proposal( requestId=requestId, creator=userId, allowEdit=(not hasReasons) )
+        now = int( time.time() )
+        proposalRecord = proposal.Proposal( requestId=requestId, creator=userId, allowEdit=(not hasReasons), timeCreated=now )
         proposalRecord.setContent( title, detail )
         # Store proposal record
         proposalRecordKey = proposalRecord.put()
@@ -209,7 +213,7 @@ def submitEditProposal( ):
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
         cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
-        if not cookieData.valid():  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.NO_COOKIE )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Check proposal length
@@ -285,7 +289,7 @@ def submitFreezeProposal( ):
         # User id from cookie, crumb...
         responseData = { 'success':False, 'requestLogId':requestLogId }
         cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse )
-        if not cookieData.valid():  return httpServer.outputJson( responseData, httpResponse, errorMessage=conf.NO_COOKIE )
+        if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
         userId = cookieData.id()
 
         # Retrieve link-key record

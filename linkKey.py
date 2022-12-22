@@ -2,7 +2,7 @@
 import re
 # Local imports
 from constants import Constants
-from user import randomStringWithLength
+import user
 
 
 # Constants
@@ -22,11 +22,12 @@ if not isUnitTest:
         destinationType = ndb.StringProperty()  # { REQUEST_CLASS_NAME, PROPOSAL_CLASS_NAME }
         destinationId = ndb.StringProperty()
         loginRequired = ndb.BooleanProperty()
+        timeCreated = ndb.IntegerProperty( default=0 )
 
 
 
 def createLinkKey():
-    return randomStringWithLength( const.LINK_KEY_LENGTH )
+    return user.randomStringWithLength( const.LINK_KEY_LENGTH )
 
 def isValidLinkKey( l ):
     return (l is not None) and (len(l) == const.LINK_KEY_LENGTH) and re.match( r'^[A-Za-z0-9]+$' , l )

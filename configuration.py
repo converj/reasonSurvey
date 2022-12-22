@@ -19,7 +19,8 @@ const.pythonVersion = sys.version_info[0]
 const.isDev = os.path.isfile('configurationDev.py')  or  ( not os.getenv('GAE_ENV', '').startswith('standard') )
 if const.isDev:  import configurationDev
 
-if not const.isDev:  logging.getLogger().setLevel( logging.WARNING )
+if const.isDev:  logging.getLogger().setLevel( logging.DEBUG )
+else:            logging.getLogger().setLevel( logging.WARNING )
 
 const.SITE_NAME = 'Converj'
 
@@ -66,7 +67,6 @@ const.NOT_OWNER = 'NOT_OWNER'
 const.NOT_HOST = 'NOT_HOST'
 const.HAS_RESPONSES = 'HAS_RESPONSES'
 const.FROZEN = 'FROZEN'
-const.OVER_BUDGET = 'OVER_BUDGET'
 const.EXPERIMENT_NOT_AUTHORIZED = 'EXPERIMENT_NOT_AUTHORIZED'
 
 # Persistent record class names
@@ -75,6 +75,12 @@ const.REASON_CLASS_NAME = 'Reason'
 const.PROPOSAL_CLASS_NAME = 'Proposal'
 const.USER_CLASS_NAME = 'User'
 const.LINK_KEY_CLASS_NAME = 'LinkKey'
+
+# Survey types
+const.SURVEY_TYPE_REQUEST_PROPOSALS = 'SURVEY_TYPE_REQUEST_PROPOSALS' 
+const.SURVEY_TYPE_PROPOSAL = 'SURVEY_TYPE_PROPOSAL' 
+const.SURVEY_TYPE_AUTOCOMPLETE = 'SURVEY_TYPE_AUTOCOMPLETE' 
+const.SURVEY_TYPE_BUDGET = 'SURVEY_TYPE_BUDGET' 
 
 # Environment variable names
 const.REQUEST_LOG_ID = 'REQUEST_LOG_ID'

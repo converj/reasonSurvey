@@ -158,7 +158,7 @@ def slicesForUser( linkKeyStr ):
         sliceRecordKeys = [ ndb.Key( slice.Slice, sliceId )  for sliceId, size  in sliceVoteRecord.slices.items() ]  if sliceVoteRecord  else []
         sliceRecords = ndb.get_multi( sliceRecordKeys )
         if conf.isDev:  logging.debug( 'SlicesForUser.get() sliceRecords=' + str(sliceRecords) )
-
+        
         sliceIdToDisplay = { s.key.id() : httpServerBudget.sliceToDisplay(s, userId)  for s in sliceRecords  if s }
         votesDisplay = httpServerBudget.sliceVotesToDisplay( sliceVoteRecord, userId )
 

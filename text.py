@@ -57,16 +57,16 @@ class LogMessage( object ):
 
 
 
-# Encode unicode-object-sequence into utf8-bytes (in ascii-range)
-def utf8( unicodeObjects ):
-    return unicodeObjects.encode('utf-8')  if unicodeObjects  else None
+# Encode unicode-object-sequence into bytes in utf8-format
+def utf8( unicodeObjects ):  return toUtf8( unicodeObjects )
 
-def toAscii( unicodeObjects ):
-    return unicodeObjects.encode('ascii')  if unicodeObjects  else None
+def toUtf8( unicodeObjects ):  return unicodeObjects.encode('utf-8')  if unicodeObjects  else None
 
-# Convert utf8-bytes to unicode-object-sequence
-def toUnicode( utf8Bytes ):
-    return utf8Bytes.decode('utf-8')  if utf8Bytes  else None
+# Encode unicode-object-sequence into bytes in ascii-range
+def toAscii( unicodeObjects ):  return unicodeObjects.encode('ascii')  if unicodeObjects  else None
+
+# Convert utf8/ascii-bytes to unicode-object-sequence
+def toUnicode( utf8Bytes ):  return utf8Bytes.decode('utf-8')  if utf8Bytes  else None
 
 
 

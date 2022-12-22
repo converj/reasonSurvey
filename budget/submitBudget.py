@@ -3,6 +3,7 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
+import time
 # Import app modules
 import common
 from budget.configBudget import const as conf
@@ -53,8 +54,9 @@ def budgetNew( ):
             return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
         
         # Construct and store new budget record
+        now = int( time.time() )
         budgetRecord = budget.Budget( creator=userId, title=title, introduction=introduction, total=total, allowEdit=True, hideReasons=hideReasons,
-            adminHistory=common.initialChangeHistory() )
+            adminHistory=common.initialChangeHistory() , timeCreated=now )
         budgetRecordKey = budgetRecord.put()
         logging.debug( 'budgetRecordKey.id={}'.format(budgetRecordKey.id()) )
 

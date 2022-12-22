@@ -166,13 +166,17 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
 
 
 #pageHome {  margin:5px;  }
+    #newSurveyTable {  margin:0 auto;  }
+        .newSurveyNumber {  padding-right:20px;  opacity:0.50;  }
+
         a.newSurveyLink {
             text-decoration:none;  display:block;
             margin:10px 0px 10px 0px;  padding:15px;  background:#f0f0f0;
         }
         .newSurveyLink:hover {  background-color:rgb(206,231,256);  }
-            .newSurveyLinkDetail {  margin-left:5px;  color:black;  }
+            .newSurveyLinkDetail {  display:block;  margin-left:5px;  color:black;  }
 
+        .newSurveyExample {  min-width:65px;  padding-left:20px;  opacity:0.50;  }
 
 
 #pageNewRequest {  }

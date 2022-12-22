@@ -17,6 +17,7 @@ import user
 def budgetToDisplay( budgetRecord, userId ):
     display = {
         'id': str(budgetRecord.key.id()) ,
+        'timeCreated': budgetRecord.timeCreated ,
         'title': budgetRecord.title ,
         'introduction': budgetRecord.introduction ,
         'total': budgetRecord.total ,

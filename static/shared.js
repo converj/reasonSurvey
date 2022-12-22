@@ -1110,7 +1110,7 @@ requestInitialCookie( callback ){
     var ajaxSync = false;  // This function is called first on page-load, so making it sync is redundant
     ajaxPost( {crumb:crumb, fingerprint:fingerprint}, 'initialCookie', function(error, status, responseData){
 
-        if ( error  ||  !responseData.success ){  return;  }
+        if ( error  ||  !responseData  ||  !responseData.success ){  return;  }
 
         // Cookie will have been set by http-response
         crumb = responseData.crumb;

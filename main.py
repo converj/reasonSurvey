@@ -42,6 +42,7 @@ import httpServer
 from httpServer import app
 import secrets
 import submitLogin
+import submitMetrics
 import submitProposal
 import submitReason
 import submitRequest
@@ -51,11 +52,10 @@ import user
 
 
 
-
 @app.get('/')
 def mainPage( ):
         httpRequest, httpResponse = httpServer.requestAndResponse()
-        logging.debug( 'mainPage() httpRequest=' + str(httpRequest) )
+        if conf.isDev:  logging.debug( 'mainPage() httpRequest=' + str(httpRequest) )
 
         templateValues = {
             # Pass configuration data from server to client
@@ -99,7 +99,7 @@ def mainPage( ):
 @app.post('/initialCookie')
 def initialCookie( ):
         httpRequest, httpResponse = httpServer.requestAndResponse()
-        logging.debug( 'initialCookie() httpRequest=' + str(httpRequest) )
+        if conf.isDev:  logging.debug( 'initialCookie() httpRequest=' + str(httpRequest) )
 
         # Collect inputs
         requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
@@ -116,11 +116,40 @@ def initialCookie( ):
         
 
 
+@app.get('/termsOfService.html')
+def termsOfService( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+        if conf.isDev:  logging.debug( 'httpRequest=' + str(httpRequest) )
+
+        templateValues = {
+            'TITLE': 'Terms of Service' ,
+            'COMPANY_NAME': 'Converj LLC' ,
+            'THE_CONTACT': 'LEGALCORP SOLUTIONS INC' ,
+            'THE_ADDRESS': '506 S Spring St #13308, Los Angeles CA 90013' ,
+            'THE_LOCATION': 'Los Angeles, California, United States' ,
+        }
+        return httpServer.outputTemplate( 'termsOfService.html', templateValues, httpResponse )
+
+
+@app.get('/privacyPolicy.html')
+def privacyPolicy( ):
+        httpRequest, httpResponse = httpServer.requestAndResponse()
+        if conf.isDev:  logging.debug( 'httpRequest=' + str(httpRequest) )
+
+        templateValues = {
+            'TITLE': 'Privacy Policy' ,
+            'COMPANY_NAME': 'Converj LLC' ,
+            'THE_LOCATION': 'Los Angeles, California, United States' ,
+        }
+        return httpServer.outputTemplate( 'privacyPolicy.html', templateValues, httpResponse )
+
+
+
 # Find records needing cleanup, initial form
 # @app.get('/clean')
 def cleanGet( ):
         httpRequest, httpResponse = httpServer.requestAndResponse()
-        logging.debug(LogMessage('Clean', 'get()'))
+        if conf.isDev:  logging.debug(LogMessage('Clean', 'get()'))
 
         templateValues = { }
         return httpServer.outputTemplate( 'cleanup.html', templateValues, httpResponse )
@@ -129,14 +158,14 @@ def cleanGet( ):
 # @app.post('/clean' )
 def cleanPost( ):
         httpRequest, httpResponse = httpServer.requestAndResponse()
-        logging.debug(LogMessage('Clean.post()', 'httpRequest=', httpRequest))
+        if conf.isDev:  logging.debug(LogMessage('Clean.post()', 'httpRequest=', httpRequest))
 
         # Collect inputs
         inputData = httpServer.postFormParams( httpRequest )
-        logging.debug(LogMessage('Clean', 'inputData=', inputData))
-        secret = inputData.get( 'secret', [''] )[0]
-        type = inputData.get( 'type', [''] )[0]
-        cursor = inputData.get( 'cursor', [''] )[0]
+        if conf.isDev:  logging.debug(LogMessage('Clean', 'inputData=', inputData))
+        secret = inputData.get( 'secret', '' )
+        type = inputData.get( 'type', '' )
+        cursor = inputData.get( 'cursor', '' )
 
         cursor = Cursor( urlsafe=cursor )  if cursor  else None
         doDelete = True

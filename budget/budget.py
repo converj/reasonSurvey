@@ -11,6 +11,7 @@ class Budget( ndb.Model ):
     introduction = ndb.StringProperty()
     total = ndb.FloatProperty()
 
+    timeCreated = ndb.IntegerProperty( default=0 )
     creator = ndb.StringProperty()
     allowEdit = ndb.BooleanProperty( default=True )  # Always true
     freezeUserInput = ndb.BooleanProperty( default=False )

@@ -84,12 +84,14 @@
 #pageAutocompleteResults              .Question label {  opacity:1.0;  font-weight:bold;  }
 #pageAutocompleteResults              .QuestionContent {  margin:5px 0px 5px 0px;  }
 #pageAutocompleteResults              .Answers {  display:table;  width:calc(100% - 15px);  border-collapse:collapse;  }
-#pageAutocompleteResults                  .Answer {  display:table-row;  }
+#pageAutocompleteResults                  .Answers summary::marker {  content:none;  }
+#pageAutocompleteResults                  .Answer {  width:100%;  }
+#pageAutocompleteResults                  .Answer:hover {  background:rgb(206,231,256);  }
 #pageAutocompleteResults                      .AnswerCell {  display:table-cell;  border:solid 1px #dddddd;  padding:10px;  }
 #pageAutocompleteResults                      .AnswerCountBarBack {  width:100px;  }
 #pageAutocompleteResults                          .AnswerCountBar {  background-color:#8888aa;  }
 #pageAutocompleteResults                      .AnswerCount {  width:50px;  text-align:right;  }
-#pageAutocompleteResults                      .AnswerReasons {  display:table;  width:calc(100% - 15px);  border-collapse:collapse;  }
+#pageAutocompleteResults                      .AnswerReasons {  display:table;  margin-left:126px;  width:calc(100% - 129px);  border-collapse:collapse;  }
 #pageAutocompleteResults                          .AnswerReason {  display:table-row;  }
 #pageAutocompleteResults                  [hidereasons='true']  .ReasonsRow {  display:none;  }
 #pageAutocompleteResults              .QuestionResultsButton {  display:none;  }

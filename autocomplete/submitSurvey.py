@@ -3,6 +3,7 @@ from google.appengine.ext import ndb
 import json
 import logging
 import os
+import time
 # Import app modules
 import common
 from autocomplete.configAutocomplete import const as conf
@@ -50,9 +51,10 @@ def newSurvey( ):
         if ( hideReasons or loginRequired or experimentalPassword )  and  ( experimentalPassword != secrets.experimentalPassword ):
             return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.EXPERIMENT_NOT_AUTHORIZED )
 
-        # Construct and store new survey record.
+        # Construct and store new survey record
+        now = int( time.time() )
         surveyRecord = survey.Survey( creator=userId, title=title, introduction=introduction, allowEdit=True, hideReasons=hideReasons,
-            adminHistory=common.initialChangeHistory() )
+            adminHistory=common.initialChangeHistory() , timeCreated=now )
         surveyRecordKey = surveyRecord.put()
         logging.debug( 'surveyRecordKey.id={}'.format(surveyRecordKey.id()) )
 

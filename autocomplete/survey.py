@@ -1,7 +1,7 @@
-# Import external modules
+# Import external modules.
 from google.appengine.ext import ndb
 import logging
-# Import local modules
+# Import local modules.
 from autocomplete.configAutocomplete import const as conf
 
 
@@ -12,6 +12,7 @@ class Survey( ndb.Model ):
     introduction = ndb.StringProperty()
     questionIds = ndb.StringProperty( repeated=True )  # Ordered
 
+    timeCreated = ndb.IntegerProperty( default=0 )
     creator = ndb.StringProperty()
     allowEdit = ndb.BooleanProperty( default=True )  # Always true
     freezeUserInput = ndb.BooleanProperty( default=False )

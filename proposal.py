@@ -23,6 +23,7 @@ class Proposal( ndb.Model ):
     title = ndb.StringProperty()
     detail = ndb.StringProperty()
 
+    timeCreated = ndb.IntegerProperty( default=0 )
     creator = ndb.StringProperty()
     allowEdit = ndb.BooleanProperty()
     freezeUserInput = ndb.BooleanProperty( default=False )
@@ -59,6 +60,7 @@ class Proposal( ndb.Model ):
     def updateScore( self ):
         contentLen = ( len(self.title) if self.title else 0 ) + ( len(self.detail) if self.detail else 0 )
         self.score = float( self.netPros ) / float( contentLen + 100.0 )
+
 
 
 # Returns records, cursor, more-flag
