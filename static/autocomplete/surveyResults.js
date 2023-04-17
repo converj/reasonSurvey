@@ -8,13 +8,13 @@
         ElementWrap.call( this );  // Inherit member data from ElementWrap.
 
         this.createFromHtml( questionId, '\n\n' + [
-            '<h1 class=title id=title> Question Results </h1>',
+            '<h1 class=title id=title translate=true> Question Results </h1>',
             '<div class=Question id=Question>',
-            '    <div class=Message id=Message aria-live=polite></div>',
-            '    <label for=QuestionContent id=QuestionPosition></label>',
+            '    <div class=Message id=Message aria-live=polite translate=true></div>',
+            '    <label><span translate=true>Question</span> <span id=QuestionPositionNumber></span></label>',
             '    <div class=QuestionContent id=QuestionContent></div>',
             '    <div class=Answers id=Answers></div>',
-            '    <button class=QuestionResultsButton id=QuestionResultsButton onclick=onQuestionResultsClick> More answers </button>',
+            '    <button class=QuestionResultsButton id=QuestionResultsButton onclick=onQuestionResultsClick translate=true> More answers </button>',
             '</div>'
         ].join('\n') );
     }
@@ -40,7 +40,7 @@
         
         this.setInnerHtml( 'QuestionContent', this.question.content );
         if ( ! this.singleQuestionPage ){
-            this.setInnerHtml( 'QuestionPosition', 'Question ' + (this.question.positionInSurvey + 1) );
+            this.setInnerHtml( 'QuestionPositionNumber', this.question.positionInSurvey + 1 );
             this.setStyle( 'QuestionResultsButton', 'display', (this.hasMoreAnswers ? 'inline-block' : null) );
             this.setStyle( 'title', 'display', 'none' );
         }
@@ -94,8 +94,8 @@
             // Use separate table for answers-with-reasons, because expander cannot work on just some table-rows
             let reasonsDiv = html('div').class('AnswerReasons').children(
                 html('tr').class('AnswerReason').children(
-                    html('th').class('AnswerCell').class('AnswerCount').innerHtml('Count').build() ,
-                    html('th').class('AnswerCell').class('AnswerContent').innerHtml('Reason').build() ,
+                    html('th').class('AnswerCell').class('AnswerCount').attribute('translate','true').innerHtml('Count').build() ,
+                    html('th').class('AnswerCell').class('AnswerContent').attribute('translate','true').innerHtml('Reason').build() ,
                 ).build()
             ).build();
             answerRow.appendChild( reasonsDiv );
@@ -117,6 +117,8 @@
                 ].join('\n') )  );
             }
         }
+
+        translateScreen( this.getSubElement('Question') );
     };
 
         QuestionResultDisplay.prototype.
@@ -185,11 +187,11 @@
         ElementWrap.call( this );  // Inherit member data from ElementWrap.
 
         this.createFromHtml( surveyId, '\n\n' + [
-            '   <h1 class=title> Survey Results </h1>' ,
+            '   <h1 class=title translate=true> Survey Results </h1>' ,
             '   <div class=Survey id=Survey>' ,
-            '       <div class=Message id=freezeMessage aria-live=polite></div>' ,
-            '       <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
-            '       <div class=Message id=Message aria-live=polite></div>' ,
+            '       <div class=Message id=freezeMessage aria-live=polite translate=true></div>' ,
+            '       <div class=hideReasonsStatus id=hideReasonsStatus translate=true></div>' ,
+            '       <div class=Message id=Message aria-live=polite translate=true></div>' ,
             '       <div class=Questions id=Questions></div>' ,
             '   </div>'
         ].join('\n') );
@@ -241,6 +243,8 @@
                 addAndAppear( question.display.element, questionsDiv );
             }
         }
+
+        translateScreen();
     };
     
 

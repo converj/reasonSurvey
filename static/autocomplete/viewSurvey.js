@@ -44,11 +44,16 @@
         for ( let s = 0;  s < spanElements.length;  ++s ){
             answerContentDiv.appendChild( spanElements[s] );
         }
-        answerContentDiv.appendChild( html('span').class('suggestionReasonSeparator').innerHtml('Reason:').build() );
+        answerContentDiv.appendChild( html('span').class('suggestionReasonSeparator').children(
+            html('span').attribute('translate','true').innerHtml('Reason').build() ,
+            html('span').innerHtml(':').build()
+        ).build() );
         spanElements = keywordsToHighlightSpans( answerInput, suggestionAndReasonArray[1] );
         for ( let s = 0;  s < spanElements.length;  ++s ){
             answerContentDiv.appendChild( spanElements[s] );
         }
+
+        translateScreen( this.getSubElement('Answer') );
     };
 
         AnswerViewDisplay.prototype.
@@ -76,18 +81,18 @@
 
         this.createFromHtml( questionId, '\n\n' + [
             '<form class=Question id=Question>',
-            '    <div class=Message id=Message aria-live=polite></div>',
-            '    <h2 for=QuestionContent id=QuestionPosition> Question </h2>',
+            '    <div class=Message id=Message aria-live=polite translate=true></div>',
+            '    <h2 for=QuestionContent><span translate=true>Question</span> <span id=QuestionPositionNumber></span></h2>',
             '    <div class=QuestionContent id=QuestionContent></div>',
             '    <ul class=Answers id=Answers></ul>',
-            '    <div class=Message id=suggestionsMessage aria-live=polite></div>',
+            '    <div class=Message id=suggestionsMessage aria-live=polite translate=true></div>',
             // Answer input
-            '   <div class="Message NewAnswerMessage" id=NewAnswerMessage aria-live=polite></div>',
+            '   <div class="Message NewAnswerMessage" id=NewAnswerMessage aria-live=polite translate=true></div>',
             '   <div class=NewAnswer>',
-            '       <label for=NewAnswerInput> Answer </label>',
+            '       <label for=NewAnswerInput translate=true> Answer </label>',
             '       <input class=NewAnswerInput id=NewAnswerInput placeholder="Type your answer, or choose a suggested answer" ',
             '           oninput=handleInput onkeydown=handleNewAnswerKey onblur=handleInputBlur />',
-            '       <label class=NewReasonLabel for=NewReasonInput> Reason </label>',
+            '       <label class=NewReasonLabel for=NewReasonInput translate=true> Reason </label>',
             '       <textarea class=NewReasonInput id=NewReasonInput placeholder="Type your reason, or choose a suggested answer and reason" ',
             '           oninput=handleInput onkeydown=handleNewReasonKey onblur=handleInputBlur ></textarea>',
             '    </div>',
@@ -128,7 +133,7 @@
 
         // Set HTML content
         this.setInnerHtml( 'QuestionContent', storedTextToHtml(this.question.content) );
-        this.setInnerHtml( 'QuestionPosition', 'Question ' + (this.question.positionInSurvey + 1) );
+        this.setInnerHtml( 'QuestionPositionNumber', this.question.positionInSurvey + 1 );
         let answerAndReasonArray = parseAnswerAndReason( this.userAnswer );
         this.setProperty( 'NewAnswerInput', 'defaultValue', answerAndReasonArray[0] );
         this.setProperty( 'NewReasonInput', 'defaultValue', answerAndReasonArray[1] );
@@ -395,17 +400,17 @@
         ElementWrap.call( this );  // Inherit member data from ElementWrap.
 
         this.createFromHtml( surveyId, '\n\n' + [
-            '<h1 class=title> Auto-complete Survey </h1>',
+            '<h1 class=title translate=true> Auto-complete Survey </h1>',
             '<div class=Survey id=Survey>',
-            '    <div class=Message id=Message aria-live=polite></div>' ,
-            '    <div class=Message id=freezeMessage aria-live=polite></div>' ,
-            '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
-            '    <div class=loginStatus id=loginStatus></div>',
+            '    <div class=Message id=Message aria-live=polite translate=true></div>' ,
+            '    <div class=Message id=freezeMessage aria-live=polite translate=true></div>' ,
+            '    <div class=hideReasonsStatus id=hideReasonsStatus translate=true></div>' ,
+            '    <div class=loginStatus id=loginStatus translate=true></div>',
             '    <h2 class=SurveyTitle id=SurveyTitle></h2>',
             '    <div class=SurveyIntroduction id=SurveyIntroduction></div>',
             '    <div class=Questions id=Questions></div>',
-            '    <div class=Message id=bottomMessage aria-live=polite></div>' ,
-            '    <button class=SurveyResultsButton id=SurveyResultsButton onclick=onSurveyResults> Survey Results </button>',
+            '    <div class=Message id=bottomMessage aria-live=polite translate=true></div>' ,
+            '    <button class=SurveyResultsButton id=SurveyResultsButton onclick=onSurveyResults translate=true> Survey Results </button>',
             // Admin change history
             '   <details class=adminHistory id=adminHistory> ',
             '       <summary class=adminHistoryLast id=adminHistoryLast></summary> ',
@@ -494,6 +499,8 @@
                 question.display = null;
             }
         }
+
+        translateScreen();
     };
 
 

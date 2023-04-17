@@ -2,6 +2,8 @@
 /**********************************************************************************/
 /* all html elements */
 
+html {  }
+
 body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  background-color:#dddddd;  }
 
     a {  text-decoration:none;  color:blue;  cursor:pointer;  }
@@ -11,13 +13,14 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
         fieldset {  margin:10px 0px 10px 0px;  border:solid 1px #aaaaaa;  padding:10px;  }
             legend {  color:#888888;  }
         input , textarea {
-            width:calc(100% - 7px);  padding:5px;  font-family:sans-serif;  font-size:16px;
+            width:calc(100% - 7px);  padding:5px;  font-family:sans-serif;  font-size:1.0rem;
             border:solid 1px #cccccc;  box-shadow:0px 0px 5px 0px #aaaaaa inset;
         }
+        input[ type=radio ] {  width:auto;  }
         textarea {  line-height:1.5em;  }
         input[ type=checkbox ] {  width:auto;  margin-left:5px;  cursor:pointer;  }
         input:invalid , textarea:invalid , input.invalid {  background-color:#ffdddd;  }
-        label {  color:black;  opacity:0.5;  font-size:12pt;  cursor:pointer;  }
+        label {  color:black;  opacity:0.5;  font-size:1.0rem;  cursor:pointer;  }
         ::placeholder {  color:#888888;  opacity:1.0;  }
 
         :focus {  outline:5px solid lightblue;  outline-offset:0px;  }
@@ -34,17 +37,17 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
         margin:5px;  
         padding:15px 7px 15px 7px;  
 
-        font-size:16px;  line-height:2.0em;
+        font-size:1.0rem;  line-height:2.0em;
         cursor:pointer;
     }
     .Button:hover , button:hover {  background:rgb(206,231,256);  color:black;  }
 
     #content {  max-width:800px;  margin:20px auto 20px auto;  word-wrap:anywhere;  }
         #siteName {  text-align:center;  font-weight:normal;  color:#aaaaaa;  }
-        .title {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:20px;  color:#888888;  }
+        .title {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:1.6rem;  color:#888888;  }
 
-        h1 {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:20px;  color:#888888;  }
-        h2 {  margin:5px 0px 5px 0px;  font-weight:bold;  font-size:22px;  color:black;  }
+        h1 {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:1.4rem;  color:#888888;  }
+        h2 {  margin:5px 0px 5px 0px;  font-weight:bold;  font-size:1.3rem;  color:black;  }
         h3 {  }
         p {  line-height:1.7em;  }
 
@@ -53,8 +56,8 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
         details {  margin-bottom:15px;  }
         details > summary {  cursor:pointer;  }
 
-        dialog {  border:solid 1px green;  }
-        dialog::backdrop {  background:rgba(255, 187, 187, 0.75);  }
+        dialog {  border:solid 1px black;  box-shadow: 0px 0px 30px 0px #000;  }
+        dialog::backdrop {  background:rgba(100, 100, 100, 0.75);  }
 
 
 .Message {  opacity:0.0;  transition:opacity 2.0s, height 2.0s;  overflow-y:hidden;  }
@@ -94,6 +97,12 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
             .modalPopupButton {  }
 
 
+.languageRow {  /* margin:10px;  padding:10px; */  }
+    .languageRow input {  margin:20px 0px 20px 20px;  }
+    .languageRow label {  padding:15px;  }
+    .languageRow button {  margin-top:20px;  }
+
+
 
 /**********************************************************************************/
 /* Menu */
@@ -101,15 +110,25 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
 /* Menu-trigger button */
 #menuLink {
     position:fixed;
-    margin:0px;
-    z-index:9;  
+    margin:0px;  z-index:9;  top:-5px;  right:0px;  min-width:60px;
     border-radius:7px;
     box-shadow:0px 0px 20px 0px #888, -1px -1px 2px #ccc inset;
     color:#aaaaaa;
     text-transform:uppercase;  
 }
 #menuLink:hover {  background:rgb(206,231,256);  color:black;  text-decoration:none;  }
-#menuLink {  top:-5px;  right:0px;  }
+
+#languageLinkSelect /* , #languageLink */ {
+    position:fixed;
+    margin:0px;  z-index:8;  bottom:0px;  right:0px;  width:60px;  
+    border-radius:7px;
+    box-shadow:0px 0px 20px 0px #888, -1px -1px 2px #ccc inset;
+    color:#aaaaaa;
+}
+#languageLinkSelect {  right:0px;  height:30px;  width:auto;  }
+#languageLinkSelect:hover {  background:rgb(206,231,256);  color:black;  text-decoration:none;  }
+
+
 
 /* Menu items */
 #menuMobile { }
@@ -212,7 +231,7 @@ a.recentRequestLink {  text-decoration:none;  }
     .recentRequest {  margin:10px 0px 10px 0px;  padding:10px;  padding-bottom:20px;  border:solid 1px #bbbbbb;  color:black;  background:#f0f0f0;  }
     .recentRequest:hover {  background:rgb(206,231,256);  }
         .recentRequestType {  margin-bottom:10px;  color:#888888;  display:inline-block;  }
-        .recentRequestTitle {  margin:0px 0px 10px 0px;  font-size:17px;  }
+        .recentRequestTitle {  margin:0px 0px 10px 0px;  font-size:1.2rem;  }
         .recentRequestDetail {  }
         .recentRequestTime {  display:none;  }
 
@@ -256,7 +275,7 @@ a.recentRequestLink {  text-decoration:none;  }
 
         /* TitleAndDetail */
         .TitleAndDetail {  position:relative;  }
-            .TitleAndDetail .Title {  text-align:left;  font-weight:bold;  background-color:transparent;  font-size:16px;  }
+            .TitleAndDetail .Title {  text-align:left;  font-weight:bold;  font-size:1.1rem;  background-color:transparent;  }
             .TitleAndDetail[allowedit='true'] {  cursor:pointer;  }   /* required to make clickable on iOS */
             
             /* Edit icon */
@@ -267,7 +286,7 @@ a.recentRequestLink {  text-decoration:none;  }
 
             /* Viewing */
             .TitleAndDetail[editing='edit'] .TitleAndDetailViewing {  display:none;  }
-                .Request > .TitleAndDetail .Title {  font-size:22px;  }
+                .Request > .TitleAndDetail .Title {  font-size:1.3rem;  }
                 .TitleAndDetail .Detail {  margin-top:10px;  line-height:1.5em;  }
 
             /* Editing */
@@ -318,7 +337,7 @@ a.recentRequestLink {  text-decoration:none;  }
 
                 .Proposal[fromRequest='true'] .ProposalContent {  padding-bottom:15px;  }
                 .Proposal[fromRequest='false'] .ProposalContent {  margin:0px 0px 20px 0px;  padding:10px 5px 10px 5px;  }
-                    .Proposal[fromRequest='false'] .ProposalContent h2  {  font-size:22px;  }
+                    .Proposal[fromRequest='false'] .ProposalContent h2  {  font-size:1.3rem;  }
 
                 /* Vote sums */
                 .ProposalVoteSums {  display:none;  position:relative;  padding:10px 5px 10px 5px;  border-top:solid 1px #dddddd;
@@ -346,7 +365,7 @@ a.recentRequestLink {  text-decoration:none;  }
                             .ReasonViewing {  }
                             .Reason[editing='edit'] .ReasonViewing {  display:none;  }
 
-                                .ReasonProOrCon {  float:left;  padding:2px 10px 0px 0px;  text-transform:capitalize;  font-size:14px;  color:grey;  }
+                                .ReasonProOrCon {  float:left;  padding:2px 10px 0px 0px;  text-transform:capitalize;  font-size:0.9rem;  color:grey;  }
 
                                 /* Reason text */
                                 .ReasonText {  line-height:1.5em;  }
@@ -389,7 +408,7 @@ a.recentRequestLink {  text-decoration:none;  }
                                     [frozen='true'] .ReasonVoteCount {  display:block;  }
                                     [mysurvey='true'] .ReasonVoteCount {  display:block;  }
 
-                                .ReasonScore {  position:relative;  top:12px;  left:-10px;  font-size:12px;  color:#aaa;  display:none;  }
+                                .ReasonScore {  position:relative;  top:12px;  left:-10px;  font-size:0.8rem;  color:#aaa;  display:none;  }
 
                             /* Reason editing */
                             .ReasonEditing {  display:none;  }
@@ -460,7 +479,7 @@ a.recentRequestLink {  text-decoration:none;  }
     .ReqProp[frozen='true'] .NewProposalForm {  display:none;  }
     .ReqProp[freezenewproposals='true'] .NewProposalForm {  display:none;  }
 
-        .NewProposalSectionTitle {  margin:15px 0px 0px 0px;  text-align:center;  font-weight:bold;  font-size:20px;  color:#888888;  }
+        .NewProposalSectionTitle {  margin:15px 0px 0px 0px;  text-align:center;  font-weight:bold;  font-size:1.3rem;  color:#888888;  }
 
         a.matchLink {  text-decoration:none;  color:black;  }
             .match {  border:solid 1px #cccccc;  padding:10px;  margin:0px;  }

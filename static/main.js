@@ -94,8 +94,27 @@ $(document).ready( function(){
             // Do not overlap updating display & login, because display-data-cookies may overwrite login-cookie, without voter-id
             updateWaitingLogin( updateDisplayData );
         });
+
+        // Initialize translation
+        initializeLanguage();
+        showCurrentLanguage();
+        document.getElementById('languageLinkSelect').oninput =  ( event ) => {
+                let newLangCode = event.target.value;
+                currentLanguageCode = newLangCode;
+                setFragmentFields( {lang:newLangCode} );
+                document.cookie = 'A=' + newLangCode;  // Only change cookie when user explicitly chooses language from select-list, not from URL-fragment
+                translateScreen();
+        };
+
     });
 });
+
+    function
+showCurrentLanguage( ){
+    if ( currentLanguageCode ){
+        document.getElementById('languageLinkSelect').value = currentLanguageCode;
+    }
+}
 
 
     function
@@ -129,6 +148,27 @@ updateMenuForScreenChange(){
 
 ////////////////////////////////////////////////////////////////////////////////
 // Handle URL-fragment changes
+
+    function
+initializeLanguage( ){
+    // Handle language URL-fragment field
+    let fragKeyToValue = parseFragment();
+    if ( fragKeyToValue.lang ){
+        document.getElementById('languageLinkSelect').value = fragKeyToValue.lang;
+        currentLanguageCode = fragKeyToValue.lang;
+        translateScreen();
+    }
+    // Set language from cookie, setting language URL-fragment field
+    else {
+        let languageCookie = document.cookie.split(';').find(  c => ( c.split('=')[0].trim() == 'A' )  );
+        let languageFromCookie = ( languageCookie )?  languageCookie.split('=')[1]  :  null;
+        languageFromCookie = ( languageFromCookie )?  languageFromCookie.trim()  :  null;
+        if ( languageFromCookie ){
+            currentLanguageCode = languageFromCookie;
+            translateScreen();
+        }
+    }
+}
 
 window.onhashchange = function(){
 
@@ -426,6 +466,8 @@ window.onhashchange = function(){
         clearData();
         showPage( DIV_ID_HOME, 'Converj' );
     }
+
+    initializeLanguage();
 }
 
     function
@@ -491,6 +533,8 @@ jQuery('#menuItemLinkBackResults').keyup( enterToClick );
 
 document.getElementById('menuLink').onclick = function(){  toggleMenu();  };
 jQuery('.menuItemLink').keyup( enterToClick );
+
+
 
 // Content-cover click always closes menu.
 let contentCover = document.getElementById('contentCover');

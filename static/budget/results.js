@@ -18,12 +18,14 @@
                         html('div').id('Title').class('SliceTitle').build() ,
                         html('div').class('Size').id('Size').children(
                             html('input').class('SizeInput').id('SizeInput').build() ,  // For size bar display
-                            html('span').innerHtml('Budget Amount:').build() ,
+                            html('span').attribute('translate','true').innerHtml('Budget Amount').build() ,
+                            html('span').innerHtml(':').build() ,
                             html('span').class('SliceSizePercent').id('SliceSizePercent').build() ,
                             html('span').class('SliceSizeAbsolute').id('SliceSizeAbsolute').build()
                         ).build() ,
                         html('div').class('SliceVotes').id('SliceVotes').children(
-                            html('span').innerHtml('Votes:').build() ,
+                            html('span').attribute('translate','true').innerHtml('Votes').build() ,
+                            html('span').innerHtml(':').build() ,
                             html('span').class('SliceVotesNumber').id('SliceVotesNumber').build() ,
                         ).build() ,
                         html('div').id('Message').class('Message').build() ,
@@ -193,10 +195,14 @@
 
         this.createFromElement( budgetId,
             html('div').children(
-                html('h1').class('title').innerHtml('Budget Results').build() ,
+                html('h1').class('title').attribute('translate','true').innerHtml('Budget Results').build() ,
                 html('div').class('Budget').id('Budget').children(
                     html('h2').class('Title').id('Title').build() ,
-                    html('div').class('Total').id('Total').build() ,
+                    html('div').class('Total').id('Total').children(
+                        html('span').attribute('translate','true').innerHtml('Total amount').build() ,
+                        html('span').innerHtml(':').build() ,
+                        html('span').id('TotalValue').build() ,
+                    ).build() ,
                     html('div').class('hideReasonsStatus').id('hideReasonsStatus').build() ,
                     html('div').class('Message').class('freezeMessage').id('freezeMessage').build() ,
                 ).build() ,
@@ -204,10 +210,10 @@
                 html('div').class('Slices').id('Slices').children(
                     html('div').class('Slice').id('ColumnTitles').children(
                         html('div').class('SliceSizeDisplay').children(
-                            html('span').class('AmountWord').innerHtml('Amount').build() ,
+                            html('span').class('AmountWord').attribute('translate','true').innerHtml('Amount').build() ,
                             html('span').class('AmountSymbol').innerHtml('%').build()
                         ).attribute('onclick','SizeColumnTitleClick').build() ,
-                        html('div').class('SliceDescription').innerHtml('Budget Item').build()
+                        html('div').class('SliceDescription').attribute('translate','true').innerHtml('Budget Item').build()
                     ).build()
                 ).build() ,
 
@@ -245,7 +251,7 @@
         this.setAttribute( 'Budget', 'hidereasons', (this.budget.hideReasons ? TRUE : null) );
 
         this.setInnerHtml( 'Title', this.budget.title );
-        this.setInnerHtml( 'Total', 'Total amount: ' + this.budget.total );
+        this.setInnerHtml( 'TotalValue', this.budget.total );
 
         // For each slice...
         let slicesDiv = this.getSubElement('Slices');
@@ -268,6 +274,8 @@
         for ( let s = 0;  s < this.slices.length;  ++s ){
             this.slices[s].display.dataUpdated();
         }
+
+        translateScreen();
     };
     
         BudgetResultDisplay.prototype.

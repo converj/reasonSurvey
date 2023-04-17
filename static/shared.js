@@ -21,6 +21,67 @@ const KEY_NAME_SPACE = ' '
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// Localization
+
+
+// Apply a javascript translation function to all on-screen text that has class=translate
+let currentLanguageCode = 'en';
+
+    function
+translateScreen( root = document ){
+    let translatableDivs = root.querySelectorAll( '[translate="true"]' );  // Retranslate always, because innerHTML can change after previous translation
+    for ( let t = 0;  t < translatableDivs.length;  ++t ){
+        let translatableDiv = translatableDivs[ t ];
+        // Use textId attribute as lookup ID for translations, defaulting to original english text as the ID
+        let textId = translatableDiv.getAttribute('textId');
+        if ( ! textId ){
+            textId = translatableDiv.innerHTML;
+            translatableDiv.setAttribute( 'textId', textId );
+        }
+        // Get translated text, and substitute it into HTML element
+        let translatedText = translate( textId );
+        if ( translatedText ){  translatableDiv.innerHTML = translatedText;  }
+        translatableDiv.setAttribute( 'translated', currentLanguageCode );
+    }
+
+    translatePlaceholders( root );
+}
+
+    function
+translatePlaceholders( root ){
+    let translatableDivs = root.querySelectorAll( '[placeholder]' );  // Elements that have a placeholder
+    for ( let t = 0;  t < translatableDivs.length;  ++t ){
+        let translatableDiv = translatableDivs[ t ];
+        // Store original placeholder for retranslating in a different language
+        let placeholderId = translatableDiv.getAttribute('placeholderId');
+        if ( ! placeholderId ){
+            placeholderId = translatableDiv.placeholder;
+            translatableDiv.setAttribute( 'placeholderId', placeholderId );
+        }
+        // Get translated text, and substitute it into HTML element
+        let translatedText = translate( placeholderId );
+        if ( translatedText ){  translatableDiv.placeholder = translatedText;  }
+    }
+}
+
+
+    function
+translate( englishText ){
+    englishText = collapseWhitespace( englishText );
+    if ( ! englishText ){  return '';  }
+    let translations = englishToTranslations[ englishText ];
+    let translation = ( translations )?  translations[ currentLanguageCode ]  :  null;
+    return ( translation )?  translation  :  englishText;
+}
+
+    function
+collapseWhitespace( text ){
+    return text.trim().replace(/\s+/g, ' ');
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 // Data structures
 
     function 
@@ -447,6 +508,10 @@ showMessageStruct( struct, div ){
 
     function
 showMessage( text, color, disappearMs, element, textDefault ){
+
+    // Translate message text
+    text = ( text )?  translate( text )  :  null;
+    textDefault = ( textDefault )?  translate( textDefault )  :  null;
 
     stopMessageTimer( element );
     
@@ -1098,7 +1163,7 @@ storedTextToHtml( storedText ){
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
-// Browswer fingerprinting for cookie security
+// Browser fingerprinting for cookie security
 
 var fingerprint = null;
 
@@ -2268,7 +2333,7 @@ fingerprintBrowser(){
 
     var timeTaken = new Date() - startTime;
     console.info( 'fingerprintBrowser() timeTaken=', timeTaken );
-    console.info( 'fingerprintTexts=', fingerprintTexts );
+    console.log( 'fingerprintTexts=', fingerprintTexts );
 
     // Hash the fingerprintTexts
     // Alternative:  http://www.webtoolkit.info/javascript-md5.html

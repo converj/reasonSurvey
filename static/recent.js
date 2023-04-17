@@ -37,10 +37,10 @@
                     let recentDiv = htmlToElement( [
                         '<a href="#page=' + linkType.url + '&link=' + recent.linkKey  + '" class=recentRequestLink>',
                         '<div class=recentRequest tabindex=0>',
-                        '    <div class=recentRequestType>' + linkType.display + '</div>',
-                        '    <div class=recentRequestType>' + (recent.frozen ? '(frozen)' : '') + '</div>',
-                        '    <div class=recentRequestType>' + (recent.freezeNewProposals ? '(frozen proposals)' : '') + '</div>',
-                        '    <div class=recentRequestType>' + (recent.hideReasons ? '(reasons hidden)' : '') + '</div>',
+                        '    <div class=recentRequestType translate=true>' + linkType.display + '</div>',
+                        '    <div class=recentRequestType translate=true>' + (recent.frozen ? '(frozen)' : '') + '</div>',
+                        '    <div class=recentRequestType translate=true>' + (recent.freezeNewProposals ? '(frozen proposals)' : '') + '</div>',
+                        '    <div class=recentRequestType translate=true>' + (recent.hideReasons ? '(reasons hidden)' : '') + '</div>',
                         '    <h2 class=recentRequestTitle>' + recent.title + '</h2>',
                         '    <div class=recentRequestDetail>' + detailSample + '</div>',
                         '    <div class=recentRequestTime>' + recent.time + '</div>',
@@ -55,6 +55,8 @@
                     
                     recentContent.appendChild( recentDiv );
                 }
+
+                translateScreen();
             }
             else {
                 showMessage( 'Failed to load recent requests and proposals.', RED, null, recentMessage );

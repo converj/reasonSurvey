@@ -85,18 +85,18 @@
             // Slices are always editable, because they are only viewed by their own creator/voter
             '       <div class=SliceInputs>' ,
             '           <div class=TitleEdit>' ,
-            '               <label for=TitleInput> Title </label>' ,
+            '               <label for=TitleInput translate=true> Title </label>' ,
             '               <input class=SliceTitleInput id=TitleInput placeholder="Type your budget item title, or choose a suggested title" ' ,
             '                   onfocus=handleFocus oninput=handleInput onkeydown=handleTitleKey onblur=handleInputBlur />' ,
             '           </div>' ,
             '           <div class=ReasonEdit>' ,
-            '               <label class=SliceReasonLabel for=ReasonInput> Reason </label>' ,
+            '               <label class=SliceReasonLabel for=ReasonInput translate=true> Reason </label>' ,
             '               <textarea class=SliceReasonInput id=ReasonInput placeholder="Type your budget item reason, or choose a suggested reason" ' ,
             '                   onfocus=handleFocus oninput=handleInput onkeydown=handleReasonKey onblur=handleInputBlur ></textarea>' ,
             '           </div>' ,
 
             '           <div class=SizeEdit>' ,
-            '               <label for=SizeInput> Percent of budget </label>' ,
+            '               <label for=SizeInput translate=true> Percent of budget </label>' ,
             '               <input type=number class=SizeInput id=SizeInput  min=5 max=100 step=5 placeholder=10 ' ,
             '                   onfocus=handleFocus onclick=handleSizeClick onkeydown=handleSizeKey oninput=handleSizeInput onblur=handleSizeBlur />' ,
             '               <div class=Message id=messageForSize aria-live=polite></div>' ,
@@ -634,32 +634,32 @@
         ElementWrap.call( this );  // Inherit member data
 
         this.createFromHtml( budgetId, '\n\n' + [
-            '   <h1 class=title> Budget </h1>' ,
+            '   <h1 class=title translate=true> Budget </h1>' ,
             '   <div class=Budget id=Budget>' ,
-            '       <div class=Message id=Message aria-live=polite></div>' ,
-            '       <div class=Message id=freezeMessage aria-live=polite></div>' ,
-            '       <div class=loginStatus id=loginStatus></div>' ,
-            '       <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
+            '       <div class=Message id=Message aria-live=polite translate=true></div>' ,
+            '       <div class=Message id=freezeMessage aria-live=polite translate=true></div>' ,
+            '       <div class=loginStatus id=loginStatus translate=true></div>' ,
+            '       <div class=hideReasonsStatus id=hideReasonsStatus translate=true></div>' ,
 
             '       <div class=BudgetDescription>' ,
             '           <h2 class=Title id=BudgetTitle></h2>' ,
             '           <div class=BudgetIntroduction id=BudgetIntroduction></div>' ,
-            '           <div class=TotalAvailable id=TotalAvailable></div>' ,
-            '           <div class=TotalUsed id=TotalUsed></div>' ,
+            '           <div class=TotalAvailable id=TotalAvailable><span translate=true>Total budget</span>: <span id=TotalAvailableValue></span></div>' ,
+            '           <div class=TotalUsed id=TotalUsed><span translate=true>Percent used</span>: <span id=TotalUsedValue></span></div>' ,
             '       </div>' ,
 
             '       <div class=Slices id=Slices>' ,
             '           <div class="Slice" id=ColumnTitles>' ,
             '               <div class=SliceSizeDisplay onclick=SizeColumnTitleClick' ,
-            '                   ><span class=AmountWord>Amount</span><span class=AmountSymbol>%</span></div>' ,
-            '               <div class=SliceDescription> Budget Item </div>' ,
+            '                   ><span class=AmountWord translate=true>Amount</span><span class=AmountSymbol>%</span></div>' ,
+            '               <div class=SliceDescription translate=true> Budget Item </div>' ,
             '           </div>' ,
             '           <div class="Slice NewSliceRow" id=NewSliceRow>' ,
             '               <div class=SliceSizeDisplay onclick=NewSliceDisplayClick aria-label="Add budget item">+</div>' ,
             '               <div class=SliceDescription>' ,
             '                   <div class=NewSlice>' ,
-            '                       <h3> New budget item </h3>' ,
-            '                       <label for=NewSliceTitleInput> Title </label>' ,
+            '                       <h3 translate=true> New budget item </h3>' ,
+            '                       <label for=NewSliceTitleInput translate=true> Title </label>' ,
             '                       <input type=text class=NewSliceTitleInput id=NewSliceTitleInput placeholder="" ' ,
             '                           oninput=handleNewSliceInput>' ,
             '                   </div>' ,
@@ -667,7 +667,7 @@
             '               </div>' ,
             '           </div>' ,
             '       </div>' ,
-            '       <button class=BudgetResultsButton id=BudgetResultsButton onclick=onBudgetResults> Budget Results </button>' ,
+            '       <button class=BudgetResultsButton id=BudgetResultsButton onclick=onBudgetResults translate=true> Budget Results </button>' ,
 
             // Admin change history
             '       <details class=adminHistory id=adminHistory> ',
@@ -737,8 +737,8 @@
 
         this.setInnerHtml( 'BudgetTitle', this.budget.title );
         this.setInnerHtml( 'BudgetIntroduction', storedTextToHtml(this.budget.introduction) );
-        this.setInnerHtml( 'TotalAvailable', 'Total budget: ' + this.budget.total );
-        this.setInnerHtml( 'TotalUsed', 'Percent used: ' + (this.totalUsed ?  ''+this.totalUsed+'%'  : '') );
+        this.setInnerHtml( 'TotalAvailableValue', this.budget.total );
+        this.setInnerHtml( 'TotalUsedValue', (this.totalUsed ?  ''+this.totalUsed+'%'  : '') );
 
         displayAdminHistory( this.budget.adminHistory, this.getSubElement('adminHistoryLast'), this.getSubElement('adminHistoryFull') );
 
@@ -763,6 +763,8 @@
         for ( let s = 0;  s < this.slices.length;  ++s ){
             this.slices[s].display.dataUpdated();
         }
+
+        translateScreen();
     };
 
         BudgetViewDisplay.prototype.

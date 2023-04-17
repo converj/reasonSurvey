@@ -27,7 +27,7 @@
             '<div class=Reason id=Reason>',
             // Viewing
             '   <div class=ReasonViewing>',
-            '       <div class=ReasonProOrCon id=ReasonProOrConViewing></div>',
+            '       <div class=ReasonProOrCon id=ReasonProOrConViewing translate=true></div>',
             '       <div class=ReasonVote id=Vote onclick=handleVoteClick title="Vote" ',
             '           role=button title=Vote tabindex=0 onkeyup=handleVoteKeyUp ',
             '           aria-controls=ReasonEditing >',
@@ -45,14 +45,14 @@
             '    <div class=ReasonEditing id=ReasonEditing>', 
             '        <div class=ReasonProOrCon id=ReasonProOrConEditing></div>',
             '        <div class=ReasonEdit>', 
-            '            <textarea class=ReasonEditInput id=Content placeholder="reason text" ',
+            '            <textarea class=ReasonEditInput id=Content placeholder="I agree because..." ',
             '                onblur=handleEditReasonBlur oninput=onInput></textarea>',
             '        </div>',
             '        <div class=ReasonEditingButtons>',
             '            <button class=ReasonSaveButton onclick=handleEditReasonSave ',
-            '               onblur=handleEditReasonBlur> Save </button>',
+            '               onblur=handleEditReasonBlur translate=true> Save </button>',
             '            <button class=ReasonCancelButton onclick=handleEditReasonCancel ',
-            '               onblur=handleEditReasonBlur onkeyup=onEditReasonCancelKeyUp> Cancel </button>',
+            '               onblur=handleEditReasonBlur onkeyup=onEditReasonCancelKeyUp translate=true> Cancel </button>',
             '        </div>',
             '    </div>',
             '    <div class="Message ReasonEditMessage" id=ReasonEditMessage aria-live=polite></div>' ,
@@ -356,9 +356,9 @@
             '       </div>',
             '       <div class=TitleAndDetailEditButtons>',
             '           <button class=TitleAndDetailSaveButton onclick=handleSave ',
-            '               onblur=handleEditBlur> Save </button>',
+            '               onblur=handleEditBlur translate=true> Save </button>',
             '           <button class=TitleAndDetailCancelButton onclick=handleCancel ',
-            '               onblur=handleEditBlur> Cancel </button>',
+            '               onblur=handleEditBlur translate=true> Cancel </button>',
             '       </div>',
             '   </div>',
             // Message
@@ -377,7 +377,6 @@
     // Update this.element
         TitleAndDetailDisplay.prototype.
     dataUpdated = function( ){
-
         // Set editing state on element
         this.setAttribute( 'TitleAndDetail', 'editing', this.editing );
         // Set editing aria expand/collapse state
@@ -419,6 +418,9 @@
         this.match = false;
         this.match |= displayHighlightedContent( titleText, this.highlightWords, this.getSubElement('Title') );
         this.match |= displayHighlightedContent( storedTextToHtml(this.data.detail), this.highlightWords, this.getSubElement('Detail') );
+
+        translateScreen( this.getSubElement('TitleAndDetail') );
+
     };
 
 
@@ -653,12 +655,12 @@
 
         this.createFromHtml( proposalId, '\n\n' + [
             '<div class=Proposal id=Proposal>',
-            '    <h1 class=title id=PageTitle role=status> Proposal </h1>' ,
+            '    <h1 class=title id=PageTitle role=status translate=true> Proposal </h1>' ,
             '    <div id=Message class="Message ProposalMessage" aria-live=polite></div>' ,
-            '    <div class=loginStatus id=loginStatus></div>' ,
-            '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
+            '    <div class=loginStatus id=loginStatus translate=true></div>' ,
+            '    <div class=hideReasonsStatus id=hideReasonsStatus translate=true></div>' ,
             '   <div id=freezeUserInput class=freezeUserInput> ',
-            '       <label for=freezeUserInputCheckbox oninput=clickFreezeUserInput> Block all input </label> ',
+            '       <label for=freezeUserInputCheckbox oninput=clickFreezeUserInput translate=true> Block all input </label> ',
             '       <input id=freezeUserInputCheckbox type=checkbox oninput=clickFreezeUserInput /> ',
             '       <div id=freezeUserInputMessage class=Message></div> ',
             '   </div> ',
@@ -673,20 +675,20 @@
             '           <div class=NewReasonForm id=NewReasonForm role=form >' ,
             '               <div class="Message NewReasonMessage" id=NewReasonMessage aria-live=polite></div>' ,
             '               <div class=NewReason>' ,
-            '                   <label for=NewReasonInput> Find or add reason to dis/agree with the proposal </label>' ,
+            '                   <label for=NewReasonInput translate=true> Find or add reason to dis/agree with the proposal </label>' ,
             '                   <textarea class=NewReasonInput id=NewReasonInput placeholder="I agree because..." ' ,
             '                       oninput=onInput onfocus=handleNewReasonClick onblur=handleNewReasonBlur ' ,
             '                       aria-expanded=false aria-controls=NewReasonButtons ></textarea>' ,
             '               </div>' ,
             '               <div class=NewReasonButtons id=NewReasonButtons>' ,
-            '                   <button class=NewReasonButton id=NewReasonButtonPro onclick=handleNewPro onblur=handleNewReasonBlur> Agree </button>' ,
-            '                   <button class=NewReasonButton id=NewReasonButtonCon onclick=handleNewCon onblur=handleNewReasonBlur> Disagree </button>' ,
+            '                   <button class=NewReasonButton id=NewReasonButtonPro onclick=handleNewPro onblur=handleNewReasonBlur translate=true> Agree </button>' ,
+            '                   <button class=NewReasonButton id=NewReasonButtonCon onclick=handleNewCon onblur=handleNewReasonBlur translate=true> Disagree </button>' ,
             '               </div>' ,
             '           </div>' ,
             // Vote counts for proposal
             '           <div class=ProposalVoteSums id=ProposalVotes>' ,
-            '               <div class=ProposalVotePro><span class=VoteSumLabel>Votes pro:</span><span id=ProposalVotePro></span></div>' ,
-            '               <div class=ProposalVoteCon><span class=VoteSumLabel>Votes con:</span><span id=ProposalVoteCon></span></div>' ,
+            '               <div class=ProposalVotePro><span class=VoteSumLabel><span translate=true>Votes pro</span>:</span><span id=ProposalVotePro></span></div>' ,
+            '               <div class=ProposalVoteCon><span class=VoteSumLabel><span translate=true>Votes con</span>:</span><span id=ProposalVoteCon></span></div>' ,
             '           </div>' ,
             // Reasons
             '           <div class=ReasonsWrap> ' ,  // Allow setting max-height on reasons, which cannot use max-height because it is a table
@@ -707,7 +709,7 @@
             //      Button to load more reasons on single-proposal-page
             '       <div class=moreReasonsDiv><button id=moreReasonsButton aria-live=polite onclick=retrieveMoreReasons> More reasons </button></div>' ,
             '   </div>' ,  // end ProposalContentReasonsNew
-            '   <div class=backButtonDiv><button class=backButton id=backButton onclick=onClickBack onkeyup=onKeyUpBack> &larr; Back to proposals </button></div>' ,
+            '   <div class=backButtonDiv><button class=backButton id=backButton onclick=onClickBack onkeyup=onKeyUpBack> &larr; <span translate=true>Back to proposals</span> </button></div>' ,
             // Admin change history
             '   <details class=adminHistory id=adminHistory> ',
             '       <summary class=adminHistoryLast id=adminHistoryLast></summary> ',
@@ -896,6 +898,9 @@
         
         // Set collapse properties
         this.setAttribute( 'Proposal', 'collapse', this.collapse );
+
+        translateScreen( this.getSubElement('Proposal') );
+
     };
 
 
@@ -1479,18 +1484,18 @@
         this.createFromHtml( requestId, '\n' + [
             '<div class=ReqProp id=RequestForProposals>',
             // Status messages
-            '   <h1 class=title role=status> Request For Proposals </h1>' ,
+            '   <h1 class=title role=status translate=true> Request For Proposals </h1>' ,
             '   <div class="Message RequestMessage" id=RequestMessage aria-live=polite></div>' ,
-            '   <div class=loginStatus id=loginStatus></div>',
-            '   <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
+            '   <div class=loginStatus id=loginStatus translate=true></div>',
+            '   <div class=hideReasonsStatus id=hideReasonsStatus translate=true></div>' ,
             '   <div class=doneLink><div class=doneLinkLabel> Done link: </div><a id=doneLinkUrl></a></div> ',
             '   <div id=freezeUserInput class=freezeUserInput> ',
-            '       <label for=freezeUserInputCheckbox oninput=clickFreezeUserInput> Block all input </label> ',
+            '       <label for=freezeUserInputCheckbox oninput=clickFreezeUserInput translate=true> Block all input </label> ',
             '       <input id=freezeUserInputCheckbox type=checkbox oninput=clickFreezeUserInput /> ',
             '       <div id=freezeUserInputMessage class=Message></div> ',
             '   </div> ',
             '   <div id=freezeNewProposals class=freezeNewProposals> ',
-            '       <label for=freezeNewProposalsCheckbox oninput=clickFreezeNewProposals> Block new proposals </label> ',
+            '       <label for=freezeNewProposalsCheckbox oninput=clickFreezeNewProposals translate=true> Block new proposals </label> ',
             '       <input id=freezeNewProposalsCheckbox type=checkbox oninput=clickFreezeNewProposals /> ',
             '       <div id=freezeProposalsMessage class=Message></div> ',
             '   </div> ',
@@ -1498,18 +1503,18 @@
             '    <div class=Request id=Request subdisplay=titleAndDetailDisp></div>',
             //   New/find proposal form.  Do not use TitleAndDetailDisplay because need customizations like initial reasons.
             '    <div class=NewProposalForm id=NewProposalForm>',
-            '        <div class=NewProposalSectionTitle> Find or Add Proposal </div>',
+            '        <div class=NewProposalSectionTitle translate=true> Find or Add Proposal </div>',
             //       Insert a few new-proposal match summary snippets before new-proposal input, because
             //       filtered proposals are too distant from new-proposal input (because of reasons).
             '        <div id=matches class="Matches matches" aria-live=polite></div>',
             '        <div class=Message id=matchesMessage></div>',
-            '        <label class=NewProposalTitleLabel for=NewProposalTitle>Title</label>',
+            '        <label class=NewProposalTitleLabel for=NewProposalTitle translate=true>Title</label>',
             '        <div class=Title>',
             '            <input class=TitleInput id=NewProposalTitle',
             '                onclick=startEditingNewProposal onblur=handleEditBlur oninput=onInput onkeyup=onNewProposalKey',
             '                placeholder="I suggest..." aria-required=true />',
             '        </div>',
-            '        <label class=NewProposalDetailLabel for=NewProposalDetail>Detail</label>',
+            '        <label class=NewProposalDetailLabel for=NewProposalDetail translate=true>Detail</label>',
             //      Use focus-handler, because screen-reader cannot focus this textarea with click-handler
             //      Attaching click-handler to parent-div also works
             '        <div class=Detail>',
@@ -1517,7 +1522,7 @@
             '               onfocus=startEditingNewProposal onblur=handleEditBlur oninput=onInput' ,
             '                placeholder="More details of my suggestion..." aria-required=true ></textarea>',
             '        </div>',
-            '        <label class=NewProposalReasonLabel for=NewProposalInitialReasonInput1> Supporting Reasons </label>',
+            '        <label class=NewProposalReasonLabel for=NewProposalInitialReasonInput1 translate=true> Supporting Reasons </label>',
             '        <div class=NewProposalInitialReasons>',
             '            <div class=NewProposalInitialReasonDiv>',
             '                <textarea class=NewProposalInitialReasonInput id=NewProposalInitialReasonInput1',
@@ -1536,14 +1541,14 @@
             '            </div>',
             '        </div>',
             '        <div class=TitleAndDetailEditButtons>',
-            '            <button type=button class=TitleAndDetailSaveButton onclick=handleSaveNewProposal> Save </button>',
+            '            <button type=button class=TitleAndDetailSaveButton onclick=handleSaveNewProposal translate=true> Save </button>',
             '        </div>',
             '        <div class="Message TitleAndDetailMessage" id=newProposalMessage aria-live=polite></div>' ,
             '    </div>',
             // Proposals
             '    <div class=Proposals id=Proposals></div>',
             '    <div class=MoreProposalsWrap>',
-            '        <button id=MoreProposals onclick=clickMoreProposals aria-live=polite> More proposals </button>',
+            '        <button id=MoreProposals onclick=clickMoreProposals aria-live=polite translate=true> More proposals </button>',
             '    </div>',
             '   <a id=doneLinkForParticipants class=doneLinkForParticipants><div> This step is done. Go to next step... </div></a> ',
             // Admin change history
@@ -1559,7 +1564,6 @@
     // Set all data.
         RequestForProposalsDisplay.prototype.
     setAllData = function( reqPropData ){
-
         // Set proposals data. No need to create/update proposal display here, because dataUpdated() will do it.
         this.reqPropData = reqPropData;
 
@@ -1586,7 +1590,6 @@
     // Update html from data.
         RequestForProposalsDisplay.prototype.
     dataUpdated = function( retrieveReasons=false, addProposalFirst=false ){
-
         document.title = SITE_TITLE + ': Request for Proposals: ' + this.reqPropData.request.title;
 
         // Set request-message content
@@ -1728,6 +1731,8 @@
                 matchesDiv.appendChild( html('a').class('matchLink').children(matchDiv).build() );
             }
         }
+
+        translateScreen( this.getSubElement('RequestForProposals') );
 
         this.colorNextInput();  // Update input field highlights.
     };
@@ -2521,7 +2526,7 @@
             // Last change
             let lastChange = adminHistory.reduce( (agg, c) => (agg['time'] < c['time'])? c : agg , {time:0} );
             let lastChangeText = ( lastChange && lastChange['time'] )?  toLocalDateTimeString(lastChange['time']) + ' &nbsp; ' + lastChange['text']  :  '';
-            divAdminHistoryLast.innerHTML = 'Last admin change: ' + lastChangeText;
+            divAdminHistoryLast.innerHTML = '<span translate=true>Last admin change</span>: ' + lastChangeText;
             // All changes
             let changesDescending = adminHistory.sort( (a, b) => b['time'] - a['time'] );
             let changeDivs = changesDescending.map(  c  =>  html('div').class('change').innerHtml( toLocalDateTimeString(c['time']) + ' &nbsp; ' + c['text'] ).build()  );

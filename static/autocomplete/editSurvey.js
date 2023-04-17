@@ -11,10 +11,10 @@
         this.createFromHtml( displayId, '\n\n' + [
             '<div class=Answer id=Answer>',
             '   <div class=AnswerEdit>' , 
-            '       <label for=AnswerContentInput> Suggested Answer </label>' ,
+            '       <label for=AnswerContentInput translate=true> Suggested Answer </label>' ,
             '       <input class=AnswerContentInput id=AnswerContentInput placeholder="" ' ,
             '           onblur=handleEditAnswerBlur oninput=handleEditAnswerInput onkeydown=handleAnswerKey />' ,
-            '       <label class=AnswerReasonLabel for=AnswerReasonInput> Reason </label>' ,
+            '       <label class=AnswerReasonLabel for=AnswerReasonInput translate=true> Reason </label>' ,
             '       <textarea class=AnswerReasonInput id=AnswerReasonInput placeholder="" ' ,
             '           onblur=handleEditAnswerBlur oninput=handleEditAnswerInput onkeydown=handleReasonKey></textarea>' ,
             '       <div class="Message AnswerEditMessage" id=AnswerEditMessage aria-live=polite></div>' ,
@@ -55,6 +55,8 @@
         setTimeout( function(){
             thisCopy.fitAnswer(); 
         } , 100 );
+
+        translateScreen( this.getSubElement('Answer') );  // Answers seem to be re-updated after top-level translation, so need re-translation
     };
 
 
@@ -332,8 +334,8 @@
         this.createFromHtml( questionId, '\n\n' + [
             '<div class=Question id=Question>',
             // Question
-            '    <div class=QuestionEdit>', 
-            '        <label for=QuestionPosition id=QuestionPositionLabel> Question </label>',
+            '    <div class=QuestionEdit id=QuestionEdit>', 
+            '        <label for=QuestionPosition id=QuestionPositionLabel translate=true> Question </label>',
             '        <input type=number min=1 max=1000 class=QuestionPositionInput id=QuestionPositionInput ',
             '            required oninput=handlePositionInput />',
             '        <textarea class=QuestionEditInput id=QuestionContentInput placeholder="" ',
@@ -344,7 +346,7 @@
             // Answers
             '    <div class=Answers id=Answers></div>',
             '    <div class=NewAnswer>', 
-            '        <label for=NewAnswerInput> Suggest Answer </label>',
+            '        <label for=NewAnswerInput translate=true> Suggest Answer </label>',
             '        <textarea class=NewAnswerInput id=NewAnswerInput placeholder="" ',
             '            oninput=handleNewAnswerInput></textarea>',
             '    </div>',
@@ -775,34 +777,34 @@
         ElementWrap.call( this );  // Inherit member-data
         
         this.createFromHtml( surveyId, '\n\n' + [
-            '<h1 class=title> Edit Survey </h1>',
+            '<h1 class=title translate=true> Edit Survey </h1>',
             '<div class=Survey id=Survey>',
-            '    <div class="Message SurveyLinkMessage" id=SurveyLinkMessage aria-live=polite></div>',
-            '    <div class=loginStatus id=loginStatus></div>',
-            '    <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
+            '    <div class="Message SurveyLinkMessage" id=SurveyLinkMessage aria-live=polite translate=true></div>',
+            '    <div class=loginStatus id=loginStatus translate=true></div>',
+            '    <div class=hideReasonsStatus id=hideReasonsStatus translate=true></div>' ,
             '    <div> ' ,
-            '        <button class=freezeButton id=freezeButton onclick=clickFreezeButton></button>' ,
-            '        <div class="Message freezeMessage" id=freezeMessage></div>' ,
+            '        <button class=freezeButton id=freezeButton onclick=clickFreezeButton translate=true></button>' ,
+            '        <div class="Message freezeMessage" id=freezeMessage translate=true></div>' ,
             '    </div> ' ,
             '    <div class=SurveyEdit>', 
-            '        <label for=SurveyTitleInput> Survey title </label>',
-            '        <input type=text class="SurveyEditInput SurveyTitleInput" id=SurveyTitleInput placeholder="" ',
+            '        <label for=SurveyTitleInput translate=true> Survey title </label>',
+            '        <input type=text class="SurveyEditInput SurveyTitleInput" id=SurveyTitleInput placeholder="title..." ',
             '            onkeydown=handleEditTitleKey oninput=handleEditTitleInput onblur=handleEditSurveySave></textarea>',
-            '        <label for=SurveyIntroInput> Survey introduction </label>',
-            '        <textarea class=SurveyEditInput id=SurveyIntroInput placeholder="" ',
+            '        <label for=SurveyIntroInput translate=true> Survey introduction </label>',
+            '        <textarea class=SurveyEditInput id=SurveyIntroInput placeholder="introduction..." ',
             '            onkeydown=handleEditIntroKey oninput=handleEditIntroInput onblur=handleEditSurveySave></textarea>',
             '        <div class="Message SurveyEditMessage" id=SurveyEditMessage aria-live=polite></div> ',
             '    </div>',
-            '    <h2> Questions </h2>' ,
-            '    <p> Add survey questions here. </p>' ,
-            '    <p> You can suggest answers here.  Participants will also be able to enter any answer they want, or copy each other\'s answers. </p>' ,
+            '    <h2 translate=true> Questions </h2>' ,
+            '    <p translate=true> Add survey questions here. </p>' ,
+            '    <p translate=true> You can suggest answers here.  Participants will also be able to enter any answer they want, or copy each other\'s answers. </p>' ,
             '    <div class=Questions id=Questions></div>',
             '    <div class=NewQuestion>', 
-            '        <label for=NewQuestionInput> New question </label>',
+            '        <label for=NewQuestionInput translate=true> New question </label>',
             '        <textarea class=NewQuestionInput id=NewQuestionInput placeholder="" ',
             '            oninput=handleNewQuestionInput></textarea>',
             '    </div>',
-            '    <div class=SurveyViewButtonBar><button class=SurveyViewButton id=SurveyViewButton onclick=onViewSurvey> View Survey </button></div>' ,
+            '    <div class=SurveyViewButtonBar><button class=SurveyViewButton id=SurveyViewButton onclick=onViewSurvey translate=true> View Survey </button></div>' ,
             '</div>'
         ].join('\n') );
     }
@@ -855,11 +857,9 @@
         this.setAttribute( 'Survey', 'hidereasons', (this.survey.hideReasons ? TRUE : null) );
 
         // Set title
-        var titleInputContent = ( this.titleInput )?  this.titleInput  :  this.survey.title;
-        this.setProperty( 'SurveyTitleInput', 'value', titleInputContent );
+        this.setProperty( 'SurveyTitleInput', 'defaultValue', this.survey.title );
         // Set introduction
-        var introInputContent = ( this.introInput )?  this.introInput  :  this.survey.introduction;
-        this.setProperty( 'SurveyIntroInput', 'value', introInputContent );
+        this.setProperty( 'SurveyIntroInput', 'defaultValue', this.survey.introduction );
         var surveyIntroInput = this.getSubElement('SurveyIntroInput');
         setTimeout(  function(){ fitTextAreaToText( surveyIntroInput ); } , 100  );
 
@@ -873,6 +873,8 @@
         // while skipping insert index past the moving question's target index?
         // Simpler than using pre/next links, and saves equal work?
         // No work done for elements outside range of source to target index.
+
+        translateScreen();
     };
 
         SurveyEditDisplay.prototype.
@@ -1112,62 +1114,44 @@
 
         if ( this.topDisp.linkKey.loginRequired  &&  ! requireLogin() ){  return false;  }
 
-        var titleInput = this.getSubElement('SurveyTitleInput');
-        var introInput = this.getSubElement('SurveyIntroInput');
+        let titleInput = this.getSubElement('SurveyTitleInput');
+        let introInput = this.getSubElement('SurveyIntroInput');
         if ( (titleInput.value == this.survey.title) && (introInput.value == this.survey.introduction) ){  return;  }
 
         // save via ajax
         this.editMessage = { color:GREY, text:'Saving changes...' };
         this.surveyIntroValidity = '';
         this.dataUpdated();
-        var sendData = { 
+        let sendData = { 
             crumb:crumb , fingerprint:fingerprint ,
             linkKey:this.topDisp.linkKey.id , 
             title:titleInput.value ,
             introduction:introInput.value
         };
-        var url = '/autocomplete/editSurvey';
-        var thisCopy = this;
+        let url = '/autocomplete/editSurvey';
+        let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
-            if ( error ){
-                var message = 'Failed to save survey';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.surveyIntroValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.success ){
+            // Success
+            if ( ! error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.editMessage = { color:GREEN, text:'Saved survey', ms:7000 };
                 thisCopy.surveyIntroValidity = '';
                 thisCopy.dataUpdated();
-                // update data
+                // Update data
                 thisCopy.survey.title = receiveData.survey.title;
                 thisCopy.survey.introduction = receiveData.survey.introduction;
                 thisCopy.dataUpdated();
+                return;
             }
-            else if ( receiveData  &&  receiveData.message == TOO_SHORT ){  
-                var message = 'Survey is too short';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.surveyIntroValidity = message;
-                thisCopy.dataUpdated();
+            // Show error message
+            let message = 'Failed to save survey';
+            if ( receiveData ){
+                if ( receiveData.message == TOO_SHORT ){  message = 'Survey is too short';  }
+                else if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit survey created by someone else';  }
+                else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit survey that already has answers';  }
             }
-            else if ( receiveData  &&  receiveData.message == NOT_OWNER ){  
-                var message = 'Cannot edit survey created by someone else';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.surveyIntroValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else if ( receiveData  &&  receiveData.message == HAS_RESPONSES ){  
-                var message = 'Cannot edit survey that already has answers';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.surveyIntroValidity = message;
-                thisCopy.dataUpdated();
-            }
-            else {
-                var message = 'Failed to save survey';
-                thisCopy.editMessage = { color:RED, text:message };
-                thisCopy.surveyIntroValidity = message;
-                thisCopy.dataUpdated();
-            }
+            thisCopy.editMessage = { color:RED, text:message };
+            thisCopy.surveyIntroValidity = message;
+            thisCopy.dataUpdated();
         } );
     };
 

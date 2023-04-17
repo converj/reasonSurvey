@@ -13,6 +13,8 @@ import text
 const = Constants()
 const.COOKIE_NAME = 'C'
 const.COOKIE_NAME_FOR_JAVASCRIPT = 'J'
+const.COOKIE_NAME_FOR_LOGIN = 'L'
+const.COOKIE_NAME_FOR_LANGUAGE = 'A'
 
 log = False
 

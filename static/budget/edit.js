@@ -244,40 +244,40 @@
         ElementWrap.call( this );  // Inherit member data
 
         this.createFromHtml( budgetId, '\n\n' + [
-            '<h1 class=title> Edit Budget </h1>' ,
+            '<h1 class=title translate=true> Edit Budget </h1>' ,
             '   <div class=Budget id=Budget>' ,
             '       <div class="Message BudgetLinkMessage" id=BudgetLinkMessage aria-live=polite></div>' ,
-            '       <div class=loginStatus id=loginStatus></div>' ,
+            '       <div class=loginStatus id=loginStatus translate=true></div>' ,
             '       <div class=hideReasonsStatus id=hideReasonsStatus></div>' ,
             '       <div>' ,
-            '           <button class=freezeButton id=freezeButton onclick=clickFreezeButton></button>' ,
-            '           <div class="Message freezeMessage" id=freezeMessage></div>' ,
+            '           <button class=freezeButton id=freezeButton onclick=clickFreezeButton translate=true></button>' ,
+            '           <div class="Message freezeMessage" id=freezeMessage translate=true></div>' ,
             '       </div>' ,
 
             '       <div class=BudgetEdit>' , 
-            '           <label for=BudgetTitleInput> Budget Title </label>' ,
+            '           <label for=BudgetTitleInput translate=true> Budget Title </label>' ,
             '           <input type=text class="BudgetEditInput BudgetEditTitle" id=BudgetTitleInput placeholder="" ' ,
             '               onkeydown=handleEditTitleKey oninput=handleEditTitleInput onblur=handleEditBudgetSave />' ,
-            '           <label for=BudgetIntroInput> Introduction </label>' ,
+            '           <label for=BudgetIntroInput translate=true> Introduction </label>' ,
             '           <textarea class=BudgetEditInput id=BudgetIntroInput placeholder="" ' ,
             '               onkeydown=handleEditIntroKey oninput=handleEditIntroInput onblur=handleEditBudgetSave></textarea>' ,
-            '           <label for=BudgetTotalInput> Budget total amount </label>' ,
+            '           <label for=BudgetTotalInput translate=true> Budget total amount </label>' ,
             '           <input type=number min=0 step=any class=BudgetEditInput id=BudgetTotalInput placeholder="100" ' ,
             '               aria-required=true  value=100 ' ,
             '               onkeydown=handleEditTotalKey oninput=handleEditTotalInput onblur=handleEditBudgetSave />' ,
             '           <div class="Message BudgetEditMessage" id=BudgetEditMessage aria-live=polite></div> ' ,
             '       </div>' ,
 
-            '       <h2> Budget items </h2>' ,
-            '       <p> Users can choose from the budget-items that you suggest here, or add their own budget-items. </p>' ,
+            '       <h2 translate=true> Budget items </h2>' ,
+            '       <p translate=true> Users can choose from the budget-items that you suggest here, or add their own budget-items. </p>' ,
             '       <div class=Slices id=Slices></div>' ,
             '       <div class=NewSlice>' ,
-            '           <h3> New budget item </h3>' ,
-            '           <label for=NewSliceTitleInput> Title </label>' ,
+            '           <h3 translate=true> New budget item </h3>' ,
+            '           <label for=NewSliceTitleInput translate=true> Title </label>' ,
             '           <input type=text class=NewSliceTitleInput id=NewSliceTitleInput placeholder="" ' ,
             '               oninput=handleNewSliceInput>' ,
             '       </div>' ,
-            '       <div class=BudgetViewButtonBar><button class=BudgetViewButton id=BudgetViewButton onclick=onViewBudget> View Budget </button></div>' ,
+            '       <div class=BudgetViewButtonBar><button class=BudgetViewButton id=BudgetViewButton onclick=onViewBudget translate=true> View Budget </button></div>' ,
             '   </div>'
         ].join('\n') );
     }
@@ -352,6 +352,8 @@
             if ( ! slice.data ){  this.slices[s] = null;  }
         }
         this.slices = this.slices.filter(s => s);  // Remove nulls
+
+        translateScreen();
     };
 
 
