@@ -95,15 +95,15 @@ $(document).ready( function(){
             updateWaitingLogin( updateDisplayData );
         });
 
-        // Initialize translation
+        // Initialize language
         initializeLanguage();
         showCurrentLanguage();
         document.getElementById('languageLinkSelect').oninput =  ( event ) => {
-                let newLangCode = event.target.value;
-                currentLanguageCode = newLangCode;
-                setFragmentFields( {lang:newLangCode} );
-                document.cookie = 'A=' + newLangCode;  // Only change cookie when user explicitly chooses language from select-list, not from URL-fragment
-                translateScreen();
+            let newLangCode = event.target.value;
+            currentLanguageCode = newLangCode;
+            setFragmentFields( {lang:newLangCode} );
+            document.cookie = 'A=' + newLangCode;  // Only change cookie when user explicitly chooses language from select-list, not from URL-fragment
+            translateScreen();
         };
 
     });
@@ -156,6 +156,7 @@ initializeLanguage( ){
     if ( fragKeyToValue.lang ){
         document.getElementById('languageLinkSelect').value = fragKeyToValue.lang;
         currentLanguageCode = fragKeyToValue.lang;
+        // Only user-chosen language sticks, not language from link provided by other users
         translateScreen();
     }
     // Set language from cookie, setting language URL-fragment field
@@ -168,6 +169,7 @@ initializeLanguage( ){
             translateScreen();
         }
     }
+
 }
 
 window.onhashchange = function(){
@@ -515,25 +517,24 @@ toggleMenu( showMenu ){
 
 // Back links go back from proposal to enclosing request.
 jQuery('#menuItemLinkBackProposals').click(  function(e){ e.preventDefault(); setFragmentFields( {page:FRAG_PAGE_ID_REQUEST} ); }  );
-jQuery('#menuItemLinkBackResults').click(  function(e){
-            e.preventDefault();
-            let fragKeyToValue = parseFragment();
-            if ( fragKeyToValue.page == FRAG_PAGE_QUESTION_RESULTS ){
-                setFragmentFields( {page:FRAG_PAGE_AUTOCOMPLETE_RESULTS} );
-            }
-            else if ( fragKeyToValue.page == FRAG_PAGE_BUDGET_SLICE_RESULT ){
-                setFragmentFields( {page:FRAG_PAGE_BUDGET_RESULT} );
-            }
-            else {
-                return false;
-            }
+jQuery('#menuItemLinkBackResults').click(  e => {
+    e.preventDefault();
+    let fragKeyToValue = parseFragment();
+    if ( fragKeyToValue.page == FRAG_PAGE_QUESTION_RESULTS ){
+        setFragmentFields( {page:FRAG_PAGE_AUTOCOMPLETE_RESULTS} );
+    }
+    else if ( fragKeyToValue.page == FRAG_PAGE_BUDGET_SLICE_RESULT ){
+        setFragmentFields( {page:FRAG_PAGE_BUDGET_RESULT} );
+    }
+    else {
+        return false;
+    }
 }  );
 jQuery('#menuItemLinkBackProposals').keyup( enterToClick );
 jQuery('#menuItemLinkBackResults').keyup( enterToClick );
 
 document.getElementById('menuLink').onclick = function(){  toggleMenu();  };
 jQuery('.menuItemLink').keyup( enterToClick );
-
 
 
 // Content-cover click always closes menu.

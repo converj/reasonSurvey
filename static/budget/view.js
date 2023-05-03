@@ -101,11 +101,11 @@
             '                   onfocus=handleFocus onclick=handleSizeClick onkeydown=handleSizeKey oninput=handleSizeInput onblur=handleSizeBlur />' ,
             '               <div class=Message id=messageForSize aria-live=polite></div>' ,
             '               <div class=ReasonForResize id=ReasonForBigger onclick=handleSizeBigger>' ,
-            '                   <div class=SuggestionLabel> Larger reason: </div>' ,
+            '                   <div class=SuggestionLabel><span translate=true>Larger reason</span>: </div>' ,
             '                   <div class=SuggestionContent id=SuggestionContentBigger></div>' ,
             '               </div>' ,
             '               <div class=ReasonForResize id=ReasonForSmaller onclick=handleSizeSmaller>' ,
-            '                   <div class=SuggestionLabel> Smaller reason: </div>' ,
+            '                   <div class=SuggestionLabel><span translate=true>Smaller reason</span>: </div>' ,
             '                   <div class=SuggestionContent id=SuggestionContentSmaller></div>' ,
             '               </div>' ,
             '           </div>' ,
@@ -407,7 +407,7 @@
                     // Update size fields
                     thisCopy.slice.size = receiveData.vote.slices[ thisCopy.slice.id ];
                     thisCopy.topDisp.sliceSizeChanged( receiveData.vote.total );
-                    thisCopy.messageForSize = { text:'Total allocated: ' + receiveData.vote.total + '%', color:GREEN, ms:5000 };
+                    thisCopy.messageForSize = { text:translate('Total allocated') + ': ' + receiveData.vote.total + '%', color:GREEN, ms:5000 };
                 }
             }
             else {

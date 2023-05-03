@@ -33,6 +33,9 @@ translateScreen( root = document ){
     for ( let t = 0;  t < translatableDivs.length;  ++t ){
         let translatableDiv = translatableDivs[ t ];
         // Use textId attribute as lookup ID for translations, defaulting to original english text as the ID
+        // Caching the english in textId is necessary to re-translate from english when changing between non-english languages,
+        // since innerHtml no longer has the source english
+        // Caching the textId ignores intentional innerHtml changes, so require all callers use setInnerHtml() or showMessage() to set textId
         let textId = translatableDiv.getAttribute('textId');
         if ( ! textId ){
             textId = translatableDiv.innerHTML;
@@ -41,7 +44,6 @@ translateScreen( root = document ){
         // Get translated text, and substitute it into HTML element
         let translatedText = translate( textId );
         if ( translatedText ){  translatableDiv.innerHTML = translatedText;  }
-        translatableDiv.setAttribute( 'translated', currentLanguageCode );
     }
 
     translatePlaceholders( root );
@@ -427,11 +429,20 @@ ElementWrap.prototype.setStyle = function( subElementId, styleVarName, value ){
 };
 
 ElementWrap.prototype.setInnerHtml = function( subElementId, html ){
-    var subelement = this.getSubElement( subElementId );
+    let subelement = this.getSubElement( subElementId );
     if ( subelement.innerHTML === html ){  return;  }
     if ( html === undefined  ||  html === null ){  html = '';  }
-    subelement.innerHTML = html;
+    setInnerHtml( subelement, html );
 };
+
+// Sets HTML and textId for translation
+    function
+setInnerHtml( div, html ){
+    div.innerHTML = html;
+    if ( (div.getAttribute('translate') == 'true') || div.getAttribute('textId') ){
+        div.setAttribute( 'textId', html );
+    }
+}
 
 ElementWrap.prototype.setClass = function( subElementId, className, isClassTrue ){
     var subelement = this.getSubElement( subElementId );
@@ -525,7 +536,7 @@ showMessage( text, color, disappearMs, element, textDefault ){
     }
 
     // Set text
-    element.innerHTML = text;
+    setInnerHtml( element, text );
     element.style.color = color;
 
     // Show message
@@ -544,7 +555,7 @@ showMessage( text, color, disappearMs, element, textDefault ){
     function
 clearMessage( element, textDefault ){
     if ( textDefault ){
-        element.innerHTML = textDefault;
+        setInnerHtml( element, textDefault );
         element.style.color = null;
     }
     else {
@@ -564,7 +575,7 @@ hideMessage( element ){
     // Could change innerHTML without delay, because transitioning line-height is enough prevent visual jerk
     // Empty the inner-html, to allow re-showing the same message
     element.hideTimer = setTimeout( function(){
-        element.innerHTML = '';
+        setInnerHtml( element, '' );
     } , MESSAGE_TRANSITION_MS );
 }
 
@@ -846,8 +857,8 @@ showLoggedInControls( ){
     elementWithId('menuItemLogin').setAttribute('show', 'false');
     elementWithId('menuItemLogout').setAttribute('show', null);
 
-    var city = loginCity();
-    elementWithId('menuItemCity').innerHTML = city;
+    let city = loginCity();
+    setInnerHtml( elementWithId('menuItemCity'), city );
     elementWithId('menuItemCity').setAttribute( 'show' , (city ? null : 'false') );
 }
 

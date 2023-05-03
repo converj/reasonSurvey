@@ -10,10 +10,10 @@
         // Create html element, store it in this.element
         this.createFromHtml( displayId, '\n\n' + [
             '   <div class=Slice id=Slice>' ,
-            '       <label for=SliceTitleInput> Budget Item </label>' ,
+            '       <label for=SliceTitleInput translate=true> Budget Item </label>' ,
             '       <input class=SliceTitleInput id=SliceTitleInput placeholder="" ' ,
             '           onblur=handleEditTitleBlur oninput=handleEditInput onkeydown=handleTitleKey />' ,
-            '       <label class=SliceReasonLabel for=SliceReasonInput> Reason </label>' ,
+            '       <label class=SliceReasonLabel for=SliceReasonInput translate=true> Reason </label>' ,
             '       <textarea class=SliceReasonInput id=SliceReasonInput placeholder="" ' ,
             '           onblur=handleEditReasonBlur oninput=handleEditInput onkeydown=handleReasonKey></textarea>' ,
             '       <button class=SliceDeleteButton title="delete" onmousedown=handleSliceDelete> X </button>' ,

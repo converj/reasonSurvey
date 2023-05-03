@@ -21,7 +21,7 @@
 
         // Clear messsages
         newBudgetResetValidity();
-        newBudgetSubmitMessage.innerHTML = '';
+        showMessage( '', GREY, null, newBudgetSubmitMessage );
 
         // Show experimental options
         let experimentalInputsDiv = document.getElementById('experimentalInputsForBudget');

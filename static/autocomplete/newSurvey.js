@@ -22,7 +22,7 @@
         newSurveyIntroInput.setCustomValidity('');
         loginRequiredForAutocompleteCheckbox.checked = false;
         loginRequiredForAutocompleteCheckbox.setCustomValidity('');
-        newSurveySubmitMessage.innerHTML = '';
+        showMessage( '', GREY, null, newSurveySubmitMessage );
 
         // Show experimental options
         let experimentalInputsDiv = document.getElementById('experimentalInputsForAutocomplete');

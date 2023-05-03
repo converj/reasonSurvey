@@ -90,7 +90,7 @@
 #pageAutocompleteResults                      .AnswerCell {  display:table-cell;  border:solid 1px #dddddd;  padding:10px;  }
 #pageAutocompleteResults                      .AnswerCountBarBack {  width:100px;  }
 #pageAutocompleteResults                          .AnswerCountBar {  background-color:#8888aa;  }
-#pageAutocompleteResults                      .AnswerCount {  width:50px;  text-align:right;  }
+#pageAutocompleteResults                      .AnswerCount {  width:80px;  text-align:right;  }
 #pageAutocompleteResults                      .AnswerReasons {  display:table;  margin-left:126px;  width:calc(100% - 129px);  border-collapse:collapse;  }
 #pageAutocompleteResults                          .AnswerReason {  display:table-row;  }
 #pageAutocompleteResults                  [hidereasons='true']  .ReasonsRow {  display:none;  }

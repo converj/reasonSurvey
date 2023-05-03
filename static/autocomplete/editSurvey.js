@@ -395,6 +395,8 @@
             if ( answerDisplay.answer.id == null ){  answerDisplay.dataUpdated();  }
         }
         this.setProperty( 'NewAnswerInput', 'disabled', ! this.isQuestionValid() );
+
+        translateScreen( this.getSubElement('Question') );  // New question input appears dynamically, needs translation
     };
     
         QuestionEditDisplay.prototype.
@@ -664,6 +666,8 @@
 
         QuestionEditDisplay.prototype.
     retrieveAnswers = function( ){
+
+        if ( ! this.question  ||  ! this.question.id ){  return;  }
 
         // answers:series[answer] , modified
         var questionData = this.question;

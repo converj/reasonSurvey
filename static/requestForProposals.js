@@ -420,7 +420,6 @@
         this.match |= displayHighlightedContent( storedTextToHtml(this.data.detail), this.highlightWords, this.getSubElement('Detail') );
 
         translateScreen( this.getSubElement('TitleAndDetail') );
-
     };
 
 
@@ -702,7 +701,7 @@
             '       <div class=ProposalExpandBottomRelative>' ,   // relative-absolute positioning for enclosed elements
             '           <div class=ProposalExpandBottomWrap>' ,  // crop shadow overflow
             '               <div class=ProposalExpandBottom onclick=handleExpandSeparatePage>' ,  // generates shadow, has hover-highlight and background arrows
-            '                   <button id=expandButton> More reasons </button>' ,
+            '                   <button id=expandButton translate=true> More reasons </button>' ,
             '               </div>' ,
             '           </div>' ,
             '       </div>' ,
@@ -900,7 +899,6 @@
         this.setAttribute( 'Proposal', 'collapse', this.collapse );
 
         translateScreen( this.getSubElement('Proposal') );
-
     };
 
 

@@ -30,7 +30,7 @@
                         ).build() ,
                         html('div').id('Message').class('Message').build() ,
                         html('div').id('Reasons').build() ,
-                        html('button').id('SliceResultsButton').innerHtml('More reasons')
+                        html('button').id('SliceResultsButton').innerHtml('More reasons').attribute('translate','true')
                             .attribute('onclick','onSliceResultsClick').build()
                 ).build()
             ).build()
