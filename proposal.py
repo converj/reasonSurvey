@@ -16,7 +16,6 @@ const.MAX_RETRY = 3
 const.MIN_REAGGREGATE_DELAY_SEC = 60
 
 
-# Parent key: RequestForProposals?   No, use KeyProperty instead.
 class Proposal( ndb.Model ):
     requestId = ndb.StringProperty()   # May be null
 

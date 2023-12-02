@@ -4,7 +4,9 @@ import configuration as baseConf  # Import from parent directory requires that t
 const = baseConf.const   # Callers can import only this file and get both base and local constants via "const" variable
 
 const.minLengthSurveyIntro = 30
+const.maxLengthSurveyIntro = 10000
 const.minLengthQuestion = 30
+const.maxLengthQuestion = 3000
 const.minLengthAnswer = 1
 
 const.SURVEY_CLASS_NAME = 'Survey'

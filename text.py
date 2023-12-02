@@ -27,7 +27,6 @@ def isUnicode( text ):
     return isinstance( text, unicode )  if ( conf.pythonVersion <= 2 )  else isinstance( text, str )
 
 
-
 # Loggable object that can build from variable-arguments-list, and flexibly format unicode values without crashing
 # More expensive than logging tuples, but more readable.  Equally encoding-safe & argument-matching-safe.
 # Retains file/line info, and only constructs log-message-string when needed, unlike a logging wrapper function
@@ -45,14 +44,17 @@ class LogMessage( object ):
                 elif not parts:        parts += [ a, ' ' ]  # If string is the log-tag... print it plainly, with following space
                 else:                  parts += [ repr(a), ' ' ]   # parts+=['\'',a,'\' '] fails in python-3, because bytes cannot be concatenated by join()
             elif isUnicode( a ):
-                if isAscii( a ):
+                if ( a == u'' ):
+                    parts.append( u"'' " )
+                elif isAscii( a ):
                     if ( a[-1:] == '=' ):  parts.append( a )
                     elif not parts:        parts += [ a, ' ' ]
                     else:                  parts += [ repr(a), ' ' ]
                 else:
-                    parts += [ repr(a), '=utf8:\'', utf8(a), '\' ' ]
+                    parts += [ repr(a), '=utf8:\'', toUtf8(a), '\' ' ]
             else:
                 parts += [ repr(a), ' ' ]
+        if None in parts:  raise ValueError( 'found None in parts={}'.format(parts) )
         return ''.join( parts )
 
 

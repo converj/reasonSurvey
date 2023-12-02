@@ -10,6 +10,7 @@ from configuration import const as conf
 import httpServer
 from httpServer import app
 import linkKey
+from multi.survey import MultipleQuestionSurvey
 import proposal
 import requestForProposals
 import user
@@ -61,7 +62,7 @@ def recent( ):
                 recentDestSummary['detail'] = detail  if detail  else ''
                 recentDestSummary['frozen'] = r.freezeUserInput
                 recentDestSummary['freezeNewProposals'] = ( r.key.kind() == requestForProposals.RequestForProposals.__name__ ) and r.freezeNewProposals
-                recentDestSummary['hideReasons'] = r.hideReasons
+                recentDestSummary['hideReasons'] = False  if ( r.key.kind() == MultipleQuestionSurvey.__name__ )  else r.hideReasons
                 recentDestSummaries.append( recentDestSummary )
 
             logging.debug( 'getRecent.GetRecent() recentDestSummaries=' + str(recentDestSummaries) )

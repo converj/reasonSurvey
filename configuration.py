@@ -19,10 +19,13 @@ const.pythonVersion = sys.version_info[0]
 const.isDev = os.path.isfile('configurationDev.py')  or  ( not os.getenv('GAE_ENV', '').startswith('standard') )
 if const.isDev:  import configurationDev
 
-if const.isDev:  logging.getLogger().setLevel( logging.DEBUG )
-else:            logging.getLogger().setLevel( logging.WARNING )
+if const.isDev:
+    logging.basicConfig( stream=sys.stdout, level=logging.DEBUG, format='\n%(filename)s %(funcName)s():  %(message)s' )
+else:
+    logging.getLogger().setLevel( logging.WARNING )
 
 const.SITE_NAME = 'Converj'
+const.SITE_URL = 'https://converj.net'   # Public website, since current-website can be referenced as "/"
 
 const.COOKIE_FIELD_SIGNATURE = 'signature'
 const.COOKIE_FIELD_BROWSER_ID = 'identity'
@@ -50,13 +53,20 @@ const.VOTER_ID_LOGIN_REQUEST_ID_LENGTH = 30
 const.minLengthRequest = 30
 const.minLengthProposal = 30
 const.minLengthReason = 20
+const.maxLengthReason = 2000
 
 const.recentRequestsMax = 10
 
 const.MAX_TOP_REASONS = 6
 
 # HTTP/JSON request response codes
+const.TOO_MANY_QUESTIONS = 'TOO_MANY_QUESTIONS'
+const.TOO_MANY_OPTIONS = 'TOO_MANY_OPTIONS'
+const.WRONG_TYPE = 'WRONG_TYPE'
+const.UNCHANGED = 'UNCHANGED'
+const.OUT_OF_RANGE = 'OUT_OF_RANGE'
 const.TOO_SHORT = 'TOO_SHORT'
+const.TOO_LONG = 'TOO_LONG'
 const.REASON_TOO_SHORT = 'REASON_TOO_SHORT'
 const.DUPLICATE = 'DUPLICATE'
 const.BAD_CRUMB = 'BAD_CRUMB'

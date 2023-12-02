@@ -16,19 +16,32 @@ def medianKey( keyToCount ):
     # Sum half the counts
     sumCount = sum(  [ count  for key, count in keyToCount.items() ]  )
     halfSumCount = float(sumCount) / 2.0
-    logging.debug( 'medianKey() halfSumCount=' + str(halfSumCount) + ' keyToCount=' + str(keyToCount) )
+    logging.debug( 'halfSumCount={} keyToCount={}'.format(halfSumCount, keyToCount) )
     # Return key matching half the count, ordered by key as integer
     runningSumCount = 0
-    keysSorted = sorted( keyToCount.keys() , key=int )
-    for k in range(len(keysSorted)):
-        key = keysSorted[k]
-        keyNext = keysSorted[k+1]  if (k+1 < len(keysSorted))  else None
+    keysSorted = sorted( [k for k,c in keyToCount.items() if c] , key=int )  # Filter zero-counts, and sort by key's numeric value
+    logging.debug( 'keysSorted={}'.format(keysSorted) )
+    for k in range( len(keysSorted) ):
+        key = keysSorted[ k ]
+        keyNext = keysSorted[ k+1 ]  if ( k+1 < len(keysSorted) )  else None
         count = keyToCount[ key ]
         runningSumCount += count
         # If halfSumCount falls between key-count and next-key-count... average keys
         if ( halfSumCount < runningSumCount ) or ( keyNext is None ):  return float(key)
         elif ( halfSumCount == runningSumCount ):  return average( [float(key), float(keyNext)] )
     return None
+
+# Assumes that keys are integers, but may return float between keys
+def averageKey( keyToCount ):
+    if keyToCount is None:  return None
+    # Sum the counts
+    sumCount = sum( count  for key,count in keyToCount.items() )
+    if not sumCount:  return None
+    # Sum the count-weighed keys
+    weightedSumKeys = sum( count * int(key)  for key,count in keyToCount.items()  if count )  # Filter zero counts
+    logging.debug( 'sumCount={} weightedSumKeys={}'.format(sumCount, weightedSumKeys) )
+    # Return the weighted average
+    return weightedSumKeys / sumCount;
 
 def average( values ):
     return sum(values) / len(values)

@@ -5,7 +5,7 @@ const EDIT = 'edit';
 const TRUE = 'true';
 const FALSE = 'false';
 
-const EVENT_NAMES = ['click', 'focus', 'blur', 'keydown', 'keyup', 'paste', 'input', 'invalid', 'mousedown', 'mouseup'];
+const EVENT_NAMES = ['click', 'focus', 'blur', 'keydown', 'keyup', 'paste', 'input', 'invalid', 'mousedown', 'mouseup', 'toggle'];
 const RED = 'red';
 const BLACK = 'black';
 const GREEN = 'green';
@@ -23,13 +23,20 @@ const KEY_NAME_SPACE = ' '
 ///////////////////////////////////////////////////////////////////////////////////////
 // Localization
 
-
 // Apply a javascript translation function to all on-screen text that has class=translate
+// Use selection dropdown for language
+// Use URL-fragment (or subdomain) to set currentLanguageCode
+// Set/get currentLanguageCode in cookie
+// Discard translated attribute, because retranslation is necessary for dynamically populated content every time dataUpdated()
+// Translate dynamic message text in showMessage() -- more efficient and reliable than querying for message divs whenever a sub-display is updated
+
 let currentLanguageCode = 'en';
+const WARN_MISSING_TRANSLATIONS = true;
+
 
     function
 translateScreen( root = document ){
-    let translatableDivs = root.querySelectorAll( '[translate="true"]' );  // Retranslate always, because innerHTML can change after previous translation
+    let translatableDivs = root.querySelectorAll( '[translate="true"] , [translate="yes"]' );  // Retranslate always, because innerHTML can change after previous translation
     for ( let t = 0;  t < translatableDivs.length;  ++t ){
         let translatableDiv = translatableDivs[ t ];
         // Use textId attribute as lookup ID for translations, defaulting to original english text as the ID
@@ -47,6 +54,7 @@ translateScreen( root = document ){
     }
 
     translatePlaceholders( root );
+    translateTitles( root );
 }
 
     function
@@ -55,14 +63,34 @@ translatePlaceholders( root ){
     for ( let t = 0;  t < translatableDivs.length;  ++t ){
         let translatableDiv = translatableDivs[ t ];
         // Store original placeholder for retranslating in a different language
-        let placeholderId = translatableDiv.getAttribute('placeholderId');
+        let placeholderId = translatableDiv.getAttribute('placeholderTextId');
         if ( ! placeholderId ){
             placeholderId = translatableDiv.placeholder;
-            translatableDiv.setAttribute( 'placeholderId', placeholderId );
+            translatableDiv.setAttribute( 'placeholderTextId', placeholderId );
         }
         // Get translated text, and substitute it into HTML element
         let translatedText = translate( placeholderId );
         if ( translatedText ){  translatableDiv.placeholder = translatedText;  }
+    }
+}
+
+    function
+translateTitles( root ){  return translateProperties( root, 'title' );  }
+
+    function
+translateProperties( root, propertyName ){
+    let translatableDivs = root.querySelectorAll( '[' + propertyName + ']' );  // Elements that have propertyName
+    for ( let t = 0;  t < translatableDivs.length;  ++t ){
+        let translatableDiv = translatableDivs[ t ];
+        // Store original propertyName for retranslating in a different language
+        let propertyNameId = translatableDiv.getAttribute( 'data-' + propertyName + 'TextId' );
+        if ( ! propertyNameId ){
+            propertyNameId = translatableDiv[ propertyName ];
+            translatableDiv.setAttribute( 'data-' + propertyName + 'TextId', propertyNameId );
+        }
+        // Get translated text, and substitute it into HTML element
+        let translatedText = translate( propertyNameId );
+        if ( translatedText ){  translatableDiv[ propertyName ] = translatedText;  }
     }
 }
 
@@ -73,6 +101,7 @@ translate( englishText ){
     if ( ! englishText ){  return '';  }
     let translations = englishToTranslations[ englishText ];
     let translation = ( translations )?  translations[ currentLanguageCode ]  :  null;
+    if ( WARN_MISSING_TRANSLATIONS  &&  (! translation)  &&  (currentLanguageCode != 'en') ){  console.warn( 'Missing translation for englishText="' + englishText + '"' );  }
     return ( translation )?  translation  :  englishText;
 }
 
@@ -85,6 +114,13 @@ collapseWhitespace( text ){
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Data structures
+
+    function
+isEmpty( container ){  return ( container )?  ( Object.keys(container).length <= 0 )  :  true;  }
+
+    function
+last( sequence ){  return ( sequence )?  sequence[ sequence.length - 1 ]  :  null;  }
+
 
     function 
 incrementMapValue( map, key, increment ){
@@ -160,6 +196,11 @@ logOnScreenReplace( ...arguments ){
         elementJquery.slideToggle();
     }
 
+        function
+    isPartlyOffScreen( element ){
+        let bounds = element.getBoundingClientRect();
+        return ( bounds.top < 0 ) || ( window.innerHeight < bounds.bottom );
+    }
 
         function
     scrollToHtmlElement( htmlElement, margin=20 ){
@@ -415,7 +456,7 @@ ElementWrap.prototype.setRequiredMember = function( subElementId, varName, value
 };
 
 ElementWrap.prototype.setAttribute = function( subElementId, attributeName, value ){
-    var subelement = this.getSubElement( subElementId );
+    let subelement = this.getSubElement( subElementId );
     if ( subelement.getAttribute( attributeName ) === value ){  return;  }
     if ( value ){  subelement.setAttribute( attributeName, value );  }
     else {  subelement.removeAttribute( attributeName );  }
@@ -474,6 +515,7 @@ ElementWrap.prototype.attachHandlers = function( htmlElement ){
         let handlerFunctionName = htmlElement.getAttribute( handlerFieldName );
         if ( handlerFunctionName ){
             let handlerFunction = thisCopy[ handlerFunctionName ];  // Copy for closure of handler function created below
+            if ( ! handlerFunction ){  console.error( 'ElementWrap.attachHandlers() could not find handler function for name=', handlerFunctionName );  }
             // Assign event handler to callback that assigns "this" to display.
             // Could attach with htmlElement.addEventListener(), but still have to replace 'onevent' field with null
             htmlElement[ handlerFieldName ] =  (event) => handlerFunction.call(thisCopy, event);
@@ -488,16 +530,99 @@ ElementWrap.prototype.attachHandlers = function( htmlElement ){
     
 // Replace subdisplay tag with contained display-object
 ElementWrap.prototype.attachSubelements = function( htmlElement ){
-    var subdisplayName = htmlElement.getAttribute('subdisplay');
+    // If attribute "subdisplay" exists... insert child-display's html-element
+    let subdisplayName = htmlElement.getAttribute('subdisplay');
     if ( subdisplayName ){
-        var subdisplay = this[ subdisplayName ];
+        let subdisplay = this[ subdisplayName ];
+        if ( ! subdisplay ){  console.error( 'ElementWrap.attachSubelements() could not find subdisplay for name=', subdisplayName );  }
         htmlElement.appendChild( subdisplay.element );
     }
     // Recurse on children.
-    for ( var c = 0;  c < htmlElement.children.length;  ++c ){
+    for ( let c = 0;  c < htmlElement.children.length;  ++c ){
         this.attachSubelements( htmlElement.children[c] );
     }
 };
+
+// Create / reorder / discard subdisplays to match subdisplaysStruct data
+// subdisplaysStruct: {  data:array[ {key...} ] , displays:array[ {key...} ] , creator:function?  }
+// parentDiv will be parent-element of created display elements
+// creator: f( subdisplayDatum ) -> subdisplay:ElementWrap
+ElementWrap.prototype.updateSubdisplays = function( subdisplaysStruct, parentDiv, creator ){
+
+    if ( ! subdisplaysStruct  ||  ! subdisplaysStruct.data ){
+        console.error( 'ElementWrap.updateSubdisplays() subdisplaysStruct.data does not exist' );
+        return;
+    }
+    let subDatas = subdisplaysStruct.data;
+
+    // Check that keys exist, and are unique
+    let keyToCount = { };
+    subDatas.forEach( d => {
+        if ( ! d ){  console.error( 'ElementWrap.updateSubdisplays()', 'data is null' );  return;  }
+        if ( ! d.key ){  console.error( 'ElementWrap.updateSubdisplays()', 'No key in data=', d );  return;  }
+        let oldCount = keyToCount[ d.key ];
+        keyToCount[ d.key ] = ( oldCount )?  oldCount + 1  :  1;
+    } );
+    for ( const k in keyToCount ){
+        if ( 1 < keyToCount[k] ){  console.error( 'ElementWrap.updateSubdisplays()', 'Reuse of key=', 'in subDatas=', subDatas );  }
+    }
+
+    // Get function to create new displays, from argument or from subdisplaysStruct
+    creator = creator || subdisplaysStruct.creator;
+    if ( ! creator ){
+        console.error( 'ElementWrap.updateSubdisplays() creator does not exist' );
+        return;
+    }
+
+    // Ensure subdisplays exist for each data, and in same order
+    getOrInsert( subdisplaysStruct, 'displays', [] );
+    let subDisplays = [];
+    for ( let d = 0;  d < subDatas.length;  ++d ){
+        let data = subDatas[ d ];
+        if ( (! data) || (! data.key) ){  continue;  }
+        // Create missing display for data
+        let existingDisplays = subdisplaysStruct.displays.filter( display => (display.key == data.key) );
+        if ( 0 < existingDisplays.length ){  subDisplays.push( ... existingDisplays );  }
+        else {
+            let newDisplay = creator(data);
+            newDisplay.key = data.key;
+            subDisplays.push( newDisplay );
+        }
+    }
+    // Modify original subdisplaysStruct
+    subdisplaysStruct.displays = subDisplays;
+
+    // Ensure each subdisplay is added to element children, trying to make minimal changes
+    subdisplaysUniqueKeys = new Set( subDisplays.map(s => s.key) );
+    // For each subdisplay, in order...
+    for ( let s = 0;  s < subDisplays.length;  ++s ){
+        let subdisplay = subDisplays[ s ];
+        subdisplay.element.setAttribute( 'key', subdisplay.key );
+
+        // If subdisplay is not already added as a child...
+        let childKey = ( s < parentDiv.children.length )?  String( parentDiv.children[s].getAttribute('key') )  :  null;
+        if ( subdisplay.key != childKey ){
+            // Replace child-element if it no longer has a matching data/display
+            if ( ( s < parentDiv.children.length)  &&  ! subdisplaysUniqueKeys.has(childKey) ){
+                parentDiv.removeChild( parentDiv.children[s] );
+            }
+            // Move subdisplay-element to child-element's position
+            insertChildAtIndex( parentDiv, subdisplay.element, s );
+        }
+    }
+    // Remove children that no longer have data/display
+    for ( let c = parentDiv.children.length - 1;  0 <= c;  c-- ){
+        let child = parentDiv.children[ c ];
+        let childKey = String( child.getAttribute('key') );
+        if ( ! subdisplaysUniqueKeys.has(childKey) ){  parentDiv.removeChild( child );  }
+    }
+};
+
+    function
+insertChildAtIndex( parentDiv, child, index ){
+    if ( parentDiv.children.length <= index ){  parentDiv.appendChild( child );  }
+    else {  parentDiv.insertBefore( child, parentDiv.children[index] );  }
+}
 
 ElementWrap.prototype.dataUpdated = null;  // Abstract method
 
@@ -520,6 +645,8 @@ showMessageStruct( struct, div ){
     function
 showMessage( text, color, disappearMs, element, textDefault ){
 
+    setInnerHtml( element, '' );  // Start text empty, to fade in new text
+
     // Translate message text
     text = ( text )?  translate( text )  :  null;
     textDefault = ( textDefault )?  translate( textDefault )  :  null;
@@ -531,7 +658,7 @@ showMessage( text, color, disappearMs, element, textDefault ){
 
     // If new text is empty... clear message
     if ( ! text ){
-        clearMessage( element, textDefault );
+        endMessage( element, textDefault );
         return;
     }
 
@@ -546,14 +673,14 @@ showMessage( text, color, disappearMs, element, textDefault ){
     // Start to hide message after delay.  Store timer in html-element itself, to ensure 1-to-1 relation.
     if ( disappearMs ){
         element.hideTimer = setTimeout(
-            function(){ clearMessage(element, textDefault); } ,
+            function(){ endMessage(element, textDefault); } ,
             disappearMs
         );
     }
 }
 
     function
-clearMessage( element, textDefault ){
+endMessage( element, textDefault ){
     if ( textDefault ){
         setInnerHtml( element, textDefault );
         element.style.color = null;
@@ -571,12 +698,11 @@ hideMessage( element ){
     // Start transition
     element.style.opacity = 0.0;  // Requires MESSAGE_TRANSITION_MS
     element.style.height = '0px';
-    // Finish hiding message after transition.  Store timer in html-element, to ensure 1-to-1 relation.
-    // Could change innerHTML without delay, because transitioning line-height is enough prevent visual jerk
     // Empty the inner-html, to allow re-showing the same message
-    element.hideTimer = setTimeout( function(){
-        setInnerHtml( element, '' );
-    } , MESSAGE_TRANSITION_MS );
+    // Finish hiding message after transition.  Store timer in html-element, to ensure 1-to-1 relation.
+    //  Use a separate timer for text-clear vs text-hide
+    // Or, could change innerHTML without delay, because transitioning line-height is enough prevent visual jerk
+    element.clearTimer = setTimeout( () => setInnerHtml(element, '') , MESSAGE_TRANSITION_MS );
 }
 
     function
@@ -587,10 +713,8 @@ isHidden( element ){
     function
 stopMessageTimer( element ){
     // Stop existing timer stored in element
-    if ( element.hideTimer ){
-        clearTimeout( element.hideTimer );
-        element.hideTimer = null;
-    }
+    clearTimeout( element.hideTimer );
+    clearTimeout( element.clearTimer );
 }
 
 // Prevents multiple delayed-calls to f()
@@ -622,6 +746,16 @@ containsFocus( containingElement ){
     }
     return false;
 }
+
+    function
+focusAtEnd( input ){
+    if ( ! input ){  return;  }
+    input.focus();
+    if ( ! input.value ){  return;  }
+    input.selectionStart = input.value.length;
+    input.selectionEnd = input.value.length;
+};
+
 
     function
 focusNextTabStop( currentElement ){
@@ -898,7 +1032,7 @@ parseCookie( logAll ){
         cookieName =  ( cookieName )?  cookieName.trim()  :  null;
         let cookieValue = cookieNameAndValue[1];
         // Skip cookie from login-site, when both sites live in the same server
-        if ( cookieName == 'L' ){  continue;  }
+        if ( ['L','A'].includes(cookieName) ){  continue;  }
         let cookieValue64 = ( cookieValue )?  cookieValue.replace( /"/g, '' ).replace( /\\075/g , '=' )  :  null;
         let cookieValueJson = ( cookieValue64 )?  atob( cookieValue64 )  :  null;
         if ( logAll ){  console.log( 'parseCookie() cookieName=', cookieName, 'cookieValueJson=', cookieValueJson );  }
@@ -1141,7 +1275,7 @@ storedTextToHtml( storedText ){
         if ( e.match(urlRegex) ){  
             var url = new URL( e );
             var host = url.host.replace( /^www\./ , '' );  // Strip default sub-domain from host
-            if ( AUTO_LINK_URL_HOSTS.indexOf( host ) >= 0 ) {
+            if (  ( 0 <= AUTO_LINK_URL_HOSTS.indexOf(host) )  ||  host.endsWith('.gov')  ) {
                 return '<a href="'+e+'" target="_blank">'+e+'</a>';
             }
         }
@@ -2243,46 +2377,48 @@ const FONTS = [
 // Returns a hash of fingerprint data.  Favors stability over uniqueness.
     function
 fingerprintBrowser(){
-    var fingerprintTexts = [ ];
+    let fingerprintTexts = [ ];
 
-    var startTime = new Date();
+    let startTime = new Date();
 
-    // Canvas
-    var canvasData = '';
-    try {
-        var canvas = document.createElement('canvas');
-        canvas.height = 60;
-        canvas.width = 400;
-        var canvasContext = canvas.getContext('2d');
-        canvas.style.display = 'inline';
-        canvasContext.textBaseline = 'alphabetic';
+    // Canvas -- disabled, because it appears inconsistent with changes to zoom-level or screen-size
+    if ( false ){
+        let canvasData = '';
+        try {
+            let canvas = document.createElement('canvas');
+            canvas.height = 60;
+            canvas.width = 400;
+            let canvasContext = canvas.getContext('2d');
+            canvas.style.display = 'inline';
+            canvasContext.textBaseline = 'alphabetic';
 
-        canvasContext.fillStyle = '#f60';
-        canvasContext.fillRect( 125, 1, 62, 20 );
+            canvasContext.fillStyle = '#f60';
+            canvasContext.fillRect( 125, 1, 62, 20 );
 
-        canvasContext.fillStyle = '#069';
-        canvasContext.font = '10pt fake-font-123';
-        var testText = 'PWh4A1YnT21ReVk2zDzRiCSEbEnqbLa8I1aVOUHkAoVLnELCir, \uD83D\uDE03'
-        canvasContext.fillText( testText, 2, 15 );
+            canvasContext.fillStyle = '#069';
+            canvasContext.font = '10pt fake-font-123';
+            let testText = 'PWh4A1YnT21ReVk2zDzRiCSEbEnqbLa8I1aVOUHkAoVLnELCir, \uD83D\uDE03'
+            canvasContext.fillText( testText, 2, 15 );
 
-        canvasContext.fillStyle = 'rgba(102, 204, 0, 0.7)';
-        canvasContext.font = '18pt Arial';
-        canvasContext.fillText( testText, 4, 45 );
+            canvasContext.fillStyle = 'rgba(102, 204, 0, 0.7)';
+            canvasContext.font = '18pt Arial';
+            canvasContext.fillText( testText, 4, 45 );
 
-        canvasData = canvas.toDataURL();
+            canvasData = canvas.toDataURL();
 
-    } catch( e ){  }
-    fingerprintTexts.push( 'canvasData:' + canvasData );
+        } catch( e ){  }
+        fingerprintTexts.push( 'canvasData:' + canvasData );
+    }
 
     // Fonts
-    var defaultFonts = { 'serif':{} , 'sans-serif':{} , 'monospace':{} };  // map[ name -> metrics struct ]
-    var fontDiv = document.createElement('font');
+    let defaultFonts = { 'serif':{} , 'sans-serif':{} , 'monospace':{} };  // map[ name -> metrics struct ]
+    let fontDiv = document.createElement('font');
     document.body.appendChild( fontDiv );
-    var fontSpan = document.createElement('span');
+    let fontSpan = document.createElement('span');
     fontSpan.style.fontSize = '72px';
     fontSpan.innerText = 'X';
-    for ( var fontName in defaultFonts ) {
-        var fontMetrics = defaultFonts[ fontName ];
+    for ( let fontName in defaultFonts ) {
+        let fontMetrics = defaultFonts[ fontName ];
         fontSpan.style.fontFamily = fontName;
         fontDiv.appendChild( fontSpan );
         fontMetrics.offsetWidth = fontSpan.offsetWidth;
@@ -2290,15 +2426,15 @@ fingerprintBrowser(){
         fontDiv.removeChild( fontSpan );
     }
     fontsFound = [];
-    var fontSampleInterval = 5;  // Too slow to check all fonts
-    for ( var f = 0;  f < FONTS.length;  f += fontSampleInterval ) {
-        var fontName = FONTS[f];
+    let fontSampleInterval = 5;  // Too slow to check all fonts
+    for ( let f = 0;  f < FONTS.length;  f += fontSampleInterval ) {
+        let fontName = FONTS[f];
         // Find any default font that has different size than displayed font
-        for ( var defaultFontName in defaultFonts ) {
-            var defaultFontMetrics = defaultFonts[ defaultFontName ];
+        for ( let defaultFontName in defaultFonts ) {
+            let defaultFontMetrics = defaultFonts[ defaultFontName ];
             fontSpan.style.fontFamily = '"' + fontName + '",' + defaultFontName;  // Do not enclose defaultFontName in quotes
             fontDiv.appendChild( fontSpan );
-            var isDefault = (fontSpan.offsetWidth == defaultFontMetrics.offsetWidth) && (fontSpan.offsetHeight == defaultFontMetrics.offsetHeight);
+            let isDefault = (fontSpan.offsetWidth == defaultFontMetrics.offsetWidth) && (fontSpan.offsetHeight == defaultFontMetrics.offsetHeight);
             fontDiv.removeChild( fontSpan );
             if ( ! isDefault ){  fontsFound.push( fontName );  break;  }
         }
@@ -2308,16 +2444,16 @@ fingerprintBrowser(){
     fingerprintTexts.push( 'fonts:' + fontsFound.join(',') );
 
     // Navigator
-    var navigatorSize = 0;
-    for ( var n in navigator ){  ++navigatorSize;  }
-    var navigatorKeys = [ 'buildID', 'product', 'productSub', 'hardwareConcurrency', 'deviceMemory', 'maxTouchPoints' ];
-    for ( var n = 0;  n < navigatorKeys.length;  ++n ){
-        var key = navigatorKeys[n];
-        var value = navigator[key];
+    let navigatorSize = 0;
+    for ( let n in navigator ){  ++navigatorSize;  }
+    let navigatorKeys = [ 'buildID', 'product', 'productSub', 'hardwareConcurrency', 'deviceMemory', 'maxTouchPoints' ];
+    for ( let n = 0;  n < navigatorKeys.length;  ++n ){
+        let key = navigatorKeys[n];
+        let value = navigator[key];
         fingerprintTexts.push( key + ':' + defaultTo(value,'') );
     }
-    for ( var p = 0;  p < navigator.plugins.length;  ++p ){  
-        var plugin = navigator.plugins[p];
+    for ( let p = 0;  p < navigator.plugins.length;  ++p ){  
+        let plugin = navigator.plugins[p];
         fingerprintTexts.push( 'plugin:' + [plugin.name, plugin.description, plugin.filename].join(' ') );
     }
 
@@ -2326,13 +2462,13 @@ fingerprintBrowser(){
     //   Unstable if graphics/desktop settings changed
 
     // WebGL properties
-    var canvas = document.createElement('canvas');
-    var webGl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    var webGlRendererVendor = null;
-    var webGlRenderer = null;
+    let canvas = document.createElement('canvas');
+    let webGl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    let webGlRendererVendor = null;
+    let webGlRenderer = null;
     if ( webGl  &&  webGl.getSupportedExtensions().indexOf('WEBGL_debug_renderer_info') >= 0) {
         try {
-            var webGlRendererExtension = webGl.getExtension('WEBGL_debug_renderer_info');
+            let webGlRendererExtension = webGl.getExtension('WEBGL_debug_renderer_info');
             webGlRendererVendor = webGl.getParameter( webGlRendererExtension.UNMASKED_VENDOR_WEBGL );
             webGlRenderer = webGl.getParameter( webGlRendererExtension.UNMASKED_RENDERER_WEBGL );
         } catch (e) {
@@ -2342,20 +2478,24 @@ fingerprintBrowser(){
     fingerprintTexts.push( 'webGlRenderer:' + defaultTo(webGlRenderer,'') );
     fingerprintTexts.push( 'webGlRendererVendor:' + defaultTo(webGlRendererVendor,'') )
 
-    var timeTaken = new Date() - startTime;
+    let timeTaken = new Date() - startTime;
     console.info( 'fingerprintBrowser() timeTaken=', timeTaken );
     console.log( 'fingerprintTexts=', fingerprintTexts );
 
     // Hash the fingerprintTexts
-    // Alternative:  http://www.webtoolkit.info/javascript-md5.html
-    var fingerprintText = fingerprintTexts.join(' ');
-    var hash = 0;
-    for ( var i = 0;  i < fingerprintText.length;  i++ ) {
-        var c = fingerprintText.charCodeAt(i);
-        hash = ( (hash << 5) - hash ) + c;
-    }
+    let hash = basicHash( fingerprintTexts.join(' ') );
     console.info( 'fingerprintBrowser() hash=', hash );
     return hash;
 }
 
+    function
+basicHash( text ){
+    // Alternative:  http://www.webtoolkit.info/javascript-md5.html
+    let hash = 0;
+    for ( let i = 0;  i < text.length;  i++ ) {
+        let c = text.charCodeAt( i );
+        hash = ( (hash << 5) - hash ) + c;
+    }
+    return hash;
+}
 

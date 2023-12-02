@@ -26,6 +26,55 @@ indexes:
   - name: score
     direction: desc
 
+- kind: Content
+  properties:
+  - name: parentKey
+  - name: proOrCon
+  - name: questionId
+  - name: surveyId
+  - name: score
+    direction: desc
+
+- kind: Content
+  properties:
+  - name: parentKey
+  - name: questionId
+  - name: surveyId
+  - name: maxChildVotes
+    direction: desc
+
+- kind: Content
+  properties:
+  - name: parentKey
+  - name: questionId
+  - name: surveyId
+  - name: score
+    direction: desc
+
+- kind: Content
+  properties:
+  - name: parentKey
+  - name: questionId
+  - name: surveyId
+  - name: voteCount
+    direction: desc
+
+- kind: Content
+  properties:
+  - name: parentKey
+  - name: questionId
+  - name: surveyId
+  - name: words
+  - name: score
+    direction: desc
+
+- kind: Content
+  properties:
+  - name: questionId
+  - name: surveyId
+  - name: maxChildVotes
+    direction: desc
+
 - kind: Proposal
   properties:
   - name: requestId
@@ -95,4 +144,56 @@ indexes:
   properties:
   - name: budgetId
   - name: voteCount
+    direction: desc
+
+- kind: VoteAggregate
+  properties:
+  - name: grandparentKey
+  - name: surveyId
+  - name: score
+    direction: desc
+
+- kind: VoteAggregate
+  properties:
+  - name: grandparentKey
+  - name: surveyId
+  - name: voteCount
+    direction: desc
+
+- kind: VoteAggregate
+  properties:
+  - name: grandparentKey
+  - name: surveyId
+  - name: words
+  - name: score
+    direction: desc
+
+- kind: VoteAggregate
+  properties:
+  - name: greatgrandparentKey
+  - name: surveyId
+  - name: words
+  - name: score
+    direction: desc
+
+- kind: VoteAggregate
+  properties:
+  - name: parentKey
+  - name: surveyId
+  - name: score
+    direction: desc
+
+- kind: VoteAggregate
+  properties:
+  - name: parentKey
+  - name: surveyId
+  - name: voteCount
+    direction: desc
+
+- kind: VoteAggregate
+  properties:
+  - name: parentKey
+  - name: surveyId
+  - name: words
+  - name: score
     direction: desc

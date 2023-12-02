@@ -1,5 +1,11 @@
+// Script for main single-webpage app
+// Mostly changes which sub-page is displayed, and initializes data-structures used by the app
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
+
+const FRAG_PAGE_MULTI_QUESTION_SURVEY = 'multi';
 
 const FRAG_PAGE_ID_NEW_REQUEST = 'newRequest';
 const FRAG_PAGE_ID_NEW_PROPOSAL = 'newProposal';
@@ -7,6 +13,10 @@ const FRAG_PAGE_ID_REQUEST = 'request';
 const FRAG_PAGE_ID_PROPOSAL_FROM_REQUEST = 'proposalFromRequest';
 const FRAG_PAGE_ID_PROPOSAL = 'proposal';
 const FRAG_PAGE_ID_RECENT = 'recent';
+const FRAG_PAGE_TO_INFO = {
+    glossary:{ div:'pageGlossary', title:'Terminology' } ,
+    apps:{ div:'pageCivicApps', title:'Civic Participation Applications' } ,
+};
 
 const FRAG_PAGE_NEW_AUTOCOMPLETE = 'newAutocomplete';
 const FRAG_PAGE_EDIT_AUTOCOMPLETE = 'editAutocomplete';
@@ -54,7 +64,6 @@ $(document).ready( function(){
     
     // Show initial page, before cookie set
     window.onhashchange();
-
     requestInitialCookie( function(){
         updateMenuForScreenChange();
         updateWaitingLogin();
@@ -98,21 +107,24 @@ $(document).ready( function(){
         // Initialize language
         initializeLanguage();
         showCurrentLanguage();
-        document.getElementById('languageLinkSelect').oninput =  ( event ) => {
-            let newLangCode = event.target.value;
-            currentLanguageCode = newLangCode;
-            setFragmentFields( {lang:newLangCode} );
-            document.cookie = 'A=' + newLangCode;  // Only change cookie when user explicitly chooses language from select-list, not from URL-fragment
-            translateScreen();
-        };
-
+        let languageLinkSelect = document.getElementById('languageLinkSelect');
+        if ( languageLinkSelect ){
+            languageLinkSelect.oninput =  ( event ) => {
+                let newLangCode = event.target.value;
+                currentLanguageCode = newLangCode;
+                setFragmentFields( {lang:newLangCode} );
+                document.cookie = 'A=' + newLangCode;  // Only change cookie when user explicitly chooses language from select-list, not from URL-fragment
+                translateScreen();
+            };
+        }
     });
 });
 
     function
 showCurrentLanguage( ){
     if ( currentLanguageCode ){
-        document.getElementById('languageLinkSelect').value = currentLanguageCode;
+        let languageLinkSelect = document.getElementById('languageLinkSelect');
+        if ( languageLinkSelect ){  languageLinkSelect.value = currentLanguageCode;  }
     }
 }
 
@@ -128,21 +140,6 @@ updateDisplayData( loggedIn ){
 // Set scroll handler
 jQuery(document).scroll(  () => { if (typeof alignRows === "function"){alignRows()} }  );
 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Handle page width resize
-
-jQuery(window).resize( function(){
-    if ( topDisp ){  topDisp.dataUpdated();  }
-    updateMenuForScreenChange();
-} );
-
-    function
-updateMenuForScreenChange(){
-    toggleMenu( isMenuAlwaysOn() );
-}
 
 
 
@@ -175,6 +172,7 @@ initializeLanguage( ){
 window.onhashchange = function(){
 
     let fragKeyToValue = parseFragment();
+    console.log( 'onhashchange() fragKeyToValue=', fragKeyToValue );
     let linkKey = fragKeyToValue.link;
     let page = fragKeyToValue.page;
     
@@ -184,9 +182,45 @@ window.onhashchange = function(){
     document.body.removeAttribute( 'menuview' );
     document.body.removeAttribute( 'menuedit' );
 
-    // Handle page fragment field.
+    // Handle page fragment field
+    // Page: multi-question survey
+    if ( page == FRAG_PAGE_MULTI_QUESTION_SURVEY ){
+        showPage( DIV_ID_MULTI_QUESTION_SURVEY, SITE_TITLE + ': Survey' );
+
+        // If link-key is changed... create survey data
+        const TEMPORARY_SURVEY_ID = 'new';
+        let haveOldSurveyData =  Boolean(  linkKey  &&  app.linkKey  &&  ( linkKey == app.linkKey.id )  &&  app.surveyData  );
+        console.log( 'window.onhashchange() haveOldSurveyData=', haveOldSurveyData );
+        if ( ! haveOldSurveyData ){
+            app.linkKey = { id:linkKey };
+            app.surveyData = { id:TEMPORARY_SURVEY_ID , questions:[] , allowEdit:true , mine:true };
+        }
+        console.log( 'window.onhashchange() app=', app );
+
+        // Create survey display
+        // Use linkKey as display id, because linkKey is available before data is retrieved
+        app.surveyDisplay = new SurveyDisplay( app.linkKey.id || TEMPORARY_SURVEY_ID ).setInitialData( app.surveyData, app.linkKey );
+        app.surveyDisplay.dataUpdated();
+        // First onhashchange() is called before requestInitialCookie()
+        // Check crumb to ensure cookie is available for retrieveData()
+        if ( app.linkKey.id  &&  crumb  &&  ! (haveOldSurveyData && app.surveyDisplay.retrievedAnswers) ){
+            app.surveyDisplay.retrieveData();
+        }
+        topDisp = app.surveyDisplay;
+
+        // Replace survey display
+        showPage( DIV_ID_MULTI_QUESTION_SURVEY, SITE_TITLE + ': Survey' );
+        let pageDiv = document.getElementById( DIV_ID_MULTI_QUESTION_SURVEY );
+        replaceChildren( pageDiv, app.surveyDisplay.element );
+
+        // If previous page was question sub-page... scroll to focus question
+        if ( haveOldSurveyData  &&  app.questionId ){
+            app.surveyDisplay.scrollToQuestion( app.questionId );
+        }
+    }
+
     // Page: new request for proposals
-    if ( FRAG_PAGE_ID_NEW_REQUEST == page ){
+    else if ( FRAG_PAGE_ID_NEW_REQUEST == page ){
         clearData();
         showPage( DIV_ID_NEW_REQUEST, SITE_TITLE + ': New Request for Proposals' );
         newRequestHandleLoad( fragKeyToValue.experiment );
@@ -463,6 +497,13 @@ window.onhashchange = function(){
         clearData();
         showPage( DIV_ID_ABOUT, SITE_TITLE + ': About' );
     }
+    // Miscellaneous pages
+    else if ( FRAG_PAGE_TO_INFO[page]  &&  FRAG_PAGE_TO_INFO[page].div ){
+        let divId = FRAG_PAGE_TO_INFO[ page ].div;
+        let title = FRAG_PAGE_TO_INFO[ page ].title  ||  '';
+        clearData();
+        showPage( divId, SITE_TITLE + (title ? ': '+title : '') );
+    }
     // Page: home
     else {
         clearData();
@@ -474,8 +515,9 @@ window.onhashchange = function(){
 
     function
 showPage( pageDivId, title ){
-    $('.Page').removeAttr('show');   // Hide all pages.
-    document.getElementById(pageDivId).setAttribute('show', 'true');
+    $('.Page').removeAttr('show');   // Hide all pages
+    let pageDiv = document.getElementById( pageDivId );
+    if ( pageDiv ){  pageDiv.setAttribute('show', 'true');  }
     document.title = title;
     updateMenuForScreenChange();
 }
@@ -493,66 +535,4 @@ clearData( ){
     topDisp = null;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Handle menu 
-
-// menuLink does not need to toggle menu on, because summary click does that automatically
-    function
-toggleMenu( showMenu ){
-    let menuMobile = document.getElementById('menuMobile');
-
-    // Determine whether to show menu
-    if ( showMenu === undefined ){  showMenu = ! menuMobile.hasAttribute('open');  }
-
-    // Display or hide menu
-    if ( showMenu ){
-        menuMobile.setAttribute('open', '');
-    }
-    else {
-        menuMobile.removeAttribute('open');
-    }
-}
-
-// Back links go back from proposal to enclosing request.
-jQuery('#menuItemLinkBackProposals').click(  function(e){ e.preventDefault(); setFragmentFields( {page:FRAG_PAGE_ID_REQUEST} ); }  );
-jQuery('#menuItemLinkBackResults').click(  e => {
-    e.preventDefault();
-    let fragKeyToValue = parseFragment();
-    if ( fragKeyToValue.page == FRAG_PAGE_QUESTION_RESULTS ){
-        setFragmentFields( {page:FRAG_PAGE_AUTOCOMPLETE_RESULTS} );
-    }
-    else if ( fragKeyToValue.page == FRAG_PAGE_BUDGET_SLICE_RESULT ){
-        setFragmentFields( {page:FRAG_PAGE_BUDGET_RESULT} );
-    }
-    else {
-        return false;
-    }
-}  );
-jQuery('#menuItemLinkBackProposals').keyup( enterToClick );
-jQuery('#menuItemLinkBackResults').keyup( enterToClick );
-
-document.getElementById('menuLink').onclick = function(){  toggleMenu();  };
-jQuery('.menuItemLink').keyup( enterToClick );
-
-
-// Content-cover click always closes menu.
-let contentCover = document.getElementById('contentCover');
-contentCover.onclick = function(){  toggleMenu( false );  };
-
-
-    function
-isMenuAlwaysOn( ){  return ( jQuery(window).width() > MAX_WIDTH_POPUP_MENU );  }
-
-
-document.body.onkeyup = function( event ){
-    if ( event.key == 'Escape' ){
-        // Hide menu and dialogs
-        if ( ! isMenuAlwaysOn() ){  toggleMenu( false );  }
-        hide('loginRequiredDiv');
-        hide('cookiesRequiredDiv');
-        hide('logoutDiv');
-    }
-};
 

@@ -12,12 +12,14 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
     form { }
         fieldset {  margin:10px 0px 10px 0px;  border:solid 1px #aaaaaa;  padding:10px;  }
             legend {  color:#888888;  }
-        input , textarea {
-            width:calc(100% - 7px);  padding:5px;  font-family:sans-serif;  font-size:1.0rem;
-            border:solid 1px #cccccc;  box-shadow:0px 0px 5px 0px #aaaaaa inset;
+        input , textarea , select {
+            width:calc(100% - 12px);  padding:5px;  font-family:sans-serif;  font-size:1.0rem;
+            border:solid 1px #999999;  box-shadow:1px 1px 5px 0px #aaaaaa inset;
+            background:white;
         }
+        select {  width:auto;  }
         input[ type=radio ] {  width:auto;  }
-        textarea {  line-height:1.5em;  }
+        textarea {  line-height:1.5em;  min-height:1em;  }
         input[ type=checkbox ] {  width:auto;  margin-left:5px;  cursor:pointer;  }
         input:invalid , textarea:invalid , input.invalid {  background-color:#ffdddd;  }
         label {  color:black;  opacity:0.5;  font-size:1.0rem;  cursor:pointer;  }
@@ -27,31 +29,29 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
 
     .Button {  display:inline-block;  cursor:pointer;  }
     .Button , button {  
-        background-color:#eeeeee;  
-        background:linear-gradient(#ffffff, #dddddd);  
-        
-        border:solid 1px #aaaaaa;
-        border-radius:7px;
-        box-shadow:-1px -1px 10px #bbbbbb inset;
+        box-shadow:-3px -3px 10px #bbb inset , 1px 1px 5px #aaa;
+        background-color:#f8f8f8;  background:linear-gradient(#ffffff, #f0f0f0);
+        border:solid 1px #999999;  border-radius:7px;
 
-        margin:5px;  
-        padding:15px 7px 15px 7px;  
+        margin:5px;  padding:7px;  min-height:3.5em;  min-width:4em;
 
         font-size:1.0rem;  line-height:2.0em;
         cursor:pointer;
     }
     .Button:hover , button:hover {  background:rgb(206,231,256);  color:black;  }
 
-    #content {  max-width:800px;  margin:20px auto 20px auto;  word-wrap:anywhere;  }
+    #content {  max-width:1000px;  margin:20px auto 20px auto;  NOTword-wrap:anywhere;  }
         #siteName {  text-align:center;  font-weight:normal;  color:#aaaaaa;  }
-        .title {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:1.6rem;  color:#888888;  }
+        .title {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:1.6rem;  color:#777777;  }
 
         h1 {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:1.4rem;  color:#888888;  }
         h2 {  margin:5px 0px 5px 0px;  font-weight:bold;  font-size:1.3rem;  color:black;  }
         h3 {  }
+        h4 {  margin:15px 0px 0px 0px;  }
         p {  line-height:1.7em;  }
 
         ul {  margin:10px 0px 10px 0px;  }
+            li {  margin:10px 0px 10px 0px;  }
 
         details {  margin-bottom:15px;  }
         details > summary {  cursor:pointer;  }
@@ -134,7 +134,7 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
 #menuMobile { }
     .menu {
         position:fixed;  top:0;  left:0;  bottom:0;  z-index:11;  width:155px; 
-        color:#aaaaaa;  background:#eeeeee;  border-right:solid 1px #aaaaaa;  box-shadow:0px 0px 20px black;
+        color:#aaaaaa;  background:#e8e8e8;  border-right:solid 1px #aaaaaa;  box-shadow:0px 0px 20px black;
         overflow-y:auto;  -webkit-overflow-scrolling:touch;
     }
         a.menuItemLink {
@@ -185,8 +185,8 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
 
 
 #pageHome {  margin:5px;  }
-    #newSurveyTable {  margin:0 auto;  }
-        .newSurveyNumber {  padding-right:20px;  opacity:0.50;  }
+    .newSurveyTable {  margin:0 auto;  }
+        .newSurveyNumber {  padding-right:20px;  opacity:0.50;  display:none;  }
 
         a.newSurveyLink {
             text-decoration:none;  display:block;
@@ -234,6 +234,35 @@ a.recentRequestLink {  text-decoration:none;  }
         .recentRequestTitle {  margin:0px 0px 10px 0px;  font-size:1.2rem;  }
         .recentRequestDetail {  }
         .recentRequestTime {  display:none;  }
+
+
+
+/**********************************************************************************/
+/* Page: glossary, apps */
+
+#pageProblems {  }
+#pageProblems   .problemsContent {  background-color:#eeeeee;  padding:10px;  }
+#pageProblems       h2 {  margin-top:30px;  }
+#pageProblems       ul.linkList {  list-style-type:none;  padding:0px;  }
+#pageProblems           ul.linkList ul {  margin:0 0 1em 0;  }
+
+#pageGlossary {  }
+#pageGlossary   .glossaryContent {  background-color:#eeeeee;  padding:10px;  }
+#pageGlossary       h2 {  margin-top:30px;  }
+#pageGlossary       ul.termLinkList {  list-style-type:none;  }
+#pageGlossary           .glossaryEntry {  margin-bottom:20px;  }
+
+#pageCivicApps {  }
+#pageCivicApps   .appsContent {  background-color:#eeeeee;  padding:10px;  }
+#pageCivicApps      h2 {  margin-top:30px;  }
+#pageCivicApps      ul.appLinkList {  list-style-type:none;  }
+#pageCivicApps          ul > li {  margin-bottom:20px;  }
+#pageCivicApps          .appEntry {  margin-bottom:20px;  }
+#pageCivicApps              .appTag {  display:inline-block;  padding:2px 5px 0px 5px;  border:solid 1px grey;  border-radius:5px;  line-height:1.0em;  }
+#pageCivicApps              .appTag[data-level="high"] {  background-color:lightgreen;  }
+#pageCivicApps              .appTag[data-level="low"] {  background-color:pink;  }
+
+.tryBottomDiv {  margin:30px;  text-align:center;  font-size:1.3rem;  }
 
 
 

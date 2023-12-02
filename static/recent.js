@@ -14,7 +14,8 @@
             'RequestForProposals': { url:FRAG_PAGE_ID_REQUEST , display:'Request for proposals' } ,
             'Proposal': { url:FRAG_PAGE_ID_PROPOSAL , display:'Proposal pro/con' } ,
             'Survey': { url:'autocomplete' , display:'Auto-complete survey' } ,
-            'Budget': { url:'budget' , display:'Participatory budget' }
+            'Budget': { url:'budget' , display:'Participatory budget' } ,
+            'MultipleQuestionSurvey': { url:'multi' , display:'Survey' }
         };
 
         // retrieve via ajax

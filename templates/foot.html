@@ -1,0 +1,97 @@
+
+
+<div id=log></div>
+
+<script>
+    // Constants passed from server-side configuration
+    const minLengthRequest = {{minLengthRequest}};
+    const minLengthProposal = {{minLengthProposal}};
+    const minLengthReason = {{minLengthReason}};
+    const maxLengthReason = {{maxLengthReason}};
+    const minLengthSurveyIntro = {{minLengthSurveyIntro}};
+    const maxLengthSurveyIntro = {{maxLengthSurveyIntro}};
+    const minLengthQuestion = {{minLengthQuestion}};
+    const maxLengthQuestion = {{maxLengthQuestion}};
+    const MAX_QUESTIONS = {{MAX_QUESTIONS}};
+    const MAX_OPTIONS = {{MAX_OPTIONS}};
+    const MIN_OPTION_LENGTH = {{MIN_OPTION_LENGTH}};
+    const MAX_OPTION_LENGTH = {{MAX_OPTION_LENGTH}};
+    const minLengthAnswer = {{minLengthAnswer}};
+    const minLengthBudgetIntro = {{minLengthBudgetIntro}};
+    const minLengthSliceTitle = {{minLengthSliceTitle}};
+    const minLengthSliceReason = {{minLengthSliceReason}};
+    const TOO_MANY_QUESTIONS = '{{TOO_MANY_QUESTIONS}}';
+    const TOO_MANY_OPTIONS = '{{TOO_MANY_OPTIONS}}';
+    const WRONG_TYPE = '{{WRONG_TYPE}}';
+    const UNCHANGED = '{{UNCHANGED}}';
+    const OUT_OF_RANGE = '{{OUT_OF_RANGE}}';
+    const TOO_SHORT = '{{TOO_SHORT}}';
+    const TOO_LONG = '{{TOO_LONG}}';
+    const REASON_TOO_SHORT = '{{REASON_TOO_SHORT}}';
+    const DUPLICATE = '{{DUPLICATE}}';
+    const NO_COOKIE = '{{NO_COOKIE}}';
+    const NO_LOGIN = '{{NO_LOGIN}}';
+    const BAD_CRUMB = '{{BAD_CRUMB}}';
+    const BAD_LINK = '{{BAD_LINK}}';
+    const NOT_OWNER = '{{NOT_OWNER}}';
+    const HAS_RESPONSES = '{{HAS_RESPONSES}}';
+    const FROZEN = '{{FROZEN}}';
+    const ERROR_DUPLICATE = '{{ERROR_DUPLICATE}}';
+    const OVER_BUDGET = '{{OVER_BUDGET}}';
+    const EXPERIMENT_NOT_AUTHORIZED = '{{EXPERIMENT_NOT_AUTHORIZED}}';
+    const MAX_WORDS_INDEXED = {{MAX_WORDS_INDEXED}};
+    const STOP_WORDS = {{ STOP_WORDS|safe }};
+    const VOTER_ID_LOGIN_SIG_LENGTH = {{VOTER_ID_LOGIN_SIG_LENGTH}};
+    const VOTER_ID_LOGIN_REQUEST_ID_LENGTH = {{VOTER_ID_LOGIN_REQUEST_ID_LENGTH}};
+    const IS_DEV = {{IS_DEV}};
+
+    // Globals passed from server
+    var crumb = '{{crumb}}';
+    
+    // Constants shared by many scripts.
+    const DIV_ID_NEW_REQUEST = 'pageNewRequest';
+    const DIV_ID_NEW_PROPOSAL = 'pageNewProposal';
+    const DIV_ID_REQUEST = 'pageRequest';
+    const DIV_ID_PROPOSAL = 'pageProposal';
+    const DIV_ID_MULTI_QUESTION_SURVEY = 'pageMultiQuestion';
+    const DIV_ID_NEW_AUTOCOMPLETE     = 'pageNewAutocomplete';
+    const DIV_ID_EDIT_AUTOCOMPLETE    = 'pageEditAutocomplete';
+    const DIV_ID_VIEW_AUTOCOMPLETE    = 'pageViewAutocomplete';
+    const DIV_ID_AUTOCOMPLETE_RESULTS = 'pageAutocompleteResults';
+    const DIV_ID_RECENT = 'pageRecent';
+    const DIV_ID_ABOUT = 'pageAbout';
+    const DIV_ID_SITE_LIST = 'pageSiteList';
+    const DIV_ID_HOME = 'pageHome';
+    const SITE_TITLE = '{{SITE_NAME}}';
+    const MAX_WIDTH_1_COLUMN = 700;
+    const MAX_WIDTH_POPUP_MENU = 800;
+
+</script>
+
+<script src='{{ url_for('static', filename='jquery-3.4.1.min.js') }}'></script>
+<script src='{{ url_for('static', filename='translations.js') }}'></script>
+<script src='{{ url_for('static', filename='shared.js') }}'></script>
+
+<script src='{{ url_for('static', filename='autocomplete/shared.js') }}'></script>
+<script src='{{ url_for('static', filename='autocomplete/editSurvey.js') }}'></script>
+<script src='{{ url_for('static', filename='autocomplete/viewSurvey.js') }}'></script>
+<script src='{{ url_for('static', filename='autocomplete/surveyResults.js') }}'></script>
+
+<script src='{{ url_for('static', filename='budget/edit.js') }}'></script>
+<script src='{{ url_for('static', filename='budget/view.js') }}'></script>
+<script src='{{ url_for('static', filename='budget/results.js') }}'></script>
+
+<script src='{{ url_for('static', filename='multi/rating.js') }}'></script>
+<script src='{{ url_for('static', filename='multi/ranking.js') }}'></script>
+<script src='{{ url_for('static', filename='multi/checklist.js') }}'></script>
+<script src='{{ url_for('static', filename='multi/text.js') }}'></script>
+<script src='{{ url_for('static', filename='multi/proposal.js') }}'></script>
+<script src='{{ url_for('static', filename='multi/requestProblems.js') }}'></script>
+<script src='{{ url_for('static', filename='multi/budget.js') }}'></script>
+<script src='{{ url_for('static', filename='multi/survey.js') }}'></script>
+
+<script src='{{ url_for('static', filename='menu.js') }}'></script>
+
+
+</body>
+</html>

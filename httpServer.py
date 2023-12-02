@@ -88,18 +88,27 @@ def requestAndResponse( ):  return HttpRequest(), flask.make_response()
 
 
 
-# Checks title + detail length
+# Checks that title + detail length is greater than minimum
 def isLengthOk( title, detail, lengthMin ):
     totalLength = 0
     totalLength += len(title) if title  else 0
     totalLength += len(detail) if detail  else 0;
-    logging.debug( 'isLengthOk() totalLength={} lengthMin={}'.format( totalLength, lengthMin ) )
     return ( totalLength >= lengthMin )
+
+def isLengthTooShort( title, detail, minLength=30 ):
+    totalLength = ( len(title)  if title  else 0 ) + ( len(detail)  if detail  else 0 )
+    return ( totalLength < minLength )
+
+# Checks that title + detail length is less than maximum
+def isLengthTooLong( title, detail, maxLength=1000 ):
+    totalLength = ( len(title)  if title  else 0 ) + ( len(detail)  if detail  else 0 )
+    if conf.isDev and log:  logging.debug( 'isLengthTooLong() totalLength={} maxLength={}'.format(totalLength, maxLength) )
+    return ( maxLength < totalLength )
 
 
 # Returns CookieData
 def validate( httpRequest, httpInput, responseData, httpResponse, 
-        idRequired=True, loginRequired=False, crumbRequired=True, signatureRequired=True, makeValid=False ):
+        idRequired=True, loginRequired=False, crumbRequired=True, signatureRequired=True, makeValid=False, outputError=True ):
 
     if not idRequired:  crumbRequired = False;  signatureRequired=False;
 
@@ -116,16 +125,16 @@ def validate( httpRequest, httpInput, responseData, httpResponse,
     
     # Output error
     if not cookieData:
-        if idRequired:  outputJson( CookieData(), responseData, httpResponse, errorMessage='Null cookieData' )
+        if idRequired and outputError:  outputJson( CookieData(), responseData, httpResponse, errorMessage='Null cookieData' )
         return CookieData()  # Always return CookieData that is non-null, but maybe invalid
     elif cookieData.errorMessage:
-        if idRequired:  outputJson( cookieData, responseData, httpResponse, errorMessage=cookieData.errorMessage )
+        if idRequired and outputError:  outputJson( cookieData, responseData, httpResponse, errorMessage=cookieData.errorMessage )
     elif not cookieData.browserId:
-        if idRequired:  outputJson( cookieData, responseData, httpResponse, errorMessage='Null browserId' )
+        if idRequired and outputError:  outputJson( cookieData, responseData, httpResponse, errorMessage='Null browserId' )
     elif not cookieData.loginId:
         if loginRequired:
             cookieData.errorMessage = conf.NO_LOGIN
-            outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
+            if outputError:  outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_LOGIN )
 
     return cookieData
 

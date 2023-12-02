@@ -1,17 +1,6 @@
-<!DOCTYPE html>
-<html>
-<meta charset='UTF-8'>
-<head>
-    <title>{{SITE_NAME}}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel='stylesheet' href='{{ url_for('static', filename='main.css') }}' />
-    <link rel='stylesheet' href='{{ url_for('static', filename='autocomplete/main.css') }}' />
-    <link rel='stylesheet' href='{{ url_for('static', filename='budget/main.css') }}' />
-</head>
-<body>
-<div id=content>
+{% include 'head.html' %}
+<!-- // Single webpage app, for all surveys -->
 
-    {% include 'loginPopups.html' %}
 
     <select id=languageLinkSelect>
         <option value=en> English </option>
@@ -22,111 +11,134 @@
         <option value=cn> 中文 </option>
     </select>
 
-    <!-- Menus -->
-    <details id=menuMobile>
-        <summary tabindex=-1 aria-label=Menu>
-            <button id=menuLink translate=true> Menu </button>
-        </summary>
-        <nav class=menu role=nav role=menu>
-            <div>
-                <!-- Include fake hrefs to get screen-reader focus -->
-                <a class=menuItemLink id=menuItemLinkBackProposals href='#page=request'> &larr; <span translate=true>Proposals</span> </a>
-                <a class=menuItemLink id=menuItemLinkBackResults href='#page=results'> &larr; <span translate=true>Results</span> </a>
-                <a class=menuItemLink id=menuItemLinkView title='View' href='#page=view'> &larr; <span translate=true>View</span> </a>
-                <a class=menuItemLink id=menuItemLinkEdit title='Edit' href='#page=edit'> &larr; <span translate=true>Edit</span> </a>
 
-                <a class=menuItemLink translate=true href='#page=home'> New Survey </a>
-                <a class=menuItemLink translate=true href='#page=recent'> Recent </a>
-                <a class=menuItemLink translate=true href='#page=about'> About </a>
-
-                <div class=menuItem id=menuItemCity></div>
-                <button class=menuItem id=menuItemLogin translate=true> Log in </button>
-                <button class=menuItem id=menuItemLogout translate=true> Log out </button>
-            </div>
-            <div id=menuLoginStatus></div>
-        </nav>
-        <div id=contentCover></div>
-    </details>
-
-    <div id=siteName>{{SITE_NAME}}</div>
-
-    <!-- Pages -->
+    <!-- Single webpage app sub-pages -->
     <div id=pages>
 
-        <div id=pageHome class=Page>
-            <div class=title role=status translate=true> Reason-Based Surveys </div>
-            <p translate=true>
-                Reason-based discussion helps people to better understand their own ideas, and opposing ideas.
+        <div id=pageHome class=Page style='max-width:600px; margin:0 auto; padding:20px;'>
+            <h1 class=title role=status translate=yes> Reason-Based Surveys </h1>
+            <p translate=yes>
+                Create a free survey, where participants express both their opinions and their reasons.
+                Participants can also learn from each other's reasons.
             </p>
-            <p translate=true>
-                These survey tools have been designed to make it fast & easy for people to express their reasons,
-                and to understand others' reasons.
-            </p>
+            <p> <span translate=yes>Start here</span>: </p>
 
-            <table id=newSurveyTable>
+            <table class=newSurveyTable>
                 <tr>
                     <td class=newSurveyNumber> 1 </td>
                     <td>
-                        <a class=newSurveyLink href='#page=newAutocomplete'>
-                            <span translate=true> Auto-complete Survey </span>
-                            <span class=newSurveyLinkDetail translate=true> Discover what problems people care about. </span></a>
+                        <a class=newSurveyLink href='/#page=multi'>
+                            <span translate=yes> Deliberative Form </span>
+                            <span class=newSurveyLinkDetail translate=yes> Ask a series of survey questions. </span></a>
                     </td><td class=newSurveyExample>
-                        <a href='https://converj.us/#page=autocomplete&link=MLvPgziMWGqik5NPMSfERPZKgPlrd9PBrKQ9dEhrpTK4YcxF5o' target=_blank translate=true> Example </a>
                     </td>
-                </tr><tr>
+                </tr>
+            </table>
+
+            <h2 translate=yes style='margin-top:50px;'> Specialized survey types </h2>
+
+            <table class=newSurveyTable>
+                <tr>
                     <td class=newSurveyNumber> 2 </td>
                     <td>
-                        <a class=newSurveyLink href='#page=newRequest'>
-                            <span translate=true> Request for Proposals </span>
-                            <span class=newSurveyLinkDetail translate=true> Get solutions to your problem. </span></a>
+                        <a class=newSurveyLink href='/#page=newAutocomplete'>
+                            <span translate=yes> Auto-complete Survey </span>
+                            <span class=newSurveyLinkDetail translate=yes> Discover what problems people care about. </span></a>
                     </td><td class=newSurveyExample>
-                        <a href='https://converj.us/#page=request&link=vEZuXj4uSvki2yQLLg8xE0fLeveOtbhx8bHkI0REmuFq9M6XsI' target=_blank translate=true> Example </a>
+                        <a href='{{SITE_URL}}/#page=autocomplete&link=MLvPgziMWGqik5NPMSfERPZKgPlrd9PBrKQ9dEhrpTK4YcxF5o' target=_blank translate=yes> Example </a>
                     </td>
                 </tr><tr>
                     <td class=newSurveyNumber> 3 </td>
                     <td>
-                        <a class=newSurveyLink href='#page=newProposal'>
-                            <span translate=true> Proposal Pro & Con </span>
-                            <span class=newSurveyLinkDetail translate=true> Get feedback on your solution. </span></a>
+                        <a class=newSurveyLink href='/#page=newRequest'>
+                            <span translate=yes> Request for Proposals </span>
+                            <span class=newSurveyLinkDetail translate=yes> Get solutions to your problem. </span></a>
                     </td><td class=newSurveyExample>
-                        <a href='https://converj.us/#page=proposal&link=E10rzZsgmVeA14enZTu2f2SbxJJAXRQ2cSqO412uD9EVKh9BhT' target=_blank translate=true> Example </a>
+                        <a href='{{SITE_URL}}/#page=request&link=vEZuXj4uSvki2yQLLg8xE0fLeveOtbhx8bHkI0REmuFq9M6XsI' target=_blank translate=yes> Example </a>
                     </td>
                 </tr><tr>
                     <td class=newSurveyNumber> 4 </td>
                     <td>
-                        <a class=newSurveyLink href='#page=budgetNew'>
-                            <span translate=true> Participatory Budget </span>
-                            <span class=newSurveyLinkDetail translate=true> Negotiate a budget with a group. </span></a>
+                        <a class=newSurveyLink href='/#page=newProposal'>
+                            <span translate=yes> Proposal Pro & Con </span>
+                            <span class=newSurveyLinkDetail translate=yes> Get feedback on your solution. </span></a>
                     </td><td class=newSurveyExample>
-                        <a href='https://converj.us/#page=budget&link=Q6pESHxVkFJPYxNR9EaeCtBsr0bR5GxIvRZ5vCpyyxrCkKsh5n' target=_blank translate=true> Example </a>
+                        <a href='{{SITE_URL}}/#page=proposal&link=E10rzZsgmVeA14enZTu2f2SbxJJAXRQ2cSqO412uD9EVKh9BhT' target=_blank translate=yes> Example </a>
+                    </td>
+                </tr><tr>
+                    <td class=newSurveyNumber> 5 </td>
+                    <td>
+                        <a class=newSurveyLink href='/#page=budgetNew'>
+                            <span translate=yes> Participatory Budget </span>
+                            <span class=newSurveyLinkDetail translate=yes> Negotiate a budget with a group. </span></a>
+                    </td><td class=newSurveyExample>
+                        <a href='{{SITE_URL}}/#page=budget&link=Q6pESHxVkFJPYxNR9EaeCtBsr0bR5GxIvRZ5vCpyyxrCkKsh5n' target=_blank translate=yes> Example </a>
                     </td>
                 </tr>
             </table>
-            <p translate=true>
-                To grow your understanding of your group's needs, it is often useful to run these survey-types in order.
+
+            <h2 style='margin-top:50px;'> {{SITE_NAME}} Benefits </h2>
+            <div class=productValue>
+                <p>
+                    Sometimes leaders need to discover the best way to help their constituents.
+                    Sometimes a leader needs to prevent upsetting surprises.
+                    Sometimes the leader needs to discover what they did not even think to ask about.
+                    With {{SITE_NAME}}, you don't just collect participants' answers.
+                    {{SITE_NAME}} helps reveal why people gave those answers, not in terms of demographics, but in their own words.
+                </p>
+                <p>
+                    {{SITE_NAME}} Features:
+                </p>
+                <ul>
+                    <li> Rating, ranking, checklists, budgets, write-in answers, and proposals
+                    <li> Request-for-proposals forum
+                    <li> Hosts can suggest answers, and participants can also add any new answer
+                    <li> Participants are nudged to converge toward a few popular answers, to surface clear and informed perspectives
+                </ul>
+                <p style='margin:1.5em 0 .5em 0;'>
+                    Why {{SITE_NAME}}?
+                </p>
+                <ul>
+                    <li> Free
+                    <li> Easy enrollment:  No sign-up process for hosts nor citizens
+                    <li> Privacy:  No participant identity tracking
+                    <li> No moderation required:  Only the best, most relevant, user content is presented
+                    <li> Simple:  As easy as creating a web survey, with realtime results
+                    <li> Deliberation built in:  No need to choose between surveys and forums
+                </ul>
+                <!-- Demo video / page, testimonials, latest updates... -->
+            </div>
+
+        </div>
+
+
+
+        <div id=pageMultiQuestion class=Page>
+            <h1 class=title translate=yes> Survey </h1>
+            <p translate=yes>
+                Survey your participants with a series of form questions -- like ratings, rankings, checkboxes, budgets, and proposals --
+                that reveal participants' opinions and reasons, and which build greater understanding between participants.
             </p>
+            <div id=MultiQuestionSurvey></div>
         </div>
 
 
 
         <div id=pageNewRequest class=Page>
-            <h1 class=title role=status translate=true> New Request For Proposals </h1>
-            <p translate=true>
-                Using {{SITE_NAME}}, a leader can send a request for proposals, to a group of participants.
-                Participants can make proposals, and point out the pro's and con's of proposals.
-            </p>
-            <p translate=true>
-                {{SITE_NAME}} handles the most significant problem with group decision-making & participatory democracy:
-                the high cost of organizing and evaluating participants' ideas.
+            <h1 class=title role=status translate=yes> New Request For Proposals </h1>
+            <p translate=yes>
+                Send your group a request for proposals, where participants can propose solutions,
+                and evaluate the pro's and con's of each other's solutions.
+                {{SITE_NAME}} will summarize the best supported solutions.
             </p>
             <form id=formNewRequest >
                 <div>
-                    <label for=newRequestInputTitle class=newRequestInputLabel translate=true> Title </label>
-                    <input id=newRequestInputTitle type=text  placeholder='How can we...'
+                    <label for=newRequestInputTitle class=newRequestInputLabel translate=yes> Title </label>
+                    <input id=newRequestInputTitle type=text  placeholder='What is the best way to...'
                         title='Enter your request title here'  aria-required=true />
                 </div>
                 <div>
-                    <label for=newRequestInputDetail class=newRequestInputLabel translate=true> Details </label>
+                    <label for=newRequestInputDetail class=newRequestInputLabel translate=yes> Details </label>
                     <textarea id=newRequestInputDetail  placeholder='More details of our problem...'
                         title='Enter the content of your request here'  aria-required=true ></textarea>
                 </div>
@@ -153,38 +165,73 @@
                 </fieldset>
 
                 <div class=newRequestInputArea> 
-                    <div id=newRequestSubmit><button id=buttonSubmit translate=true> Request Proposals </button></div>
+                    <div id=newRequestSubmit><button id=buttonSubmit translate=yes> Request Proposals </button></div>
                     <div id=newRequestSubmitMessage class=Message aria-live=polite ></div>
                 </div>
             </form>
+
+            <details class=aboutDetails style='margin-top:40px;'>
+                <summary translate=yes> More information </summary>
+
+                <div>
+                    <p>
+                        When you lead a group, and face a problem, then a request-for-proposals helps you
+                        bring out the creative problem-solving ideas of your group-members.
+                        And participants even help you extract the useful ideas from the noise.
+                    </p>
+                    Reason-based voting
+                    <ul>
+                        <li> Users must view others' reasons before entering their own reason
+                        <li> Users must vote for a reason, rather than just voting yes or no
+                        <li> User-generated content cannot be changed once responded to
+                        <li> Users are anonymous, so reasons must stand on their own merit
+                    </ul>
+                    Minimizing the burden of knowledge
+                    <ul>
+                        <li> Proposals & reasons are ordered by votes discounted by length
+                        <li> Users only have to view the best few short proposals / reasons
+                        <li> Pro & con reasons are given equal placement, either interleaved or side-by-side
+                        <li> New proposal/reason input shows similar existing proposals/reasons
+                    </ul>
+                    Anti-abuse
+                    <ul>
+                        <li> Each user can vote for only 1 reason per proposal, to reduce the impact of coordinated voting strategies
+                        <li> Access is private, and sharable by link
+                        <li> Low-quality content is submerged by user voting
+                    </ul>
+
+                    <a href='{{SITE_URL}}/#page=request&link=vEZuXj4uSvki2yQLLg8xE0fLeveOtbhx8bHkI0REmuFq9M6XsI' target=_blank> Example </a>
+                </div>
+            </details>
+
         </div>
 
         <div id=pageRequest class=Page>
-            <h1 class=title role=status translate=true> Request For Proposals </h1>
+            <h1 class=title role=status translate=yes> Request For Proposals </h1>
             <div id=requestForProposalsContent></div>
         </div>
 
 
 
         <div id=pageNewProposal class=Page>
-            <h1 class=title role=status translate=true> New Proposal </h1>
-            <p translate=true>
+            <h1 class=title role=status translate=yes> New Proposal </h1>
+            <p translate=yes>
                 Using {{SITE_NAME}}, a leader can get feedback on their proposal, 
                 and participants can point out the pro's and con's of the proposal.
             </p>
-            <p translate=true>
+            <p translate=yes>
                 {{SITE_NAME}} handles the most significant problem with group decision-making & participatory democracy:
                 the large effort to organize and evaluate participants' ideas.  {{SITE_NAME}} does this
                 by turning the crowd on itself, to organize and evaluate each-others' ideas.
             </p>
             <form id=formNewProposal >
                 <div>
-                    <label for=newProposalInputTitle class=newProposalInputLabel translate=true> Title </label>
+                    <label for=newProposalInputTitle class=newProposalInputLabel translate=yes> Title </label>
                     <input id=newProposalInputTitle type=text  placeholder='I propose...'
                         title='Enter your proposal title here'  aria-required=true />
                 </div>
                 <div>
-                    <label for=newProposalInputDetail class=newProposalInputLabel translate=true> Details </label>
+                    <label for=newProposalInputDetail class=newProposalInputLabel translate=yes> Details </label>
                     <textarea id=newProposalInputDetail  placeholder='More details of my proposal...'
                         title='Enter the content of your proposal here'  aria-required=true ></textarea>
                 </div>
@@ -206,32 +253,31 @@
                     </div>
                 </fieldset>
 
-                <div id=newProposalSubmit><button id=buttonSubmitNewProposal translate=true> Propose </button></div>
-                <div id=newProposalSubmitMessage class=Message aria-live=polite translate=true></div>
+                <div id=newProposalSubmit><button id=buttonSubmitNewProposal translate=yes> Propose </button></div>
+                <div id=newProposalSubmitMessage class=Message aria-live=polite translate=yes></div>
             </form>
         </div>
 
         <div id=pageProposal class=Page>
-            <h1 class=title role=status translate=true> Proposal </h1>
+            <h1 class=title role=status translate=yes> Proposal </h1>
             <div id=ProposalContent></div>
         </div>
 
 
 
         <div id=pageNewAutocomplete class=Page>
-            <h1 class=title translate=true> New Auto-complete Survey </h1>
-            <p translate=true>
-                Worry less about whether you are providing the right multiple choice options, by letting particpants add their own options.
-                But still get useful convergence to a few best answers.
+            <h1 class=title translate=yes> New Auto-complete Survey </h1>
+            <p translate=yes>
+                Let particpants write-in their own answers, but still condense results to a few best answers.
             </p>
             <form id=newQuestionForm >
                 <div>
-                    <label for=newSurveyTitleInput class=newAutocompleteInputLabel translate=true> Title </label>
+                    <label for=newSurveyTitleInput class=newAutocompleteInputLabel translate=yes> Title </label>
                     <input id=newSurveyTitleInput type=text  placeholder='Survey about...'
                         title='Enter your survey title here'  aria-required=true />
                 </div>
                 <div>
-                    <label for=newSurveyIntroInput class=newAutocompleteInputLabel translate=true> Introduction </label>
+                    <label for=newSurveyIntroInput class=newAutocompleteInputLabel translate=yes> Introduction </label>
                     <textarea id=newSurveyIntroInput aria-required=true
                         placeholder='More information about this survey...'
                         title='Enter survey introduction here.'></textarea>
@@ -255,47 +301,90 @@
                 </fieldset>
 
                 <div id=newSurveySubmitButtons>
-                    <button id=newSurveySubmitButton translate=true> Edit survey </button>
+                    <button id=newSurveySubmitButton translate=yes> Edit survey </button>
                 </div>
                 <div id=newSurveySubmitMessage class=Message aria-live=polite></div>
             </form>
+
+            <details class=aboutDetails style='margin-top:40px;'>
+                <summary translate=yes> More information </summary>
+                <div>
+                    Surveyors:
+                    <ul>
+                        The most straightforward way to find out what your group-members think, is to simply ask, and let them say anything.
+                        Worry less about whether you are providing the right multiple choice options, by letting particpants create their own options.
+                        But when your group is large, there are too many answers to comprehend.
+                        So autocomplete-surveys gather your members' answers into a few high-quality answers.
+                    </ul>
+
+                    Participants:
+                    <ul>
+                        To answer survey questions, just type.
+                        You may see the answer you were thinking of, and select it.
+                        Or type in a better version of a suggested answer, so that other people can select your version.
+                        If you see something rude, don't click it, and it will appear less and less.
+                    </ul>
+
+                    Reason-based voting
+                    <ul>
+                        <li> Users must view others' answers before entering their own answer
+                        <li> Users supply both an answer, and a reason for that answer
+                        <li> Users are anonymous, so answers & reasons must stand on their own merit
+                    </ul>
+                    Minimizing the burden of knowledge
+                    <ul>
+                        <li> Users only have to view the most popular and relevant answers
+                        <li> New answer input suggests similar existing proposals/reasons
+                    </ul>
+                    Anti-abuse
+                    <ul>
+                        <li> Each user can select only 1 answer per question, to reduce the chance of strategic answering
+                        <li> Access is private, and sharable by link
+                        <li> Low-quality content is submerged by user voting
+                    </ul>
+
+                    <a href='{{SITE_URL}}/#page=autocomplete&link=MLvPgziMWGqik5NPMSfERPZKgPlrd9PBrKQ9dEhrpTK4YcxF5o' target=_blank> Example </a>
+
+                </div>
+            </details>
+
         </div>
 
         <div id=pageEditAutocomplete class=Page>
-            <h1 class=title translate=true> Edit Auto-complete Survey </h1>
+            <h1 class=title translate=yes> Edit Auto-complete Survey </h1>
         </div>
 
         <div id=pageViewAutocomplete class=Page>
-            <h1 class=title translate=true> View Auto-complete Survey </h1>
+            <h1 class=title translate=yes> View Auto-complete Survey </h1>
         </div>
         
         <div id=pageAutocompleteResults class=Page>
-            <h1 class=title translate=true> Auto-complete Survey Results </h1>
+            <h1 class=title translate=yes> Auto-complete Survey Results </h1>
         </div>
 
 
 
         <div id=pageBudgetNew class=Page>
-            <h1 class=title translate=true> New Participatory Budget </h1>
+            <h1 class=title translate=yes> New Participatory Budget </h1>
             <p>
                 Discover a group's budget preferences, allowing participants to both introduce new budget items,
                 and to negotiate better allocations of resources.
             </p>
             <form id=newBudgetForm >
                 <div>
-                    <label for=newBudgetTitleInput translate=true> Title </label>
+                    <label for=newBudgetTitleInput translate=yes> Title </label>
                     <input id=newBudgetTitleInput type=text  aria-required=true
                         placeholder='Budget for...'
                         title='Enter your budget title here' />
                 </div>
                 <div>
-                    <label for=newBudgetIntroInput translate=true> Introduction </label>
+                    <label for=newBudgetIntroInput translate=yes> Introduction </label>
                     <textarea id=newBudgetIntroInput aria-required=true
                         placeholder='We need to allocate money for... because...'
                         title='Enter budget introduction'></textarea>
                 </div>
                 <div>
-                    <label for=newBudgetTotalInput translate=true> Total amount to allocate </label>
+                    <label for=newBudgetTotalInput translate=yes> Total amount to allocate </label>
                     <input id=newBudgetTotalInput type=number min=0 step=any  aria-required=true
                         placeholder='100'
                         title='Enter total budget amount' />
@@ -319,385 +408,83 @@
                 </fieldset>
 
                 <div id=newBudgetSubmitButtons>
-                    <button id=newBudgetSubmitButton translate=true> Start budget </button>
+                    <button id=newBudgetSubmitButton translate=yes> Start budget </button>
                 </div>
                 <div id=newBudgetSubmitMessage class=Message aria-live=polite></div>
             </form>
+
+            <details class=aboutDetails style='margin-top:40px;'>
+                <summary translate=yes> More information </summary>
+
+                <div>
+                    Surveyors:
+                    <ul>
+                        Don't limit the possible solutions to your budget challenges by allowing only a predetermined menu of budget-items.
+                        Allow users to add unexpected budget-items, and support their allocations with reasons.
+                        You can still seed the budget with items you consider important.
+                    </ul>
+
+                    Participants:
+                    <ul>
+                        To create a budget proposal, enter any budget-item you like.
+                        Or choose from similar budget-items, to add your support.
+                        Adjust the size of your budget-item, with suggestions about how large or small it should be.
+                    </ul>
+
+                    Reason-based voting
+                        <ul>
+                        <li> Users supply both an answer, and a reason for that answer
+                        <li> Users can learn from other users' budget proposals
+                        </ul>
+                    Minimizing the burden of knowledge
+                        <ul>
+                        <li> Users only have to view the most popular and relevant budget-items
+                        <li> Brevity is promoted
+                        </ul>
+                    Anti-abuse
+                        <ul>
+                        <li> Extreme budget proposals do not sway results
+                        <li> Access is private, and sharable by link
+                        </ul>
+
+                    <a href='{{SITE_URL}}/#page=budget&link=Q6pESHxVkFJPYxNR9EaeCtBsr0bR5GxIvRZ5vCpyyxrCkKsh5n' target=_blank> Example </a>
+                </div>
+            </details>
         </div>
 
         <div id=pageBudgetEdit class=Page>
-            <h1 class=title translate=true> Budget Setup </h1>
+            <h1 class=title translate=yes> Budget Setup </h1>
         </div>
 
         <div id=pageBudgetView class=Page>
-            <h1 class=title translate=true> Budget </h1>
+            <h1 class=title translate=yes> Budget </h1>
         </div>
 
         <div id=pageBudgetResult class=Page>
-            <h1 class=title translate=true> Budget Results </h1>
+            <h1 class=title translate=yes> Budget Results </h1>
+
         </div>
 
 
 
         <div id=pageRecent class=Page>
-            <h1 class=title role=status translate=true> Recent </h1>
-            <div id=recentMessage class=Message aria-live=polite translate=true></div>
+            <h1 class=title role=status translate=yes> Recent </h1>
+            <div id=recentMessage class=Message aria-live=polite translate=yes></div>
             <div id=recentContent></div>
-        </div>
-
-        <div id=pageAbout class=Page>
-            <h1 class=title role=status translate=true> About </h1>
-            <div id=aboutContent>
-                <p>
-                    {{SITE_NAME}} is a free survey website.  You can create your own surveys here.
-                </p>
-                <h3> The problem </h3>
-                <p>
-                    Most social-networks are "divergent", grouping us into "filter-bubbles" of like-minded people.
-                    These groups are comfortable, and the more time we spend there, 
-                    the more we hear our own opinions reflected back to ourselves,
-                    and the more extreme we become in our views.
-                </p>
-                <p>
-                    But when we leave our comfortable bubbles to make decisions for the larger society,
-                    the conflicting extreme opinions create chaos.
-                    Decision-making for our city, state, & nation becomes more and more difficult
-                    as people become further & further away from consensus.
-                </p>
-                <h3> {{SITE_NAME}} </h3>
-                <p>
-                    We need a way to understand the world outside our own filter-bubble.
-                    We need a way to re-converge our isolated islands of belief, back into a single mainland society.
-                    We need a way for people to disagree, but still understand each other, and understand the facts.
-                    We need a way to plan a future together.
-                </p>
-                <p>
-                    {{SITE_NAME}} is a forum that breaks filter-bubbles, creates consensus in diverse groups,
-                    and improves the quality of group-decisions.
-                    {{SITE_NAME}} is run by a privately-held company, operated "for benefit",
-                    seeking profit only to operate sustainably.
-                </p>
-
-                <h3> Reason-based voting </h3>
-                <p>
-                    When opinions conflict, voting alone does not bring opinions closer together.
-                    Competitive voting can even increase partisanship.
-                    But reason-based voting helps people to know more, to learn about themselves and each other,
-                    and to find more common ground than we expect.
-                </p>
-                <h3> Minimizing the burden of knowledge </h3>
-                <p>
-                    We are busy people.
-                    So these survey tools have been designed to make it fast & easy for people to express their reasons,
-                    and to comprehend others' reasons.
-                </p>
-                <h3> Anti-abuse </h3>
-                <p>
-                    Some small fraction of people will try to break, misuse, and corrupt any forum,
-                    sometimes using coordinated campaigns of abuse.
-                    A forum for all people must allow subversion to exist, but limit the impact of their abuse.
-                    These sites are designed to allow noisy special-interest-groups to speak their mind,
-                    without preventing coherent planning.
-                </p>
-
-                <details class=aboutDetails>
-                    <summary> Theory </summary>
-                    <p> Here are common group decision-making pitfalls, and how {{SITE_NAME}} avoids them. <p>
-                    <ul>
-                        <li>
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Authority_bias'> Authority-bias </a>
-                            <ul>
-                                <li> Fix:  No leaders/moderators </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Group_polarization'> Group polarization </a> ,
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Groupshift'> Group-shift </a>
-                            <ul>
-                                <li> Fix:  All users see opposing reasons. </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Groupthink'> Group-think </a> ,
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Social_influence'> Social-influence </a> ,
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Conformity'> Conformity </a>
-                            <ul>
-                                <li> Fix:  Anonymity, no reputation scores, no penalties for dissent </li>
-                                <li> Fix:  No chatroom socialization </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Filter_bubble'> Filter-bubbles </a>
-                            <ul>
-                                <li> Fix:  All users see opposing reasons. </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Information_cascade'> Information cascades </a>
-                            <ul>
-                                <li> Fix:  The decision-process is largely parallel, not very sequential. </li>
-                                <li> Fix:  Users can observe the information upon which others decide, as reasons or links. </li>
-                                <li> Some amount of convergence is a goal of the system, to cluster users around a few best answers. </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Bandwagon_effect'> Bandwagon effect </a>
-                            <ul>
-                                <li> Fix:  Users can always input a unique answer. </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a target=_blank href='https://en.wikipedia.org/wiki/Shared_information_bias'> Shared information bias </a>
-                            <ul>
-                                <li> Fix:  All discussion must be in the form of shared information. </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Survey type:  Request for Proposals </summary>
-
-                    <div>
-                        <p>
-                            When you lead a group, and face a problem, then a request-for-proposals helps you
-                            bring out the creative problem-solving ideas of your group-members.
-                            And participants even help you extract the useful ideas from the noise.
-                        </p>
-                        Reason-based voting
-                        <ul>
-                            <li> Users must view others' reasons before entering their own reason
-                            <li> Users must vote for a reason, rather than just voting yes or no
-                            <li> User-generated content cannot be changed once responded to
-                            <li> Users are anonymous, so reasons must stand on their own merit
-                        </ul>
-                        Minimizing the burden of knowledge
-                        <ul>
-                            <li> Proposals & reasons are ordered by votes discounted by length
-                            <li> Users only have to view the best few short proposals / reasons
-                            <li> Pro & con reasons are given equal placement, either interleaved or side-by-side
-                            <li> New proposal/reason input shows similar existing proposals/reasons
-                        </ul>
-                        Anti-abuse
-                        <ul>
-                            <li> Each user can vote for only 1 reason per proposal, to reduce the impact of coordinated voting strategies
-                            <li> Access is private, and sharable by link
-                            <li> Low-quality content is submerged by user voting
-                        </ul>
-
-                        <a href='https://converj.us/#page=request&link=vEZuXj4uSvki2yQLLg8xE0fLeveOtbhx8bHkI0REmuFq9M6XsI' target=_blank> Example request-for-proposals </a>
-                    </div>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Survey type:  Auto-complete </summary>
-                    <div>
-                        Surveyors:
-                        <ul>
-                            The most straightforward way to find out what your group-members think, is to simply ask, and let them say anything.
-                            Worry less about whether you are providing the right multiple choice options, by letting particpants create their own options.
-                            But when your group is large, there are too many answers to comprehend.
-                            So autocomplete-surveys gather your members' answers into a few high-quality answers.
-                        </ul>
-
-                        Participants:
-                        <ul>
-                            To answer survey questions, just type.
-                            You may see the answer you were thinking of, and select it.
-                            Or type in a better version of a suggested answer, so that other people can select your version.
-                            If you see something rude, don't click it, and it will appear less and less.
-                        </ul>
-
-                        Reason-based voting
-                        <ul>
-                            <li> Users must view others' answers before entering their own answer
-                            <li> Users supply both an answer, and a reason for that answer
-                            <li> Users are anonymous, so answers & reasons must stand on their own merit
-                        </ul>
-                        Minimizing the burden of knowledge
-                        <ul>
-                            <li> Users only have to view the most popular and relevant answers
-                            <li> New answer input suggests similar existing proposals/reasons
-                        </ul>
-                        Anti-abuse
-                        <ul>
-                            <li> Each user can select only 1 answer per question, to reduce the chance of strategic answering
-                            <li> Access is private, and sharable by link
-                            <li> Low-quality content is submerged by user voting
-                        </ul>
-
-                        <a href='https://converj.us/#page=autocomplete&link=MLvPgziMWGqik5NPMSfERPZKgPlrd9PBrKQ9dEhrpTK4YcxF5o' target=_blank> Example auto-complete survey </a>
-
-                    </div>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Survey type:  Participatory budget </summary>
-                    <div>
-                        Surveyors:
-                        <ul>
-                            Don't limit the possible solutions to your budget challenges by allowing only a predetermined menu of budget-items.
-                            Allow users to add unexpected budget-items, and support their allocations with reasons.
-                            You can still seed the budget with items you consider important.
-                        </ul>
-
-                        Participants:
-                        <ul>
-                            To create a budget proposal, enter any budget-item you like.
-                            Or choose from similar budget-items, to add your support.
-                            Adjust the size of your budget-item, with suggestions about how large or small it should be.
-                        </ul>
-
-                        Reason-based voting
-                            <ul>
-                            <li> Users supply both an answer, and a reason for that answer
-                            <li> Users can learn from other users' budget proposals
-                            </ul>
-                        Minimizing the burden of knowledge
-                            <ul>
-                            <li> Users only have to view the most popular and relevant budget-items
-                            <li> Brevity is promoted
-                            </ul>
-                        Anti-abuse
-                            <ul>
-                            <li> Extreme budget proposals do not sway results
-                            <li> Access is private, and sharable by link
-                            </ul>
-
-                        <a href='https://converj.us/#page=budget&link=Q6pESHxVkFJPYxNR9EaeCtBsr0bR5GxIvRZ5vCpyyxrCkKsh5n' target=_blank> Example participatory budget </a>
-                    </div>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Background documents </summary>
-                    <ul>
-                        <li> <a href='{{ url_for('static', filename='doc/experimentSummary.html') }}' target=_blank> Experiment summary </a>
-                        <li> <a href='{{ url_for('static', filename='doc/openVoterId.html') }}' target=_blank> Open voter ID </a>
-                    </ul>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Intellectual property </summary>
-                    <div>
-                        You may copy this site.
-                        These ideas are unpatented, straightforward applications of prior art from projects like Consider.it, Tricider, and more.
-                    </div>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Open-source code </summary>
-                    <div>
-                        The code for this site is open-source, under Apache license, at: 
-                        <br><a href='https://github.com/converj/reasonSurvey' target=_blank
-                            > https://github.com/converj/reasonSurvey </a>
-                    </div>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Legal documents </summary>
-                    <ul>
-                        <li> <a href=termsOfService.html target=_blank> Terms of Service </a>
-                        <li> <a href=privacyPolicy.html target=_blank> Privacy Policy </a>
-                    </ul>
-                </details>
-
-                <details class=aboutDetails>
-                    <summary> Accessibility </summary>
-                    <div>
-                        This website is periodically reviewed for accessibility.  The goal is to
-                        support keyboard navigation, and screen-reader navigation with:
-                        <ul>
-                            <li> VoiceOver on MacOS
-                            <li> VoiceOver on iOS
-                            <li> Talkback on Android
-                            <li> ChromeVox on ChromeOS
-                        </ul>
-                    </div>
-                </details>
-
-            </div>
         </div>
 
     </div>
 
 </div id=content>
 
-<div id=log></div>
 
-<script>
-    // Constants passed from server-side configuration
-    const minLengthRequest = {{minLengthRequest}};
-    const minLengthProposal = {{minLengthProposal}};
-    const minLengthReason = {{minLengthReason}};
-    const minLengthSurveyIntro = {{minLengthSurveyIntro}};
-    const minLengthQuestion = {{minLengthQuestion}};
-    const minLengthAnswer = {{minLengthAnswer}};
-    const minLengthBudgetIntro = {{minLengthBudgetIntro}};
-    const minLengthSliceTitle = {{minLengthSliceTitle}};
-    const minLengthSliceReason = {{minLengthSliceReason}};
-    const TOO_SHORT = '{{TOO_SHORT}}';
-    const REASON_TOO_SHORT = '{{REASON_TOO_SHORT}}';
-    const DUPLICATE = '{{DUPLICATE}}';
-    const NO_COOKIE = '{{NO_COOKIE}}';
-    const NO_LOGIN = '{{NO_LOGIN}}';
-    const BAD_CRUMB = '{{BAD_CRUMB}}';
-    const BAD_LINK = '{{BAD_LINK}}';
-    const NOT_OWNER = '{{NOT_OWNER}}';
-    const HAS_RESPONSES = '{{HAS_RESPONSES}}';
-    const ERROR_DUPLICATE = '{{ERROR_DUPLICATE}}';
-    const OVER_BUDGET = '{{OVER_BUDGET}}';
-    const EXPERIMENT_NOT_AUTHORIZED = '{{EXPERIMENT_NOT_AUTHORIZED}}';
-    const MAX_WORDS_INDEXED = {{MAX_WORDS_INDEXED}};
-    const STOP_WORDS = {{ STOP_WORDS|safe }};
-    const VOTER_ID_LOGIN_SIG_LENGTH = {{VOTER_ID_LOGIN_SIG_LENGTH}};
-    const VOTER_ID_LOGIN_REQUEST_ID_LENGTH = {{VOTER_ID_LOGIN_REQUEST_ID_LENGTH}};
-    const IS_DEV = {{IS_DEV}};
-
-    // Globals passed from server
-    var crumb = '{{crumb}}';
-    
-    // Constants shared by many scripts.
-    const DIV_ID_NEW_REQUEST = 'pageNewRequest';
-    const DIV_ID_NEW_PROPOSAL = 'pageNewProposal';
-    const DIV_ID_REQUEST = 'pageRequest';
-    const DIV_ID_PROPOSAL = 'pageProposal';
-    const DIV_ID_NEW_AUTOCOMPLETE     = 'pageNewAutocomplete';
-    const DIV_ID_EDIT_AUTOCOMPLETE    = 'pageEditAutocomplete';
-    const DIV_ID_VIEW_AUTOCOMPLETE    = 'pageViewAutocomplete';
-    const DIV_ID_AUTOCOMPLETE_RESULTS = 'pageAutocompleteResults';
-    const DIV_ID_RECENT = 'pageRecent';
-    const DIV_ID_ABOUT = 'pageAbout';
-    const DIV_ID_SITE_LIST = 'pageSiteList';
-    const DIV_ID_HOME = 'pageHome';
-    const SITE_TITLE = '{{SITE_NAME}}';
-    const MAX_WIDTH_1_COLUMN = 700;
-    const MAX_WIDTH_POPUP_MENU = 800;
-
-</script>
-
-<script src='{{ url_for('static', filename='jquery-3.4.1.min.js') }}'></script>
-<script src='{{ url_for('static', filename='translations.js') }}'></script>
-<script src='{{ url_for('static', filename='shared.js') }}'></script>
+{% include 'foot.html' %}
 
 <script src='{{ url_for('static', filename='newRequest.js') }}'></script>
 <script src='{{ url_for('static', filename='newProposal.js') }}'></script>
 <script src='{{ url_for('static', filename='recent.js') }}'></script>
 <script src='{{ url_for('static', filename='requestForProposals.js') }}'></script>
-
-<script src='{{ url_for('static', filename='autocomplete/shared.js') }}'></script>
 <script src='{{ url_for('static', filename='autocomplete/newSurvey.js') }}'></script>
-<script src='{{ url_for('static', filename='autocomplete/editSurvey.js') }}'></script>
-<script src='{{ url_for('static', filename='autocomplete/viewSurvey.js') }}'></script>
-<script src='{{ url_for('static', filename='autocomplete/surveyResults.js') }}'></script>
-
 <script src='{{ url_for('static', filename='budget/new.js') }}'></script>
-<script src='{{ url_for('static', filename='budget/edit.js') }}'></script>
-<script src='{{ url_for('static', filename='budget/view.js') }}'></script>
-<script src='{{ url_for('static', filename='budget/results.js') }}'></script>
 
 <script src='{{ url_for('static', filename='main.js') }}'></script>
-
-
-</body>
-</html>
-

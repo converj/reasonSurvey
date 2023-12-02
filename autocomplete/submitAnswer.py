@@ -81,7 +81,6 @@ def editAnswer( ):
             answerStr, reason = answer.parseAnswerAndReason( content )
             if surveyRec.hideReasons and reason:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='reasons hidden' )
             if (not answerStr) and reason:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
-            if answerStr and (not reason) and (not surveyRec.hideReasons):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.REASON_TOO_SHORT )
             if not answerStr:  continue
 
             # If new answer value already exists... error.  If new answer is same as old answer value... no problem?

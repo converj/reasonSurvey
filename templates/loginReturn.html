@@ -20,8 +20,9 @@
 <div id=log></div>
 
 
-<script src='jquery-3.4.1.min.js'></script>
-<script src='shared.js'></script>
+<script src='{{ url_for('static', filename='jquery-3.4.1.min.js') }}'></script>
+<script src='{{ url_for('static', filename='shared.js') }}'></script>
+<script src='{{ url_for('static', filename='translations.js') }}'></script>
 <script>
     var crumb = '{{crumb}}';
 

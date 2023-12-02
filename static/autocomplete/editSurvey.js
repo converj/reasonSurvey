@@ -11,7 +11,7 @@
         this.createFromHtml( displayId, '\n\n' + [
             '<div class=Answer id=Answer>',
             '   <div class=AnswerEdit>' , 
-            '       <label for=AnswerContentInput translate=true> Suggested Answer </label>' ,
+            '       <label for=AnswerContentInput class=AnswerContentLabel translate=true> Suggested Answer </label>' ,
             '       <input class=AnswerContentInput id=AnswerContentInput placeholder="" ' ,
             '           onblur=handleEditAnswerBlur oninput=handleEditAnswerInput onkeydown=handleAnswerKey />' ,
             '       <label class=AnswerReasonLabel for=AnswerReasonInput translate=true> Reason </label>' ,
@@ -181,6 +181,14 @@
             this.dataUpdated();
             return;
         }
+//         // Require that answer has reason
+//         if ( inputReason.value.length <= 0 ){
+//             this.editMessage = { color:RED, text:REASON_TOO_SHORT_MESSAGE };
+//             this.reasonValidity = REASON_TOO_SHORT_MESSAGE;
+//             this.reasonTooShort = true;
+//             this.dataUpdated();
+//             return;
+//         }
 
         // Require that answer/reason changed
         if ( inputValue == this.answer.content ){  return;  }
@@ -346,7 +354,7 @@
             // Answers
             '    <div class=Answers id=Answers></div>',
             '    <div class=NewAnswer>', 
-            '        <label for=NewAnswerInput translate=true> Suggest Answer </label>',
+            '        <label for=NewAnswerInput translate=true class=newAnswerLabel> Suggest Answer </label>',
             '        <textarea class=NewAnswerInput id=NewAnswerInput placeholder="" ',
             '            oninput=handleNewAnswerInput></textarea>',
             '    </div>',
@@ -404,6 +412,7 @@
         var contentInput = this.getSubElement('QuestionContentInput');
         return ( contentInput.value.length >= minLengthQuestion );
     };
+
 
         QuestionEditDisplay.prototype.
     focusFirstAnswerInput = function( ){
@@ -676,7 +685,7 @@
 
         // request via ajax
         var sendData = { };
-        var url = '/autocomplete/getQuestionAnswersFromCreator/' + this.topDisp.linkKey.id + '/' + this.question.id;
+        let url = '/autocomplete/getQuestionAnswersFromCreator/' + this.topDisp.linkKey.id + '/' + this.question.id;
         ajaxGet( sendData, url, function(error, status, receiveData){
             if ( receiveData ){
                 if ( receiveData.success ){

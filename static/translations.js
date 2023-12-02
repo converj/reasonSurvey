@@ -1,5 +1,5 @@
-
 const englishToTranslations = {
+
   // Menus
   'New Survey': { es:'Nueva encuesta' , cn:'新问卷调查' , nl:'Nieuwe enquête' , fr:'Nouvelle enquête' , pt:'Nova pesquisa' } ,
   'Menu': { es:'Menú' , cn:'菜单' , nl:'Menu' , fr:'Menu' , pt:'Cardápio' } ,
@@ -11,6 +11,7 @@ const englishToTranslations = {
   'About': { es:'Sobre' , cn:'关于' , nl:'Over' , fr:'À propos' , pt:'Sobre' } ,
   'Log in': { es:'Acceso' , cn:'登录' , nl:'Log in' , fr:'Connexion' , pt:'Conecte-se' } ,
   'Log out': { es:'Cerrar sesión' , cn:'登出' , nl:'Uitloggen' , fr:'Se déconnecter' , pt:'Sair' } ,
+
 
   // Status messages
   'Browser login only': { 
@@ -28,6 +29,7 @@ const englishToTranslations = {
   'Froze survey': { es:'Encuesta congelada' , cn:'冻结调查' , nl:'Bevroren enquête' , fr:'Sondage enregistré' , pt:'Pesquisa congelada' } ,
   'Unfroze survey': { es:'Encuesta descongelada' , cn:'解冻调查' , nl:'Ontdooid onderzoek' , fr:'Enquête dégelée' , pt:'Pesquisa descongelada' } ,
   'Saved survey': { es:'Encuesta guardada' , cn:'保存的调查' , nl:'Opgeslagen enquête' , fr:'Sondage enregistré' , pt:'Pesquisa salva' } ,
+
 
   // Recent
   'Request for proposals': { es:'Solicitud de propuestas' , cn:'提交提案' , nl:'Verzoek om voorstellen' , fr:'Demande de propositions' , 
@@ -48,6 +50,7 @@ const englishToTranslations = {
   'Auto-complete Survey': { 
     es:'Autocompletar Encuesta' , cn:'自动完成问卷调查' , nl:'Enquête Automatisch Aanvullen' , fr:'Sondage à Saisie Automatique'  , 
     pt:'Pesquisa de preenchimento automático'  } ,
+
 
   // Main
   'Reason-Based Surveys': {
@@ -96,6 +99,7 @@ const englishToTranslations = {
     nl:'Om uw begrip van de behoeften van uw groep te vergroten, is het vaak handig om deze soorten enquêtes op volgorde uit te voeren.' , 
     fr:"Pour mieux comprendre les besoins de votre groupe, il est souvent utile d'exécuter ces types d'enquêtes dans l'ordre." , 
     pt:'Para aumentar sua compreensão das necessidades do seu grupo, geralmente é útil executar esses tipos de pesquisa em ordem.'  } ,
+
 
   // Budget
   'New Participatory Budget': { 
@@ -171,6 +175,7 @@ const englishToTranslations = {
   'Budget Amount': { es:'Cantidad de presupuesto' , cn:'此预算所占百分比' , nl:'Budget bedrag' , fr:'Montant budgétaire' , 
     pt:'Montante do orçamento'  } ,
   'Votes': { es:'Votos' , cn:'票数' , nl:'Stemmen' , fr:'Votes' , pt:'Votos' } ,
+
 
   // Auto-complete
   'New Auto-complete Survey': { 
@@ -251,6 +256,7 @@ const englishToTranslations = {
     pt:'A pesquisa está concluída'  } ,
   'Count': { es:'Cantidad' , cn:'数量' , nl:'Graaf' , fr:'Nombre' , pt:'Contagem' } ,
   'More answers': { es:'Más respuestas' , cn:'更多答案' , nl:'Meer antwoorden' , fr:'Plus de réponses' , pt:'Mais respostas' } ,
+
 
   // Proposal pro/con
   'New Proposal': { es:'' , cn:'新的提案' , nl:'Nieuw voorstel' , fr:'Nouvelle proposition' , pt:'Nova proposta' } ,
@@ -363,6 +369,7 @@ const englishToTranslations = {
     fr:"Dernier changement d'administrateur" , 
     pt:'Última alteração de administrador'  } ,
 
+
   // Request proposals
   'New Request For Proposals': { es:'Nueva Solicitud de Propuestas' , cn:'新征求建议书' , nl:'Nieuw verzoek om voorstellen' , 
     fr:'Nouvelle demande de propositions' , pt:'Nova Solicitação de Propostas'  } ,
@@ -438,7 +445,197 @@ const englishToTranslations = {
   'Back to proposals': { es:'Volver a las propuestas' , cn:'返回提案' , nl:'Terug naar voorstellen' , fr:'Retour aux propositions' , 
     pt:'Voltar para propostas'  } ,
 
-  '': { es:'' , cn:'' , nl:'' , fr:'' , pt:'' } ,  // Handle empty translation attempts
 
+// Multi-question survey
+'Survey': {'es': 'Encuesta', 'cn': '民意调查', 'nl': 'Vragenlijst', 'fr': 'Enquête', 'pt': 'Enquete'} ,
+
+'Administrate': {'es': 'Administrar', 'cn': '管理', 'nl': 'Beheer', 'fr': 'Administrer', 'pt': 'Administrar'} ,
+
+'Result': {'es': 'Resultado', 'cn': '结果', 'nl': 'Resultaat', 'fr': 'Résultat', 'pt': 'Resultado'} ,
+
+'Vote': {'es': 'Votar', 'cn': '投票', 'nl': 'Stemmen', 'fr': 'Vote', 'pt': 'Voto'} ,
+
+'Pro': {'es': 'A favor', 'cn': '论证', 'nl': 'Voor', 'fr': 'Pour', 'pt': 'Para'} ,
+
+'Con': {'es': 'Contra', 'cn': '反对的论点', 'nl': 'Tegen', 'fr': 'Contre', 'pt': 'Contra'} ,
+
+'Position': {'es': 'Posición', 'cn': '位置', 'nl': 'Positie', 'fr': 'Position', 'pt': 'Posição'} ,
+
+'Type': {'es': 'Tipo', 'cn': '类型', 'nl': 'Soort', 'fr': 'Type', 'pt': 'Tipo'} ,
+
+'Instructions': {'es': 'Instrucciones', 'cn': '指示', 'nl': 'Instructies', 'fr': 'Instructions', 'pt': 'Instruções'} ,
+
+'Add or find reason to agree or disagree': {
+    'es': 'Agregue o encuentre motivos para estar de acuerdo o en desacuerdo', 
+    'cn': '添加或找到同意或不同意的理由', 
+    'nl': 'Voeg een reden toe of zoek een reden om het eens of oneens te zijn',
+    'fr': "Ajouter ou trouver des raisons d'être d'accord ou en désaccord",
+    'pt': 'Adicione ou encontre motivos para concordar ou discordar'
+  } ,
+
+'Allocated': {'es': 'Asignado', 'cn': '已分配', 'nl': 'Toegewezen', 'fr': 'Alloué', 'pt': 'Alocado'} ,
+
+'Option': {'es': 'Opción', 'cn': '选项', 'nl': 'Keuze', 'fr': 'Option', 'pt': 'Opção'} ,
+
+'Rating': {'es': 'Clasificación', 'cn': '评分', 'nl': 'Beoordeling', 'fr': 'Notation', 'pt': 'Avaliação'} ,
+
+'Ranking': {'es': 'Clasificación', 'cn': '排行', 'nl': 'Ranglijst', 'fr': 'Classement', 'pt': 'Classificação'} ,
+
+'Yes or No': {'es': 'Sí o no', 'cn': '是还是不是', 'nl': 'Ja of nee', 'fr': 'Oui ou non', 'pt': 'Sim ou não'} ,
+
+'Answer and reasons': {'es': 'respuesta y razones', 'cn': '答案及理由', 'nl': 'Antwoord en redenen', 'fr': 'Réponse et raisons',
+    'pt': 'Resposta e razões'} ,
+
+'Checklist': {'es': 'Lista de Verificación', 'cn': '清单', 'nl': 'Controlelijst', 'fr': 'Liste de contrôle', 'pt': 'Lista de controle'} ,
+
+'Total budget amount': {'es': 'Monto total del presupuesto', 'cn': '预算总额', 'nl': 'Totaal budgetbedrag',
+    'fr': 'Montant total du budget', 'pt': 'Valor total do orçamento'} ,
+
+'Suggestions': {'es': 'Sugerencias', 'cn': '建议', 'nl': 'Suggesties', 'fr': 'Suggestions', 'pt': 'Sugestões'} ,
+
+'Add suggestion': {'es': 'Agregar sugerencia', 'cn': '添加建议', 'nl': 'Suggestie toevoegen', 'fr': 'Ajouter une suggestion',
+    'pt': 'Adicionar sugestão'} ,
+
+'Write-in': {'es': 'Escribir en', 'cn': '写进', 'nl': 'Inschrijven', 'fr': 'Inscrire', 'pt': 'Escrever em'} ,
+
+'Total budget amount': {'es': 'Monto total del presupuesto', 'cn': '预算总额', 'nl': 'Totaal budgetbedrag',
+    'fr': 'Montant total du budget', 'pt': 'Valor total do orçamento'} ,
+
+'Minimum rating': {'es': 'Calificación mínima', 'cn': '最低评级', 'nl': 'Minimale beoordeling', 'fr': 'Note minimale',
+    'pt': 'Classificação mínima'} ,
+
+'Maximum rating': {'es': 'Calificación máxima', 'cn': '最大额定值', 'nl': 'Maximale beoordeling', 'fr': 'Note maximale',
+    'pt': 'Classificação máxima'} ,
+
+'Add option': {'es': 'Agregar opción', 'cn': '添加选项', 'nl': 'Optie toevoegen', 'fr': 'Ajouter une option', 'pt': 'Adicionar opção'} ,
+
+'Rate': {'es': 'Calificar', 'cn': '打分', 'nl': 'Beoordelen', 'fr': 'Évaluer', 'pt': 'Avaliar'} ,
+
+'Rank': {'es': 'Para clasificar', 'cn': '排名', 'nl': 'Naar rang', 'fr': 'Évaluer', 'pt': 'Classificar'} ,
+
+'Save pro': {'es': 'Guardar motivo para', 'cn': '保存原因', 'nl': 'Bewaar reden voor', 'fr': 'Enregistrer la raison pour',
+ 'pt': 'Salvar motivo para'} ,
+
+'Save con': {'es': 'Guardar motivo en contra', 'cn': '保存反对理由', 'nl': 'Spaar de rede tegen', 'fr': 'Gardez raison contre',
+ 'pt': 'Salve a razão contra'} ,
+
+'Total used': {'es': 'Total usado', 'cn': '已使用总量', 'nl': 'Totaal gebruikt', 'fr': 'Total utilisé', 'pt': 'Total usado'} ,
+
+'Yes': {'es': 'Sí', 'cn': '是的', 'nl': 'Ja', 'fr': 'Oui', 'pt': 'Sim'} ,
+
+'Add budget item': {'es': 'Agregar partida presupuestaria', 'cn': '添加预算项目', 'nl': 'Budgetartikel toevoegen', 'fr': 'Ajouter un poste budgétaire', 'pt': 'Adicionar item de orçamento'} ,
+
+'Delete': {'es': 'Borrar', 'cn': '删除', 'nl': 'Verwijderen', 'fr': 'Supprimer', 'pt': 'Excluir'} ,
+
+'Delete this question?': {'es': '¿Eliminar esta pregunta?', 'cn': '删除这个问题吗？', 'nl': 'Deze vraag verwijderen?', 'fr': 'Supprimer cette question?', 'pt': 'Excluir esta pergunta?'} ,
+
+'Administrate survey': {'es': 'Administrar encuesta', 'cn': '管理调查', 'nl': 'Enquête beheren', 'fr': "Administrer l'enquête", 'pt': 'Administrar pesquisa'} ,
+
+'View survey': {'es': 'Ver encuesta', 'cn': '查看调查', 'nl': 'Bekijk enquête', 'fr': "Voir l'enquête", 'pt': 'Ver pesquisa'} ,
+
+'Edit question': {'es': 'Editar pregunta', 'cn': '编辑问题', 'nl': 'Vraag bewerken', 'fr': 'Modifier la question', 'pt': 'Editar pergunta'} ,
+
+'Delete question': {'es': 'Eliminar pregunta', 'cn': '删除问题', 'nl': 'Vraag verwijderen', 'fr': 'Supprimer la question', 'pt': 'Excluir pergunta'} ,
+
+'View question': {'es': 'Ver pregunta', 'cn': '查看问题', 'nl': 'Vraag bekijken', 'fr': 'Voir la question', 'pt': 'Ver pergunta'} ,
+
+'Question results': {'es': 'Resultados de la pregunta', 'cn': '提问结果', 'nl': 'Vraagresultaten', 'fr': 'Résultats des questions', 'pt': 'Resultados da pergunta'} ,
+
+'Retrieved reasons': {'es': 'Razones recuperadas', 'cn': '检索到的原因', 'nl': 'Opgehaalde redenen', 'fr': 'Raisons récupérées', 'pt': 'Razões recuperadas'} ,
+
+'Reason is too long': {'es': 'La razón es demasiado larga.', 'cn': '理由太长', 'nl': 'Reden is te lang', 'fr': 'La raison est trop longue', 'pt': 'A razão é muito longa'} ,
+
+'Option created': {'es': 'Opción creada', 'cn': '选项已创建', 'nl': 'Optie gemaakt', 'fr': 'Option créée', 'pt': 'Opção criada'} ,
+
+'More results': {'es': 'Más resultados', 'cn': '更多结果', 'nl': 'Meer resultaten', 'fr': 'Plus de résultats', 'pt': 'Mais resultados'} ,
+
+'No more results yet': {'es': 'Aún no hay más resultados', 'cn': '还没有更多结果', 'nl': 'Nog geen resultaten meer', 'fr': 'Pas encore de résultats', 'pt': 'Ainda não há mais resultados'} ,
+
+'Retrieved results': {'es': 'Resultados recuperados', 'cn': '检索结果', 'nl': 'Resultaten opgehaald', 'fr': 'Résultats récupérés', 'pt': 'Resultados recuperados'} ,
+
+'Enter your budget title here': {'es': 'Ingrese el título de su presupuesto aquí', 'cn': '在此输入您的预算标题', 'nl': 'Voer hier uw budgettitel in', 'fr': 'Entrez le titre de votre budget ici', 'pt': 'Insira o título do seu orçamento aqui'} ,
+
+'Enter survey introduction here.': {'es': 'Ingrese la introducción de la encuesta aquí.', 'cn': '在此输入调查简介。', 'nl': 'Voer hier de introductie van de enquête in.', 'fr': 'Entrez ici l’introduction de l’enquête.', 'pt': 'Insira a introdução da pesquisa aqui.'} ,
+
+'Enter your survey title here': {'es': 'Ingrese el título de su encuesta aquí', 'cn': '在此输入您的调查标题', 'nl': 'Voer hier uw enquêtetitel in', 'fr': 'Entrez le titre de votre enquête ici', 'pt': 'Insira o título da sua pesquisa aqui'} ,
+
+'Enter total budget amount': {'es': 'Introduzca el importe total del presupuesto', 'cn': '输入预算总额', 'nl': 'Voer het totale budgetbedrag in', 'fr': 'Saisissez le montant total du budget', 'pt': 'Insira o valor total do orçamento'} ,
+
+'Enter budget introduction': {'es': 'Introduzca la introducción del presupuesto', 'cn': '输入预算介绍', 'nl': 'Voer de budgetintroductie in', 'fr': "Entrez l'introduction du budget", 'pt': 'Insira a introdução do orçamento'} ,
+
+'Enter the content of your proposal here': {'es': 'Introduce aquí el contenido de tu propuesta', 'cn': '在此输入您的提案内容', 'nl': 'Vul hier de inhoud van uw voorstel in', 'fr': 'Entrez ici le contenu de votre proposition', 'pt': 'Insira aqui o conteúdo da sua proposta'} ,
+
+'Enter your proposal title here': {'es': 'Ingrese el título de su propuesta aquí', 'cn': '在此输入您的提案标题', 'nl': 'Voer hier de titel van uw voorstel in', 'fr': 'Entrez le titre de votre proposition ici', 'pt': 'Insira aqui o título da sua proposta'} ,
+
+'Enter the content of your request here': {'es': 'Introduzca aquí el contenido de su solicitud', 'cn': '在此输入您的请求内容', 'nl': 'Vul hier de inhoud van uw verzoek in', 'fr': 'Saisissez ici le contenu de votre demande', 'pt': 'Insira aqui o conteúdo da sua solicitação'} ,
+
+'What is the best way to...': {'es': '¿Cuál es la mejor manera de...?', 'cn': '最好的方法是什么...', 'nl': 'Wat is de beste manier om...', 'fr': 'Quelle est la meilleure façon de...', 'pt': 'Qual é a melhor maneira de...'} ,
+
+'More instructions or information...': {'es': 'Más instrucciones o información...', 'cn': '更多说明或信息...', 'nl': 'Meer instructies of informatie...', 'fr': "Plus d'instructions ou d'informations...", 'pt': 'Mais instruções ou informações...'} ,
+
+'Question title...': {'es': 'Título de la pregunta...', 'cn': '问题标题...', 'nl': 'Vraag Titel...', 'fr': 'Titre de question...', 'pt': 'Título da questão...'} ,
+
+'Best...': {'es': 'Mejor...', 'cn': '最好的...', 'nl': 'Best...', 'fr': 'Meilleur...', 'pt': 'Melhor...'} ,
+
+'Worst...': {'es': 'El peor...', 'cn': '最糟糕的...', 'nl': 'Slechtst...', 'fr': 'Pire...', 'pt': 'Pior...'} ,
+
+'More information': {'es': 'Más información', 'cn': '更多信息', 'nl': 'Meer informatie', 'fr': "Plus d'information", 'pt': 'Mais Informações'} ,
+
+'Background information about survey...': {'es': 'Información general sobre la encuesta...', 'cn': '有关调查的背景信息...', 'nl': 'Achtergrondinformatie over enquête...', 'fr': "Informations générales sur l'enquête...", 'pt': 'Informações básicas sobre a pesquisa...'} ,
+
+'Budget Setup': {'es': 'Configuración del presupuesto', 'cn': '预算设置', 'nl': 'Budgetinstellingen', 'fr': 'Configuration du budget', 'pt': 'Configuração do orçamento'} ,
+
+'Auto-complete Survey Results': {'es': 'Resultados de la encuesta de autocompletar', 'cn': '自动完成调查结果', 'nl': 'Enquêteresultaten automatisch aanvullen', 'fr': "Résultats de l'enquête à saisie semi-automatique", 'pt': 'Resultados da pesquisa de preenchimento automático'} ,
+
+'View Auto-complete Survey': {'es': 'Ver encuesta de autocompletar', 'cn': '查看自动完成调查', 'nl': 'Bekijk de enquête voor automatisch aanvullen', 'fr': "Afficher l'enquête à saisie semi-automatique", 'pt': 'Ver pesquisa de preenchimento automático'} ,
+
+'Edit Auto-complete Survey': {'es': 'Editar encuesta de autocompletar', 'cn': '编辑自动完成调查', 'nl': 'Enquête automatisch aanvullen bewerken', 'fr': "Modifier l'enquête à saisie semi-automatique", 'pt': 'Editar pesquisa de preenchimento automático'} ,
+
+'Request For Proposals': {'es': 'Solicitud de propuestas', 'cn': '征求建议书', 'nl': 'Verzoek om voorstellen', 'fr': 'Demande de propositions', 'pt': 'Pedido de propostas'} ,
+
+'Continue': {'es': 'Continuar', 'cn': '继续', 'nl': 'Doorgaan', 'fr': 'Continuer', 'pt': 'Continuar'} ,
+
+'Request for Problems': {'es': 'Solicitud de problemas', 'cn': '问题请求', 'nl': 'Verzoek om problemen', 'fr': 'Demande de problèmes', 'pt': 'Solicitação de problemas'} ,
+
+'Require reasons': {'es': 'Requerir razones', 'cn': '需要理由', 'nl': 'Vereist redenen', 'fr': 'Exiger des raisons', 'pt': 'Exigir motivos'} ,
+
+'Label': {'es': 'Etiqueta', 'cn': '标签', 'nl': 'Etiket', 'fr': 'Étiquette', 'pt': 'Rótulo'} ,
+
+'Add or find solution': {'es': 'Agregar o encontrar solución', 'cn': '添加或查找解决方案', 'nl': 'Oplossing toevoegen of vinden', 'fr': 'Ajouter ou trouver une solution', 'pt': 'Adicione ou encontre solução'} ,
+
+'Problem': {'es': 'Problema', 'cn': '问题', 'nl': 'Probleem', 'fr': 'Problème', 'pt': 'Problema'} ,
+
+'Add or find problem': {'es': 'Agregar o encontrar problema', 'cn': '添加或查找问题', 'nl': 'Voeg een probleem toe of zoek het op', 'fr': 'Ajouter ou trouver un problème', 'pt': 'Adicionar ou encontrar problema'} ,
+
+'Enter your request title here': {'es': 'Introduzca aquí el título de su solicitud', 'cn': '在此输入您的请求标题', 'nl': 'Voer hier de titel van uw verzoek in', 'fr': 'Entrez ici le titre de votre demande', 'pt': 'Insira o título da sua solicitação aqui'} ,
+
+'Suggestion': {'es': 'Sugerencia', 'cn': '建议', 'nl': 'Suggestie', 'fr': 'Suggestion', 'pt': 'Sugestão'} ,
+
+'Survey details': {'es': 'Detalles de la encuesta', 'cn': '调查详情', 'nl': 'Enquêtedetails', 'fr': "Détails de l'enquête", 'pt': 'Detalhes da pesquisa'} ,
+
+'Freeze user input': {'es': 'Congelar la entrada del usuario', 'cn': '冻结用户输入', 'nl': 'Gebruikersinvoer bevriezen', 'fr': "Geler la saisie de l'utilisateur", 'pt': 'Congelar entrada do usuário'} ,
+
+'Survey Introduction': {'es': 'Introducción a la encuesta', 'cn': '调查简介', 'nl': 'Enquête Introductie', 'fr': "Introduction à l'enquête", 'pt': 'Introdução à pesquisa'} ,
+
+'Survey Title': {'es': 'Título de la encuesta', 'cn': '调查标题', 'nl': 'Enquêtetitel', 'fr': "Titre de l'enquête", 'pt': 'Título da pesquisa'} ,
+
+'Specialized survey types': {'es': 'Tipos de encuestas especializadas', 'cn': '专业调查类型', 'nl': 'Gespecialiseerde enquêtetypen', 'fr': "Types d'enquêtes spécialisées", 'pt': 'Tipos de pesquisas especializadas'} ,
+
+
+"Create a free survey, where participants express both their opinions and their reasons. Participants can also learn from each other's reasons.": {'es': 'Crea una encuesta gratuita, donde los participantes expresen tanto sus opiniones como sus motivos. Los participantes también pueden aprender de las razones de los demás.', 'cn': '创建一个免费的调查，让参与者表达他们的意见和理由。参与者还可以互相学习原因。', 'nl': 'Creëer een gratis enquête, waarin deelnemers zowel hun mening als hun redenen kenbaar maken. Deelnemers kunnen ook van elkaars beweegredenen leren.', 'fr': 'Créez une enquête gratuite, dans laquelle les participants expriment à la fois leurs opinions et leurs raisons. Les participants peuvent également apprendre des raisons de chacun.', 'pt': 'Crie uma pesquisa gratuita, onde os participantes expressam suas opiniões e motivos. Os participantes também podem aprender com as razões uns dos outros.'} ,
+
+'Start here': {'es': 'Empieza aqui', 'cn': '从这里开始', 'nl': 'Begin hier', 'fr': 'Commencer ici', 'pt': 'Começa aqui'} ,
+
+'Deliberative Form': {'es': 'Forma deliberativa', 'cn': '审议形式', 'nl': 'Deliberatieve vorm', 'fr': 'Forme délibérative', 'pt': 'Formulário Deliberativo'} ,
+
+'Ask a series of survey questions.': {'es': 'Haga una serie de preguntas de encuesta.', 'cn': '提出一系列调查问题。', 'nl': 'Stel een reeks enquêtevragen.', 'fr': 'Posez une série de questions d’enquête.', 'pt': 'Faça uma série de perguntas de pesquisa.'} ,
+
+
+
+
+  // Handle empty translation attempts
+  '': { es:'' , cn:'' , nl:'' , fr:'' , pt:'' }
 };
+
+
 

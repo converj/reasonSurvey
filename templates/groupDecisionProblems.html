@@ -1,0 +1,91 @@
+{% include 'head.html' %}
+<div id=pageProblems>
+
+
+            <h1 class=title translate=yes> Group Decision-Making Problems </h1>
+            <div id=aboutContent>
+
+                    <p> Here are common group decision-making pitfalls, and how {{SITE_NAME}} avoids them. <p>
+
+                    <ul class=linkList>
+
+                        <li>
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Authority_bias'> Authority-bias </a>
+                            <ul>
+                                <li> Problem:  Participants give excessive trust to claims made by people with authority. </li>
+                                <li> Fix:  No leaders / moderators </li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Group_polarization'> Group polarization </a> ,
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Groupshift'> Group-shift </a>
+                            <ul>
+                                <li>
+                                    Problem:  When a group starts with a biased distribution of opinions,
+                                    discussion tends to shift opinions even more towards extremes of that bias.
+                                </li>
+                                <li> Fix:  All users see the best opposing reasons. </li>
+                            </ul>
+                        </li>
+
+                        <a id='bandwagon'></a>
+                        <li>
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Bandwagon_effect'> Bandwagon effect </a>
+                            <ul>
+                                <li> Problem:  Many participants will copy the majority opinion to save effort or blend in. </li>
+                                <li> Fix:  Vote counts are hidden by default. </li>
+                                <li> Fix:  Users are encouraged to start creating a unique answer before finding a similar existing answer. </li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Groupthink'> Group-think </a> ,
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Social_influence'> Social-influence </a> ,
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Conformity'> Conformity </a>
+                            <ul>
+                                <li> Problem:  Participants tend to avoid conflict by conforming to the majority opinion. </li>
+                                <li> Fix:  Anonymity, no reputation scores, no penalties for dissent </li>
+                                <li> Fix:  No chatroom socialization </li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Information_cascade'> Information cascades </a>
+                            <ul>
+                                <li> Problem:  Later participants may give excessive trust to answers provided by earlier participants. </li>
+                                <li> Fix:  The decision process is mostly parallel, less sequential. </li>
+                                <li> Fix:  Users can observe the information upon which others decide, as reasons or links. </li>
+                                <li> Fix:  Some amount of convergence is a goal of the system, to cluster users around a few best answers. </li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Shared_information_bias'> Shared information bias </a>
+                            <ul>
+                                <li> Problem:  Participants mostly discuss information that is commonly known, ignoring novel information. </li>
+                                <li> Fix:  Discussion is structured to minimize repetition of information. </li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a target=_blank href='https://en.wikipedia.org/wiki/Filter_bubble'> Filter bubbles </a>
+                            <ul>
+                                <li>
+                                    Problem:  Personalized collaborative filtering systems reduce participants' information overload
+                                    by recommending information that matches what participants already know, 
+                                    pushing their opinion even further to extremes.
+                                </li>
+                                <li> Fix:  Suggestions are made by topic & quality, not by personal correlation. </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+
+            </div>
+
+
+<div class=tryBottomDiv><a href='/'> Try {{SITE_NAME}} </a></div>
+
+</div>
+{% include 'foot.html' %}

@@ -436,7 +436,7 @@
 
         if ( highlightWords ){
             // Convert content string to html-elements, then highlight elements
-            var contentElementsParent = htmlToElement( content );
+            let contentElementsParent = html('span').innerHtml( content ).build();  // Do not create extra div, only a span, to not change text layout
             var highlightedSpans = highlightNode( contentElementsParent, highlightWords, '' );
 
             setChildren( parentDiv , highlightedSpans );
@@ -596,6 +596,8 @@
     // What about editing reason?  Also in-place, expand max-height for reasons to accomodate save buttons.
     // 
     // For in-place, also have to re-collapse proposal when editing ends (if in a request-for-proposals).
+    //
+    // Simpler to pass expandOrCollapseForEditing() as a callback in TitleAndDetailDisplay.data ?
 
         function
     TitleAndDetailDisplayForReqProposal( instanceId, proposalId, proposalDisp ){

@@ -43,11 +43,8 @@ import text
 
 # Constants for use only inside this file/module
 const = Constants()
-# const.MAX_RETRY = 3
 const.MAX_VOTE_RETRY = 3
 const.CHAR_LENGTH_UNIT = 100
-# const.MAX_ANSWER_SUGGESTIONS = 3
-# const.NUM_FREQ_ANSWER_SUGGESTIONS = min( 1, const.MAX_ANSWER_SUGGESTIONS - 1 )  # Should be less than MAX_ANSWER_SUGGESTIONS
 const.SEARCH_INDEX_NAME = 'answersearchindex'
 const.MAX_SEARCH_RESULTS = 100
 const.USE_SEARCH_INDEX = False   # Expensive in money, and no better for incremental vote-weighted matching
@@ -141,9 +138,7 @@ def retrieveTopAnswers( surveyId, questionId, answerStart=None, hideReasons=Fals
         logging.debug(('retrieveTopAnswers()', 'answerRecords=', answerRecords))
 
     # Filter out empty answer/reason
-    # Answers missing required-reason should not be saveable.  Nor should empty answers.
-    if hideReasons:  answerRecords = filter( lambda a: a.hasAnswer() , answerRecords )
-    else:            answerRecords = filter( lambda a: a.hasAnswerAndReason() , answerRecords )
+    answerRecords = filter( lambda a: a.hasAnswer() , answerRecords )
 
     return answerRecords
 

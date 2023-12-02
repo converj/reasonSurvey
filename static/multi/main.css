@@ -1,0 +1,660 @@
+
+/* Survey */
+#pageMultiQuestion .MultiQuestionSurvey {  line-height:1.5em;  }
+#pageMultiQuestion  .MultiQuestionSurvey h2 {  color:black;  font-size:1.6rem;  }
+#pageMultiQuestion  .SaveOrCancelButtons {  display:none;  }
+#pageMultiQuestion  .MultiQuestionSurvey[saved='true'] .NewMultiQuestionSurvey {  display:none;  }
+#pageMultiQuestion      .NewMultiQuestionSurvey .NewSurveyTitleInput {  font-weight:bold;  }
+#pageMultiQuestion      .NewMultiQuestionSurvey .SaveOrCancelButtons {  display:block;  }
+#pageMultiQuestion  .SavedMultiQuestionSurvey {  }
+#pageMultiQuestion  .MultiQuestionSurvey[saved='false'] .SavedMultiQuestionSurvey {  display:none;  }
+#pageMultiQuestion      .ModeButtons {  float:right;  margin:10px;  }
+#pageMultiQuestion          button {  min-width:3em;  }
+#pageMultiQuestion          .MultiQuestionSurvey[mine='false'] > .SavedMultiQuestionSurvey > [role='tablist'] button.AdminButton {  display:none;  }
+#pageMultiQuestion          .MultiQuestionSurvey[mode='admin'] > .SavedMultiQuestionSurvey > [role='tablist'] button.AdminButton {  background:rgb(206,231,256);  }
+
+#pageMultiQuestion          .MultiQuestionSurvey[mode='edit'] > .SavedMultiQuestionSurvey > [role='tablist'] button.EditButton {  background:rgb(206,231,256);  }
+#pageMultiQuestion          .MultiQuestionSurvey[allowedit='false'] button.EditButton {  display:none;  }
+
+#pageMultiQuestion          .MultiQuestionSurvey[mode='view'] > .SavedMultiQuestionSurvey > [role='tablist'] button.ViewButton {  background:rgb(206,231,256);  }
+#pageMultiQuestion          .MultiQuestionSurvey[mine='false'] > .SavedMultiQuestionSurvey > [role='tablist'] button.ViewButton {  display:none;  }
+
+#pageMultiQuestion      [role='tabpanel'] {  min-height:4em;  }
+#pageMultiQuestion      .SavedMultiQuestionSurvey > [role='tabpanel'] {  border:solid 1px #aaaaaa;  background-color:#eeeeee;  padding:10px;  }
+#pageMultiQuestion          [role='tabpanel'] > div {  display:none;  }
+#pageMultiQuestion          .MultiQuestionSurvey[mode='admin'] > .SavedMultiQuestionSurvey > [role='tabpanel'] div.Admin {  display:block;  }
+#pageMultiQuestion          .MultiQuestionSurvey[mode='edit'] > .SavedMultiQuestionSurvey > [role='tabpanel'] div.Edit {  display:block;  }
+#pageMultiQuestion              .freezeUserInput {  display:block;  }
+#pageMultiQuestion              .SurveyTitleInput {  font-weight:bold;  }
+#pageMultiQuestion          .MultiQuestionSurvey[mode='view'] > .SavedMultiQuestionSurvey > [role='tabpanel'] div.View {  display:block;  }
+#pageMultiQuestion      .NewQuestion {  margin:40px 0 70px 0;  }
+#pageMultiQuestion      .MultiQuestionSurvey[saved='false'] .NewQuestion {  display:none;  }
+#pageMultiQuestion      .MultiQuestionSurvey[allowedit='false'] .NewQuestion {  display:none;  }
+#pageMultiQuestion          .NewQuestion > * {  display:none;  }
+#pageMultiQuestion          .NewQuestion h3 {  display:block;  }
+#pageMultiQuestion          .NewQuestion input.NewQuestionTitleInput {  display:block;  font-weight:bold;  }
+#pageMultiQuestion          .MultiQuestionSurvey[hasnewquestioninput="true"] .NewQuestion > * {  display:block;  }
+#pageMultiQuestion          .MultiQuestionSurvey[hasnewquestioninput="true"] .NewQuestion button {  display:inline-block;  }
+#pageMultiQuestion      .Questions {  }
+#pageMultiQuestion          .Question {
+                                margin:20px auto;  padding:0px 10px 10px 10px;  min-height:4em;
+                                background-color:#eeeeee;  border:solid 1px #bbbbbb;  display:grid;  grid-template-columns:1fr auto;
+}
+#pageMultiQuestion              .Question .ModeButtons {  margin:5px 0px 0px 0px;  grid-column:2;  display:flex;  flex-direction:column;  }
+#pageMultiQuestion                  .Question .ModeButtons * {  height:fit-content;  }
+#pageMultiQuestion                  .Question[mode='edit'] [role='tablist'] button.EditButton {  background:rgb(206,231,256);  }
+#pageMultiQuestion                  .Question[allowedit='false'] button.EditButton {  display:none;  }
+#pageMultiQuestion                  .Question[mode='view'] [role='tablist'] button.ViewButton {  background:rgb(206,231,256);  }
+#pageMultiQuestion                  .Question[mode='result'] [role='tablist'] button.ResultButton {  background:rgb(206,231,256);  }
+#pageMultiQuestion                  .Question[type='info'] [role='tablist'] button.ResultButton {  display:none;  }
+#pageMultiQuestion                  .MultiQuestionSurvey[mine='false'] .Question[type='info'] button.ViewButton {  display:none;  }
+#pageMultiQuestion              .Question [role='tabpanel'] {  grid-column:1;  }
+#pageMultiQuestion                  div.Edit {  display:none;  }
+#pageMultiQuestion                      div.Edit .QuestionEditTitle {  font-weight:bold;  width:calc(100% - 12px);  }
+#pageMultiQuestion                      div.Edit .QuestionEditDetail {  width:calc(100% - 12px);  }
+#pageMultiQuestion                  div.View {  display:none;  }
+#pageMultiQuestion                  div.Result {  display:none;  }
+#pageMultiQuestion                  .Question[mode='edit'] div.Edit {  display:block;  }
+#pageMultiQuestion                      .QuestionPositionWrap {  float:left;  margin:20px 20px 0px 0px;  }
+#pageMultiQuestion                          .QuestionPositionLabel {  }
+#pageMultiQuestion                          .QuestionPositionInput {  width:3em;  }
+#pageMultiQuestion                      .QuestionTypeWrap {  float:left;  margin:20px 20px 20px 0px;  }
+#pageMultiQuestion                          .QuestionTypeLabel {  }
+#pageMultiQuestion                          .QuestionTypeSelect {  font-size:1.0em;  }
+#pageMultiQuestion                  .Question[mode='view'] div.View {  display:block;  }
+#pageMultiQuestion                  .Question[mode='result'] div.Result {  display:block;  }
+#pageMultiQuestion                  .Question[mode='result'] [role='tabpanel'] div.Result {  display:block;  }
+#pageMultiQuestion                      .Question[allowedit='false'] button.QuestionDeleteButton {  display:none;  }
+#pageMultiQuestion                      button.QuestionDeleteButton {  }
+#pageMultiQuestion                      button.QuestionDeleteButton {  display:none;  }
+#pageMultiQuestion                      .MultiQuestionSurvey[mine='true'][allowedit='true'] .Question[mode='edit'] button.QuestionDeleteButton {  display:inline-block;  }
+#pageMultiQuestion              .Question .QuestionSubclass {  grid-column:1/3;  }
+
+
+/* Rating question */
+#pageMultiQuestion              .RatingQuestionDisplay { }
+#pageMultiQuestion                  .RatingLimitsWrap {  margin-bottom:20px;  }
+#pageMultiQuestion                      .RatingLimitWrap {  margin:20px 1em 0 0;  display:inline-block;  }
+#pageMultiQuestion                          .RatingLimitInput {  max-width:3em;  }
+#pageMultiQuestion                          .RatingLabelLabel {  }
+#pageMultiQuestion                          .RatingLabelInput {  max-width:10em;  }
+#pageMultiQuestion                  .RatingQuestionDisplay[hasnewoptioninput='true'] .NewOptionWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                  .RatingQuestionDisplay .EditHeaders {  display:grid;  grid-template-columns:1fr auto auto;  }
+#pageMultiQuestion                      .RatingQuestionDisplay .EditHeaders > * {  padding:10px;  }
+#pageMultiQuestion                  .RatingQuestionDisplay .OptionColumnHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns: 1fr 5em 3fr;  text-align:center;
+}
+#pageMultiQuestion                  .RatingQuestionDisplay .OptionResultColumnHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns:1fr 5em 3fr 100px;  line-height:2em;
+}
+#pageMultiQuestion                      .RatingQuestionDisplay .OptionColumnHeadings > * {  padding:10px 15px 5px 10px;  }
+#pageMultiQuestion                  .RatingQuestionDisplay .Options {  width:calc(100% - 10px);  }
+#pageMultiQuestion                      .RatingOptionDisplay {  border:solid 1px #aaaaaa;  }
+
+#pageMultiQuestion                          .Question[mode="edit"] .RatingOptionDisplay .Edit {  display:block;  }
+#pageMultiQuestion                              .RatingOptionDisplay .EditRow {  display:grid;  grid-template-columns:1fr auto auto;  grid-template-rows:60px;  }
+#pageMultiQuestion                                  .RatingOptionDisplay .EditRow > * {  padding:10px;  }
+#pageMultiQuestion                                      .RatingOptionDisplay .EditRow input {  padding:10px;  }
+#pageMultiQuestion                                      .RatingOptionDisplay .EditRow input.OptionContentInput {  width:calc(100% - 10px);  }
+#pageMultiQuestion                                      .RatingOptionDisplay .EditRow input.OptionPositionInput {  width:4em;  }
+#pageMultiQuestion                                  .RatingOptionDisplay .EditRow > .OptionDeleteButtonCell {  padding:0px;  }
+#pageMultiQuestion                              .RatingOptionDisplay[hasoptioninput='true'] .Edit .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                          .Question[mode="view"] .RatingOptionDisplay .View {
+                                                display:grid;
+                                                grid-template-columns: 1fr auto 3fr;
+}
+#pageMultiQuestion                              .RatingOptionDisplay .View > * {  padding:10px;  }
+#pageMultiQuestion                                  .RatingLabel {
+                                                        opacity:1.0;
+                                                        grid-row:2;  grid-column:1;
+                                                        text-align:right;
+}
+#pageMultiQuestion                                  .RatingInputWrap {  grid-row:2;  grid-column:2;  }
+#pageMultiQuestion                                      .RatingInput {  }
+#pageMultiQuestion                                  .RatingOptionDisplay .RatingIncrementButton {  width:calc(100% - 10px);  text-align:left;  display:none;  }
+#pageMultiQuestion                                  .RatingOptionDisplay[ratinginputfocused='true'] .RatingIncrementButton {  grid-column:3;  display:block;  }
+#pageMultiQuestion                                  .UpButton {  grid-row:1;  }
+#pageMultiQuestion                                  .DownButton {  grid-row:3;  }
+#pageMultiQuestion                                  .RatingOptionDisplay .ReasonCell {  grid-row:2;  grid-column:3;  }
+#pageMultiQuestion                                      .RatingOptionDisplay .ReasonInput { }
+
+#pageMultiQuestion                          .RatingOptionDisplay .MessageWrap {  grid-column:1/4;  }
+#pageMultiQuestion                              .RatingOptionDisplay .Message { }
+
+#pageMultiQuestion                          .RatingOptionDisplay > .Result > details > summary {
+                                                display:grid;  grid-template-columns:1fr 5em 3fr 100px;  line-height:2em;
+}
+#pageMultiQuestion                              .OptionResultContent::before {  content:" \25B6 \00a0 ";  }
+#pageMultiQuestion                              details[open] .OptionResultContent::before {  content:" \25BC \00a0 ";  }
+
+#pageMultiQuestion                          .OptionRatingResults {  grid-column:1/5;  }
+#pageMultiQuestion                              .RatingResult > details > summary {
+                                                    display:grid;  grid-template-columns:1fr 5em 3fr 100px;
+                                                    line-height:2em;
+}
+#pageMultiQuestion                              .RatingResult summary .Rating::before {  content:" \25B6 \00a0 ";  }
+#pageMultiQuestion                              .RatingResult > details[open] summary .Rating::before {  content:" \25BC \00a0 ";  }
+#pageMultiQuestion                                  .RatingResult .VoteCount {
+                                                        position:relative;  grid-column:4;  margin-top:0.3em;  height:1.3em;  line-height:1.5em;
+                                                        font-weight:bolder;  text-shadow:0px 0px 1px white, 0px 0px 2px white, 0px 0px 3px white, 0px 0px 4px white, 0px 0px 5px white;
+                                                        background-color:#aaaaaa;  white-space:nowrap;  overflow-x:visible;
+}
+#pageMultiQuestion                                      .RatingResult .VoteCountNumber {  position:absolute;  left:5px;  }
+#pageMultiQuestion                                  .RatingResult .Rating {  grid-column:2;  }
+#pageMultiQuestion                                  .RatingResult .Reasons { }
+#pageMultiQuestion                                      .RatingReasonResult {
+                                                            display:grid;  grid-template-columns:1fr 5em 3fr 100px;  line-height:2em;  column-gap:1em;
+}
+#pageMultiQuestion                                          .RatingReasonResult .RatingReason {  grid-column:3;  }
+#pageMultiQuestion                                          .RatingReasonResult .VoteCount {  background-color:transparent;  margin-left:5px;  }
+
+#pageMultiQuestion                                          summary::-webkit-details-marker {  display:none;  }
+#pageMultiQuestion                                          summary::marker {  display:none;  }
+
+
+
+
+/* Ranking question */
+#pageMultiQuestion              .RankingQuestionDisplay { }
+#pageMultiQuestion                  .RankingQuestionDisplay .NewOptionWrap {  display:none;  }
+#pageMultiQuestion                  .RankingQuestionDisplay[mode='edit'] .NewOptionWrap {  display:block;  }
+#pageMultiQuestion                      .RankingQuestionDisplay[hasnewoptioninput='true'] .NewOptionWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                  .RankingQuestionDisplay .EditHeadings {  display:grid;  grid-template-columns:1fr auto auto;  }
+#pageMultiQuestion                      .RankingQuestionDisplay .EditHeadings > * {  padding:10px;  }
+#pageMultiQuestion                  .RankingQuestionDisplay .ViewHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;
+                                        grid-template-columns:1fr auto 3fr;
+}
+#pageMultiQuestion                      .RankingQuestionDisplay .ViewHeadings > * {  padding:10px 15px 5px 10px;  }
+#pageMultiQuestion                  .RankingQuestionDisplay .ResultHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns:1fr 5em 3fr 100px;  grid-auto-rows:2em auto;
+}
+#pageMultiQuestion                  .RankingQuestionDisplay .Options {  width:calc(100% - 10px);  }
+#pageMultiQuestion                      .RankingOptionDisplay {  border:solid 1px #aaaaaa;  }
+
+#pageMultiQuestion                          .Question[mode="edit"] .RankingOptionDisplay .Edit {  display:block;  }
+#pageMultiQuestion                              .RankingOptionDisplay .EditRow {  display:grid;  grid-template-columns:1fr auto auto;  grid-template-rows:60px;  }
+#pageMultiQuestion                                  .RankingOptionDisplay .EditRow > * {  padding:10px;  }
+#pageMultiQuestion                                      .RankingOptionDisplay .EditRow input {  padding:10px;  }
+#pageMultiQuestion                                      .RankingOptionDisplay .EditRow input.OptionContentInput {  width:calc(100% - 10px);  }
+#pageMultiQuestion                                      .RankingOptionDisplay .EditRow input.OptionPositionInput {  width:4em;  }
+#pageMultiQuestion                                  .RankingOptionDisplay .EditRow > .OptionDeleteButtonCell {  padding:0px;  }
+#pageMultiQuestion                              .RankingOptionDisplay[hasoptioninput='true'] .Edit .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                          .Question[mode="view"] .RankingOptionDisplay .View {
+                                                display:grid;
+                                                grid-template-columns:1fr 5em 3fr;
+}
+#pageMultiQuestion                              .RankingOptionDisplay .View > * {  padding:10px;  }
+#pageMultiQuestion                                  .RankingLabel {
+                                                        opacity:1.0;
+                                                        grid-row:2;  grid-column:1;
+                                                        text-align:right;
+}
+#pageMultiQuestion                                  .RankingInputWrap {  grid-row:2;  grid-column:2;  width:4em;  }
+#pageMultiQuestion                                      .RankingInput {  width:4.0em;  }
+#pageMultiQuestion                                  .RankingOptionDisplay .RankingIncrementButton {  width:calc(100% - 10px);  text-align:left;  display:none;  }
+#pageMultiQuestion                                  .RankingOptionDisplay[rankinginputfocused='true'] .RankingIncrementButton {  grid-column:3;  display:block;  }
+#pageMultiQuestion                                  .RankingOptionDisplay .ReasonCell {  grid-row:2;  grid-column:3;  }
+#pageMultiQuestion                                      .RankingOptionDisplay .ReasonInput { }
+
+#pageMultiQuestion                          .Question[mode="result"] .RankingOptionDisplay .Result {  }
+#pageMultiQuestion                              .RankingOptionDisplay > .Result > details > summary {
+                                                    display:grid;  grid-template-columns:1fr 5em 3fr 100px;  line-height:1.5em;  min-height:2em;
+}
+#pageMultiQuestion                          .RankingOptionDisplay .MessageWrap {  grid-column:1/4;  }
+#pageMultiQuestion                              .RankingOptionDisplay .Message { }
+
+
+
+/* Checklist question */
+#pageMultiQuestion              .ChecklistQuestionDisplay { }
+#pageMultiQuestion                  .ChecklistQuestionDisplay .NewOptionWrap {  display:none;  }
+#pageMultiQuestion                  .ChecklistQuestionDisplay[mode='edit'] .NewOptionWrap {  display:block;  }
+#pageMultiQuestion                      .ChecklistQuestionDisplay[hasnewoptioninput='true'] .NewOptionWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                  .ChecklistQuestionDisplay .EditHeadings {  display:grid;  grid-template-columns:1fr auto auto;  }
+#pageMultiQuestion                      .ChecklistQuestionDisplay .EditHeadings > * {  padding:10px;  }
+#pageMultiQuestion                  .ChecklistQuestionDisplay .ViewHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;
+                                        grid-template-columns:1fr auto 3fr;
+}
+#pageMultiQuestion                      .ChecklistQuestionDisplay .ViewHeadings > * {  padding:10px 15px 5px 10px;  }
+#pageMultiQuestion                  .ChecklistQuestionDisplay .ResultHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns:1fr 5em 3fr 100px;  grid-auto-rows:2em auto;
+}
+#pageMultiQuestion                  .ChecklistQuestionDisplay .Options {  width:calc(100% - 10px);  }
+#pageMultiQuestion                      .CheckboxOptionDisplay {  border:solid 1px #aaaaaa;  }
+
+#pageMultiQuestion                          .Question[mode="edit"] .CheckboxOptionDisplay .Edit {  display:block;  }
+#pageMultiQuestion                              .CheckboxOptionDisplay .EditRow {  display:grid;  grid-template-columns:1fr auto;  grid-template-rows:60px;  }
+#pageMultiQuestion                                  .CheckboxOptionDisplay .EditRow > * {  padding:10px;  }
+#pageMultiQuestion                                      .CheckboxOptionDisplay .EditRow input {  padding:10px;  }
+#pageMultiQuestion                                      .CheckboxOptionDisplay .EditRow input.OptionContentInput {  width:calc(100% - 10px);  }
+#pageMultiQuestion                                      .CheckboxOptionDisplay .EditRow input.OptionPositionInput {  width:4em;  }
+#pageMultiQuestion                                  .CheckboxOptionDisplay .EditRow > .OptionDeleteButtonCell {  padding:0px;  }
+#pageMultiQuestion                              .CheckboxOptionDisplay[hasoptioninput='true'] .Edit .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                          .Question[mode="view"] .CheckboxOptionDisplay .View {
+                                                display:grid;
+                                                grid-template-columns:1fr 5em 3fr;
+}
+#pageMultiQuestion                              .CheckboxOptionDisplay .View > * {  padding:10px;  }
+#pageMultiQuestion                                  .CheckboxLabel {  opacity:1.0;  text-align:right;  grid-row:2;  }
+#pageMultiQuestion                                  .CheckboxInputWrap {  grid-row:2;  width:4.0em;  text-align:center;  }
+#pageMultiQuestion                                      .CheckboxInput {  }
+#pageMultiQuestion                                  .CheckboxOptionDisplay .CheckboxIncrementButton {
+                                                        grid-column:3;  width:calc(100% - 10px);  text-align:left;  display:none;  
+}
+#pageMultiQuestion                                  .CheckboxOptionDisplay[reasoninputfocused='true'] .CheckboxIncrementButton {  display:block;  }
+#pageMultiQuestion                                  .CheckboxOptionDisplay .ReasonCell {  grid-row:2;  }
+#pageMultiQuestion                                      .CheckboxOptionDisplay .ReasonInput { }
+
+#pageMultiQuestion                          .Question[mode="result"] .CheckboxOptionDisplay .Result {  }
+#pageMultiQuestion                              .CheckboxOptionDisplay > .Result > details > summary {
+                                                    display:grid;  grid-template-columns:1fr 5em 3fr 100px;  grid-column-gap:1em;
+                                                    line-height:1.5em;  min-height:2em;
+}
+#pageMultiQuestion                          .CheckboxOptionDisplay .Message {  grid-column:1/4;  }
+
+
+
+/* Text question */
+#pageMultiQuestion              .TextQuestionDisplay { }
+#pageMultiQuestion                  .TextQuestionDisplay .NewOptionWrap {  display:none;  }
+#pageMultiQuestion                  .TextQuestionDisplay[mode='edit'] .NewOptionWrap {  display:block;  }
+#pageMultiQuestion                      .TextQuestionDisplay[hasnewoptioninput='true'] .NewOptionWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                  .TextQuestionDisplay .EditHeadings {  display:grid;  grid-template-columns:1fr auto auto;  }
+#pageMultiQuestion                      .TextQuestionDisplay .EditHeadings > * {  padding:10px;  }
+
+#pageMultiQuestion                  .TextQuestionDisplay .ViewHeadings {
+}
+#pageMultiQuestion                      .TextQuestionDisplay .ViewHeadings > * {  padding:10px 15px 5px 10px;  }
+
+#pageMultiQuestion                  .TextQuestionDisplay .ResultHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns:1fr 100px;  grid-auto-rows:2em auto;
+                                        font-weight:bold;
+}
+
+#pageMultiQuestion                  .TextQuestionDisplay .Options {  width:calc(100% - 10px);  }
+#pageMultiQuestion                          .Question[mode="edit"] .TextOptionEditDisplay .Edit {  display:block;  }
+#pageMultiQuestion                              .TextOptionEditDisplay .EditRow {  display:grid;  grid-template-columns:1fr auto auto;  grid-template-rows:60px;  }
+#pageMultiQuestion                                  .TextOptionEditDisplay .EditRow > * {  padding:10px;  }
+#pageMultiQuestion                                      .TextOptionEditDisplay .EditRow input {  padding:10px;  }
+#pageMultiQuestion                                      .TextOptionEditDisplay .EditRow input.OptionContentInput {  width:calc(100% - 10px);  }
+#pageMultiQuestion                                      .TextOptionEditDisplay .EditRow input.OptionPositionInput {  width:4em;  }
+#pageMultiQuestion                                  .TextOptionEditDisplay .EditRow > .OptionDeleteButtonCell {  padding:0px;  }
+#pageMultiQuestion                              .TextOptionEditDisplay[hasoptioninput='true'] .Edit .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                          .Question[mode="view"] .TextOptionViewDisplay .View {
+                                                display:grid;
+                                                grid-template-columns:1fr 5em 4fr;
+}
+#pageMultiQuestion                              .TextOptionViewDisplay .View > * {  padding:10px;  }
+#pageMultiQuestion                                  .TextLabel {
+                                                        opacity:1.0;
+                                                        grid-row:2;  grid-column:1;
+                                                        text-align:right;
+}
+#pageMultiQuestion                                  .TextInputWrap {  grid-row:2;  grid-column:2;  }
+#pageMultiQuestion                                      .TextInput {  width:4.0em;  }
+#pageMultiQuestion                                  .TextOptionViewDisplay .ReasonCell {  grid-row:2;  grid-column:3;  }
+#pageMultiQuestion                                      .TextOptionViewDisplay .ReasonInput { }
+#pageMultiQuestion                                  .TextOptionViewDisplay .TextOptionButton {  width:100%;  text-align:left;  }
+#pageMultiQuestion                                      .TextOptionButton .ContentSpan > div {  display:inline-block;  }
+#pageMultiQuestion                                      .ReasonDelimiter {
+                                                            margin-left:10px;  border:solid 1px #aaaaaa;  border-radius:5px;  padding:3px;
+                                                            background-color:#eeeeee;  color:#666666;  line-height:1em;
+}
+#pageMultiQuestion                                      .TextOptionButton .ReasonSpan > div {  display:inline-block;  }
+
+#pageMultiQuestion                          .Question[mode="result"] .TextOptionResultDisplay {  border:solid 1px #aaaaaa;  }
+#pageMultiQuestion                              .TextOptionResultDisplay > details > summary {
+                                                    display:grid;  grid-template-columns:1fr 100px;  line-height:1.5em;  min-height:2em;  column-gap:5px;
+}
+#pageMultiQuestion                                  .TextOptionResultDisplay .VoteCount {  position:relative;  }
+#pageMultiQuestion                                  .TextOptionResultDisplay > details > summary > .VoteCount {
+                                                        height:1.3em;
+                                                        font-weight:bolder;  text-shadow:0px 0px 1px white, 0px 0px 2px white, 0px 0px 3px white, 0px 0px 4px white, 0px 0px 5px white;
+                                                        background-color:#aaaaaa;  white-space:nowrap;  overflow-x:visible;
+}
+#pageMultiQuestion                                      .TextOptionResultDisplay .VoteCountNumber {  position:absolute;  left:5px;  }
+#pageMultiQuestion                                  .TextOptionResultDisplay .TextReasonResult {
+                                                        display:grid;  grid-template-columns:1fr 100px;  column-gap:5px;  line-height:1.5em;
+}
+#pageMultiQuestion                                      .TextOptionResultDisplay .TextReason {  margin-left:60px;  }
+#pageMultiQuestion                                      .TextOptionResultDisplay .TextReasonResult .VoteCount {  margin:0px 5px 0px 5px;  }
+#pageMultiQuestion                          .TextOptionEditDisplay .MessageWrap {  grid-column:1/4;  }
+
+
+
+
+/* Budget question */
+#pageMultiQuestion              .BudgetQuestionDisplay { }
+#pageMultiQuestion                  .BudgetQuestionDisplay .TotalAmountWrap {  padding:20px 0px 10px 0px;  }
+#pageMultiQuestion                  .BudgetQuestionDisplay .NewOptionWrap {  display:none;  padding:20px 0px 10px 0px;  }
+#pageMultiQuestion                  .BudgetQuestionDisplay[mode='edit'] .NewOptionWrap {  display:block;  }
+#pageMultiQuestion                      .BudgetQuestionDisplay[hasnewoptioninput='true'] .NewOptionWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                  .BudgetQuestionDisplay .EditHeadings {  display:grid;  grid-template-columns:1fr auto auto;  }
+#pageMultiQuestion                      .BudgetQuestionDisplay .EditHeadings > * {  padding:10px 20px 10px 0px;  }
+
+#pageMultiQuestion                  .BudgetQuestionDisplay .Totals {  margin:10px 0px 10px 0px;  line-height:2em;  }
+#pageMultiQuestion                      .BudgetQuestionDisplay .Totals .Amount {  margin-right:20px;  white-space:nowrap;  }
+#pageMultiQuestion                      .BudgetQuestionDisplay .Totals .Used {  white-space:nowrap;  }
+#pageMultiQuestion                  .BudgetQuestionDisplay .ViewHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns:1fr 1fr 2fr;
+}
+#pageMultiQuestion                      .BudgetQuestionDisplay .ViewHeadings > * {  padding:10px 15px 5px 10px;  }
+
+#pageMultiQuestion                  .BudgetQuestionDisplay .ResultHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns:150px 1fr auto;
+}
+#pageMultiQuestion                      .BudgetQuestionDisplay .ResultHeadings * {  padding:10px;  }
+#pageMultiQuestion                      .BudgetQuestionDisplay .ResultHeadings .Votes {  margin-right:20px;  }
+
+#pageMultiQuestion                  .BudgetQuestionDisplay .Options {  width:calc(100% - 10px);  }
+#pageMultiQuestion                      .BudgetOptionEditDisplay {  border:solid 1px #aaaaaa;  }
+
+#pageMultiQuestion                          .Question[mode="edit"] .BudgetOptionEditDisplay .Edit {  display:block;  }
+#pageMultiQuestion                              .BudgetOptionEditDisplay .EditRow {  display:grid;  grid-template-columns:1fr auto;  grid-template-rows:60px;  }
+#pageMultiQuestion                                  .BudgetOptionEditDisplay .EditRow > * {  padding:10px;  }
+#pageMultiQuestion                                      .BudgetOptionEditDisplay .EditRow input.OptionContentInput {  width:calc(100% - 10px);  }
+#pageMultiQuestion                                      .BudgetOptionEditDisplay .EditRow .OptionDeleteCell {  padding:0px;  }
+#pageMultiQuestion                                  .BudgetOptionEditDisplay .EditRow > .OptionDeleteButtonCell {  padding:0px;  }
+#pageMultiQuestion                              .BudgetOptionEditDisplay[hasoptioninput='true'] .Edit .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                          .Question[mode="view"] .BudgetAllocationViewDisplay {  border:solid 1px #aaaaaa;  }
+#pageMultiQuestion                              .BudgetAllocationViewDisplay .ViewRow {  display:grid;  grid-template-columns:1fr 5em auto 2fr auto;  }
+#pageMultiQuestion                                  .BudgetAllocationViewDisplay .AmountAbsolute {  margin:5px 25px 5px 10px;  }  /*  white-space:nowrap;  overflow:hidden;  }  */
+#pageMultiQuestion                                  .BudgetAllocationViewDisplay .AmountIncrementButton {  width:calc(100% - 10px);  text-align:left;  display:none;  }
+#pageMultiQuestion                                  .BudgetAllocationViewDisplay[data-reasonInputFocused='true'] .AmountIncrementButton {  grid-column:3;  display:block;  }
+#pageMultiQuestion                                  .BudgetAllocationViewDisplay .ReasonCell {  }
+#pageMultiQuestion                                      .BudgetAllocationViewDisplay .ReasonInput {  width:calc(100% - 12px);  }
+#pageMultiQuestion                          .NewAllocationWrap {  }
+#pageMultiQuestion                              .NewAllocationWrap .ViewSuggestions {  display:flex;  flex-direction:row;  flex-wrap:wrap;  }
+#pageMultiQuestion                              .NewAllocationWrap .ReasonLabel {  display:none;  }
+#pageMultiQuestion                              .NewAllocationWrap .ReasonInput {  display:none;  }
+#pageMultiQuestion                              .BudgetQuestionDisplay[hasnewallocationinput="true"] .NewAllocationWrap .ReasonLabel {  display:block;  }
+#pageMultiQuestion                              .BudgetQuestionDisplay[hasnewallocationinput="true"] .NewAllocationWrap .ReasonInput {  display:block;  }
+#pageMultiQuestion                              .BudgetQuestionDisplay[hasnewallocationinput="true"] .NewAllocationWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                          .Question[mode="result"] .BudgetOptionResultDisplay {  border:solid 1px #aaaaaa;  }
+#pageMultiQuestion                              .BudgetOptionResultDisplay > details > summary {
+                                                    display:grid;  grid-template-columns:150px 1fr auto;  min-height:2em;
+}
+#pageMultiQuestion                                  .BudgetOptionResultDisplay > details > summary .Amount {
+                                                        padding-left:5px;  height:1.3em;
+                                                        font-weight:bolder;  text-shadow:0px 0px 1px white, 0px 0px 2px white, 0px 0px 3px white, 0px 0px 4px white, 0px 0px 5px white;
+                                                        background-color:#aaaaaa;  white-space:nowrap;  overflow-x:visible;
+}
+#pageMultiQuestion                                      .BudgetOptionResultDisplay .VoteCount {  margin-right:50px;  text-align:right;  }
+#pageMultiQuestion                                  .BudgetOptionResultDisplay .BudgetReasonResult {
+                                                        display:grid;  grid-template-columns:3em 6em 1fr auto;  margin-bottom:10px;
+}
+#pageMultiQuestion                                      .BudgetOptionResultDisplay .BudgetReasonResult .ReasonAmount {  margin-left:5px;  }
+
+
+
+/* Proposal question */
+#pageMultiQuestion              .ProposalQuestionDisplay { }
+#pageMultiQuestion                  .ProposalQuestionDisplay .NewReasonWrap {  display:none;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay[mode='view'] .NewReasonWrap {  display:block;  }
+#pageMultiQuestion                      .ProposalQuestionDisplay .NewReasonInput {  color:black;  }
+#pageMultiQuestion                      .ProposalQuestionDisplay[hasnewreasoninput='true'] .NewReasonWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                  .ProposalQuestionDisplay .ReasonViewHeadings {  display:none;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay .ReasonViewHeadings2Column {  display:none;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay[data-width='narrow'][mode='view'] .ReasonViewHeadings {
+                                        display:block;  margin:10px;  text-align:center;  font-weight:bold;
+}
+#pageMultiQuestion                  .ProposalQuestionDisplay[data-width='wide'][mode='view'] .ReasonViewHeadings2Column {
+                                        display:grid;  grid-template-columns:1fr 1fr;  margin:10px;  text-align:center;  font-weight:bold;
+}
+
+#pageMultiQuestion                  .ProposalQuestionDisplay .ResultVotes {  display:none;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay[mode='result'] .ResultVotes {
+                                        width:100%;
+                                        display:grid;  grid-template-columns:1fr auto auto 1fr auto auto;
+                                        text-align:center;  font-weight:bold;
+}
+#pageMultiQuestion                      .ProposalQuestionDisplay .ResultVotes * {  padding:5px 10px 5px 10px;  }
+
+#pageMultiQuestion                  .ProposalQuestionDisplay .Reasons {  width:100%;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay .Reasons2Column {  width:100%;  display:grid;  grid-template-columns:1fr 1fr;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay[mode='edit'] .Reasons {  display:none;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay[mode='edit'] .Reasons2Column {  display:none;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay .ReasonsPro {  display:block;  width:100%;  }
+#pageMultiQuestion                  .ProposalQuestionDisplay .ReasonsCon {  display:block;  width:100%;  }
+
+#pageMultiQuestion                      .ProposalReasonDisplay {  border:solid 1px #aaaaaa;  }
+#pageMultiQuestion                          .ReasonEdit {  display:none;  }
+#pageMultiQuestion                          .ProposalReasonDisplay[mode='edit'] .ReasonEdit {  display:block;  }
+#pageMultiQuestion                              .ReasonEdit .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                          .ReasonView {  display:none;  }
+#pageMultiQuestion                          .ProposalReasonDisplay[mode='view'] .ReasonView {  display:grid;  grid-template-columns:1fr auto;  }
+#pageMultiQuestion                              .ProposalReasonDisplay .ReasonViewContent {  margin:5px;  line-height:1.6em;  }
+#pageMultiQuestion                                  .ProposalReasonDisplay .ProOrConViewSpan {
+                                                        margin:15px 10px 0px 0px;  border:solid 1px #aaaaaa;  border-radius:5px;  padding:3px;
+                                                        background-color:#dddddd;  color:#666666;
+}
+#pageMultiQuestion                              .ProposalReasonDisplay .ReasonViewButtons {  }
+#pageMultiQuestion                                  .ProposalReasonDisplay .ReasonEditButton {  display:none;  }
+#pageMultiQuestion                                  .ProposalReasonDisplay[mine='true'] .ReasonEditButton {  display:block;  }
+#pageMultiQuestion                                  .ProposalReasonDisplay .ReasonVoteButton {  grid-column:2;  }
+
+#pageMultiQuestion                          .ReasonResult {  display:none;  }
+#pageMultiQuestion                          .ProposalReasonDisplay[mode='result'] .ReasonResult {  display:grid;  grid-template-columns:1fr auto;  }
+#pageMultiQuestion                              .ReasonResult * {  padding:5px 10px 5px 10px;  }
+
+#pageMultiQuestion                          .Reasons .ProposalReasonDisplay[mode='result'] .ReasonResult {  display:grid;  grid-template-columns:1fr auto;  }
+
+#pageMultiQuestion                  .BottomButtons {  text-align:center;  }
+#pageMultiQuestion                      .ProposalQuestionDisplay[hassuggestions='true'] .BottomButtons .MoreReasonsButton {  display:none;  }
+
+
+
+/* Request-for-solutions question */
+#pageMultiQuestion              .RequestSolutionsQuestionDisplay { }
+#pageMultiQuestion                  .NewSolutionWrap {  margin:10px 0 20px 0;  }
+#pageMultiQuestion                      .RequestSolutionsQuestionDisplay[hasnewsolutioninput='true'] .NewSolutionWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                              .RequestSolutionsQuestionDisplay details > summary .ContentTag::before {  content:" \25B6 \00a0 ";  }
+#pageMultiQuestion                              .RequestSolutionsQuestionDisplay details[open] > summary > .View > .ContentViewWrap > .ContentTag::before {  content:" \25BC \00a0 ";  }
+#pageMultiQuestion                              .RequestSolutionsQuestionDisplay details[open] > summary > .Edit > .ContentTag::before {  content:" \25BC \00a0 ";  }
+#pageMultiQuestion                              .RequestSolutionsQuestionDisplay details[open] > summary > .Result .ContentTag::before {  content:" \25BC \00a0 ";  }
+
+/* Request-for-problems question */
+#pageMultiQuestion              .RequestProblemsQuestionDisplay { }
+#pageMultiQuestion                  .NewProblemWrap {  margin:10px 0 20px 0;  }
+#pageMultiQuestion                      .RequestProblemsQuestionDisplay[hasnewprobleminput='true'] .NewProblemWrap .SaveOrCancelButtons {  display:block;  }
+#pageMultiQuestion                  .Problems {  }
+#pageMultiQuestion                      .ProblemDisplay {  border:solid 1px #aaaaaa;  padding:5px;  }
+#pageMultiQuestion                          .ProblemDisplay details {  margin:0px;  }
+#pageMultiQuestion                            .ProblemDisplay summary {  display:inline-block;  width:100%;  }
+#pageMultiQuestion                              .RequestProblemsQuestionDisplay details > summary .ContentTag::before {  content:" \25B6 \00a0 ";  }
+#pageMultiQuestion                              .RequestProblemsQuestionDisplay details[open] > summary > .View > .ContentViewWrap > .ContentTag::before {  content:" \25BC \00a0 ";  }
+#pageMultiQuestion                              .RequestProblemsQuestionDisplay details[open] > summary > .Edit > .ContentTag::before {  content:" \25BC \00a0 ";  }
+#pageMultiQuestion                              .RequestProblemsQuestionDisplay details[open] > summary > .Result .ContentTag::before {  content:" \25BC \00a0 ";  }
+
+#pageMultiQuestion                              .ProblemDisplay[allowedit='false'] .ProblemEditButton {  display:none;  }
+
+#pageMultiQuestion                              .Question .ProblemDisplay > details > summary > div.Edit {  display:none;  }
+#pageMultiQuestion                              .ProblemDisplay[mode='edit'] > details > summary > div.Edit {  display:block;  padding:10px 0 15px 0;  }
+#pageMultiQuestion                                  .ProblemDisplay[mode='edit'] > details > summary > div.Edit .SaveOrCancelButtons {  display:block;  }
+#pageMultiQuestion                              .ProblemDisplay .View {  }
+#pageMultiQuestion                                  .NewSolutionWrap {  margin:10px 0 20px 20px;  }
+#pageMultiQuestion                                      .ProblemDisplay[hasnewsolutioninput='true'] .NewSolutionWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                              .Question .ProblemDisplay > details > summary > div.View {  display:none;  }
+#pageMultiQuestion                              .ProblemDisplay[mode='view'] > details > summary > div.View {  display:grid;  grid-template-columns:1fr auto;  }
+#pageMultiQuestion                                  .ContentViewWrap {  padding:10px 10px 10px 0;  }
+#pageMultiQuestion                                  .ProblemViewButtons {  }
+#pageMultiQuestion                              .Question .ProblemDisplay > details > div.View {  display:none;  }
+#pageMultiQuestion                              .ProblemDisplay[mode='view'] > details > div.View {  display:block;  }
+
+#pageMultiQuestion                              .Question .ProblemDisplay > details > summary > div.Result {  display:none;  }
+#pageMultiQuestion                              .ProblemDisplay[mode='result'] > details > summary > div.Result {  display:block;  padding:5px 5px 5px 0;  }
+
+#pageMultiQuestion                                  .ContentTag {
+                                                        margin:15px 10px 0px 0px;  border:solid 1px #aaaaaa;  border-radius:5px;  padding:4px;
+                                                        background-color:#dddddd;  color:#666666;
+                                                    }
+#pageMultiQuestion                              .Solutions {  }
+#pageMultiQuestion                                  .SolutionDisplay {  margin:10px 0 20px 20px;  }
+#pageMultiQuestion                                    .SolutionDisplay summary {  display:inline-block;  width:100%;  }
+#pageMultiQuestion                                      .SolutionDisplay > details > summary > div.Edit {  display:none;  }
+#pageMultiQuestion                                      .SolutionDisplay[mode='edit'] > details > summary > div.Edit {
+                                                            display:block;  margin:15px 0 0 0;  padding:10px 0 15px 0;
+                                                        }
+#pageMultiQuestion                                          .SolutionDisplay[mode='edit'] > details > summary > div.Edit .SaveOrCancelButtons {
+                                                                display:block;
+                                                            }
+#pageMultiQuestion                                      .SolutionDisplay[allowedit='false'] .SolutionEditButton {  display:none;  }
+
+#pageMultiQuestion                                      .Question .SolutionDisplay > details > summary > div.View {  display:none;  }
+#pageMultiQuestion                                      .Question .SolutionDisplay[mode='view'] > details > summary > div.View {
+                                                            display:grid;  grid-template-columns:1fr auto;
+                                                        }
+#pageMultiQuestion                                      .Question .SolutionDisplay > details > div.View {  display:none;  }
+#pageMultiQuestion                                      .Question .SolutionDisplay[mode='view'] > details > div.View {  display:block;  }
+#pageMultiQuestion                                          .SolutionViewButtons {  }
+#pageMultiQuestion                                          .NewReasonWrap {  margin:10px 0 10px 40px;  }
+#pageMultiQuestion                                              .NewSolutionReasonInput {  }
+#pageMultiQuestion                                              .SolutionDisplay[hasnewreasoninput='true'] .NewReasonWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                                          .SolutionDisplay .ReasonViewHeadings1Column {
+                                                                display:none;  grid-template-columns:1fr;  margin:10px;  text-align:center;
+                                                            }
+#pageMultiQuestion                                          .SolutionDisplay .ReasonViewHeadings2Column {
+                                                                display:none;  grid-template-columns:1fr 1fr;  margin:10px;  text-align:center;
+                                                            }
+#pageMultiQuestion                                          .SolutionDisplay[hasreasons='true'] .ReasonViewHeadings2Column {  display:grid;  }
+#pageMultiQuestion                                      .SolutionDisplay > details > summary > div.Result {  display:none;  }
+#pageMultiQuestion                                      .SolutionDisplay[mode='result'] > details > summary > div.Result {  display:block;  }
+#pageMultiQuestion                                      .SolutionDisplay > details > div.Result {  display:none;  }
+#pageMultiQuestion                                      .SolutionDisplay[mode='result'] > details > div.Result {  display:block;  }
+
+#pageMultiQuestion                                          .SolutionDisplay .ReasonResultHeadings1Column {
+                                                                display:none;  grid-template-columns:1fr auto;  margin:10px;  text-align:center;
+                                                            }
+#pageMultiQuestion                                          .SolutionDisplay .ReasonResultHeadings2Column {
+                                                                display:none;  grid-template-columns:1fr auto 1fr auto;  margin:10px;  text-align:center;
+                                                            }
+#pageMultiQuestion                                          .SolutionDisplay[hasreasons='true'] .ReasonResultHeadings2Column {  display:grid;  }
+
+#pageMultiQuestion                                      .SolutionDisplay .Reasons {
+                                                            display:grid;  grid-template-columns:1fr 1fr;  margin-left:40px;  width:auto;
+                                                        }
+#pageMultiQuestion                                          .SolutionReasonDisplay {  border:solid 1px #aaaaaa;  padding:5px;  grid-column:1;  }
+#pageMultiQuestion                                          .SolutionReasonDisplay[procon='con'] {  grid-column:2;  }
+#pageMultiQuestion                                              .Question .SolutionReasonDisplay > div.Edit {  display:none;  }
+#pageMultiQuestion                                              .SolutionReasonDisplay[mode='edit'] > div.Edit {  display:block;  }
+#pageMultiQuestion                                                  .SolutionReasonDisplay[mode='edit'] > div.Edit .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                                              .SolutionReasonDisplay[allowedit='false'] .ReasonEditButton {  display:none;  }
+
+#pageMultiQuestion                                              .Question .SolutionReasonDisplay > div.View {  display:none;  }
+#pageMultiQuestion                                              .SolutionReasonDisplay[mode='view'] > div.View {  display:grid;  grid-template-columns:1fr auto;  }
+#pageMultiQuestion                                                  .SolutionReasonDisplay .ReasonViewButtons {  display:grid;  grid-template-columns:auto;  }
+#pageMultiQuestion                                                      .SolutionReasonDisplay .ReasonVoteWrap {
+                                                                            display:inline-block;  margin:5px;  padding:5px 5px 0 5px;  height:min-content;
+                                                                            border:solid 1px #aaaaaa;  border-radius:5px;
+                                                                            background-color:#f4f4f4;  text-align:center;
+                                                                        }
+#pageMultiQuestion                                                      .ReasonVoteWrap label {  display:block;  opacity:1.0;  }
+
+#pageMultiQuestion                                              .Question .SolutionReasonDisplay > div.Result {  display:none;  }
+#pageMultiQuestion                                              .SolutionReasonDisplay[mode='result'] > div.Result {  display:grid;  grid-template-columns:1fr auto;  }
+
+
+#pageMultiQuestion      .MultiQuestionSurvey[saved='false'] .adminHistory {  display:none;  }
+
+
+
+
+/* Overrides for narrow mobile screen */
+@media (max-width:800px) {
+
+#pageMultiQuestion      .Question .ModeButtons {  flex-direction:column;  }
+
+#pageMultiQuestion          .RatingQuestionDisplay .OptionColumnHeadings {  display:none;  }
+#pageMultiQuestion              .Question[mode="view"] .RatingOptionDisplay .View {  grid-template-columns:auto 1fr;  }
+#pageMultiQuestion                  .RatingLabel {  grid-row:auto;  grid-column:auto;  text-align:left;  }
+#pageMultiQuestion                  .RatingInputWrap {  grid-row:auto;  grid-column:auto;  }
+#pageMultiQuestion                  .RatingOptionDisplay[ratinginputfocused='true'] .RatingIncrementButton {  grid-column:1/3;  }
+#pageMultiQuestion                  .RatingOptionDisplay .ReasonCell {  grid-row:auto;  grid-column:1/3;  }
+#pageMultiQuestion          .RatingQuestionDisplay .OptionResultColumnHeadings {  grid-template-columns:1fr 1fr 1fr 1fr;  }
+#pageMultiQuestion              .OptionResultColumnHeadings .Votes {  text-align:right;  }
+#pageMultiQuestion          .RatingOptionDisplay > .Result > details > summary {  grid-template-columns:auto 1fr;  }
+#pageMultiQuestion              .RatingResult > details > summary {  grid-template-columns:2em 3fr 100px;  }
+#pageMultiQuestion                  .RatingResult .Rating {  }
+#pageMultiQuestion                  .RatingResult .VoteCount {  grid-column:3;  text-align:right;  margin:.4em 5px auto auto;  }
+#pageMultiQuestion                      .RatingResult .VoteCountNumber {  left:auto;  right:5px;  }
+#pageMultiQuestion              .RatingReasonResult {  grid-template-columns:5em 1fr auto;  }
+#pageMultiQuestion                  .RatingReasonResult .RatingReason {  grid-column:2;  }
+
+#pageMultiQuestion          .RankingQuestionDisplay .ViewHeadings {  display:none;  }
+#pageMultiQuestion              .Question[mode="view"] .RankingOptionDisplay .View {  grid-template-columns:auto 1fr;  }
+#pageMultiQuestion                  .RankingLabel {  grid-row:auto;  grid-column:auto;  }
+#pageMultiQuestion                  .RankingInputWrap {  grid-row:auto;  grid-column:auto;  }
+#pageMultiQuestion                  .RankingOptionDisplay[rankinginputfocused='true'] .RankingIncrementButton {  grid-column:1/3;  }
+#pageMultiQuestion                  .RankingOptionDisplay .ReasonCell {  grid-column:1/3;  }
+#pageMultiQuestion          .RankingQuestionDisplay .ResultHeadings {  grid-template-columns:1fr 1fr 1fr 1fr;  grid-auto-rows:auto;  }
+#pageMultiQuestion              .RankingQuestionDisplay .ResultHeadings .Votes {  text-align:right;  }
+#pageMultiQuestion              .RankingOptionDisplay > .Result > details > summary {  grid-template-columns:1fr;  grid-auto-rows:auto;  }
+#pageMultiQuestion                  .RankingOptionDisplay .RatingResult > details > summary {  grid-template-columns:1fr 3fr 100px;  }
+
+#pageMultiQuestion          .ChecklistQuestionDisplay .ViewHeadings {  display:none;  }
+#pageMultiQuestion          .Question[mode="view"] .CheckboxOptionDisplay .View {  grid-template-columns:auto 1fr;  }
+#pageMultiQuestion              .CheckboxOptionDisplay .CheckboxLabel {  grid-row:auto;  text-align:left;  }
+#pageMultiQuestion              .CheckboxInputWrap {  width:auto;  display:inline-block;  grid-row:auto;  text-align:left;  }
+#pageMultiQuestion              .CheckboxOptionDisplay .CheckboxIncrementButton {  grid-column:1/3;  grid-row:auto;  }
+#pageMultiQuestion              .CheckboxOptionDisplay .ReasonCell {  grid-column:1/3;  grid-row:auto;  }
+#pageMultiQuestion          .ChecklistQuestionDisplay .ResultHeadings {  grid-template-columns:1fr 1fr 100px;  grid-auto-rows:auto;  }
+#pageMultiQuestion              .ChecklistQuestionDisplay .ResultHeadings .YesLabel {  display:none;  }
+#pageMultiQuestion          .CheckboxOptionDisplay > .Result > details > summary {  grid-template-columns:1fr auto;  grid-auto-rows:auto;  }
+
+#pageMultiQuestion          .TextOptionResultDisplay > details > summary {  grid-template-columns:1fr auto;  }
+#pageMultiQuestion              .TextOptionResultDisplay .VoteCount {  text-align:right;  }
+#pageMultiQuestion                  .TextOptionResultDisplay .VoteCountNumber {  left:auto;  right:5px;  }
+#pageMultiQuestion              .TextOptionResultDisplay .TextReasonResult {  grid-template-columns:1fr auto;  }
+
+#pageMultiQuestion          .SolutionDisplay[hasreasons='true'] .ReasonViewHeadings1Column {  display:grid;  }
+#pageMultiQuestion          .SolutionDisplay[hasreasons='true'] .ReasonViewHeadings2Column {  display:none;  }
+#pageMultiQuestion          .SolutionDisplay[hasreasons='true'] .ReasonResultHeadings1Column {  display:grid;  }
+#pageMultiQuestion          .SolutionDisplay[hasreasons='true'] .ReasonResultHeadings2Column {  display:none;  }
+
+#pageMultiQuestion          .SolutionDisplay .Reasons {  grid-template-columns:1fr;  }
+#pageMultiQuestion              .SolutionReasonDisplay[procon='con'] {  grid-column:1;  }
+
+#pageMultiQuestion          .Question[mode="view"] .BudgetAllocationViewDisplay {  }
+#pageMultiQuestion              .BudgetQuestionDisplay .ViewHeadings {  display:none;  }
+#pageMultiQuestion              .BudgetAllocationViewDisplay .ViewRow {  grid-template-columns:auto 1fr auto;  }
+#pageMultiQuestion                  .BudgetAllocationViewDisplay .Content {  grid-row:1;  grid-column:1/3;  }
+#pageMultiQuestion                  .BudgetAllocationViewDisplay .DeleteCell {  grid-row:1/3;  grid-column:3/4;  }
+#pageMultiQuestion                  .BudgetAllocationViewDisplay .AmountCell {  width:4em;  }
+#pageMultiQuestion                  .BudgetAllocationViewDisplay .AmountAbsolute {  }
+#pageMultiQuestion                  .BudgetAllocationViewDisplay .ReasonCell {  grid-row:3;  grid-column:1/4;  }
+#pageMultiQuestion              .BudgetQuestionDisplay .ResultHeadings {  grid-template-columns:1fr 1fr auto;  }
+#pageMultiQuestion                  .BudgetQuestionDisplay .ResultHeadings .Votes {  margin-right:0px;  }
+#pageMultiQuestion              .BudgetOptionResultDisplay > details > summary {  grid-template-columns:110px 1fr auto;  }
+#pageMultiQuestion                  .BudgetOptionResultDisplay .VoteCount {  margin-right:5px;  }
+#pageMultiQuestion              .BudgetOptionResultDisplay .BudgetReasonResult {  grid-template-columns:1fr 4em 5fr auto;  }
+
+}
+

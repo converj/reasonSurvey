@@ -61,6 +61,7 @@ def editQuestion( ):
         if surveyRec is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='survey not found' )
         logging.debug(('SubmitEditQuestion.post()', 'surveyRec=', surveyRec))
         if userId != surveyRec.creator:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
+        if not surveyRec.allowEdit:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
 
         # Retrieve question record
         # If question record exists...

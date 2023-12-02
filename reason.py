@@ -44,6 +44,12 @@ class Reason(ndb.Model):
         words = words[ 0 : conf.MAX_WORDS_INDEXED ]  # Limit number of words indexed
         self.words = text.tuples( words, maxSize=2 )
 
+    def incrementVoteCount( self, increment ):  self.setVoteCount( self.voteCount + increment )
+
+    def setVoteCount( self, newVoteCount ):
+        self.voteCount = newVoteCount
+        self.score = voteCountToScore( self.voteCount, self.content )
+
 
 
 def voteCountToScore( voteCount, content ):
@@ -68,17 +74,21 @@ def retrieveTopReasons( proposalId, maxReasonsPerType, cursorPro=None, cursorCon
 
 
 # Returns 2 futures, each producing ( batch of records, next-page-cursor, more-records-flag )
-def retrieveTopReasonsAsync( proposalId, maxReasonsPerType, cursorPro=None, cursorCon=None ):
+def retrieveTopReasonsAsync( proposalId, maxReasonsPerType, cursorPro=None, cursorCon=None, cursorProDone=False, cursorConDone=False ):
     proposalIdStr = str( proposalId )
 
     if conf.isDev:  logging.debug( 'retrieveTopReasonsAsync() proposalId=' + str(proposalId) + ' maxReasonsPerType=' + str(maxReasonsPerType) )
     if conf.isDev:  logging.debug( 'retrieveTopReasonsAsync() cursorPro=' + str(cursorPro) + ' cursorCon=' + str(cursorCon) )
 
-    proRecordsFuture = Reason.query( Reason.proposalId==proposalIdStr, Reason.proOrCon==conf.PRO ).order(
-        -Reason.score ).fetch_page_async( maxReasonsPerType , start_cursor=cursorPro )
+    proRecordsFuture = None
+    if not cursorProDone:
+        proRecordsFuture = Reason.query( Reason.proposalId==proposalIdStr, Reason.proOrCon==conf.PRO ).order(
+            -Reason.score ).fetch_page_async( maxReasonsPerType , start_cursor=cursorPro )
 
-    conRecordsFuture = Reason.query( Reason.proposalId==proposalIdStr, Reason.proOrCon==conf.CON ).order(
-        -Reason.score ).fetch_page_async( maxReasonsPerType , start_cursor=cursorCon )
+    conRecordsFuture = None
+    if not cursorConDone:
+        conRecordsFuture = Reason.query( Reason.proposalId==proposalIdStr, Reason.proOrCon==conf.CON ).order(
+            -Reason.score ).fetch_page_async( maxReasonsPerType , start_cursor=cursorCon )
 
     return proRecordsFuture, conRecordsFuture
 

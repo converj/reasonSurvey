@@ -272,7 +272,7 @@
             '       <p translate=true> Users can choose from the budget-items that you suggest here, or add their own budget-items. </p>' ,
             '       <div class=Slices id=Slices></div>' ,
             '       <div class=NewSlice>' ,
-            '           <h3 translate=true> New budget item </h3>' ,
+            '           <h3 translate=true> Suggest budget item </h3>' ,
             '           <label for=NewSliceTitleInput translate=true> Title </label>' ,
             '           <input type=text class=NewSliceTitleInput id=NewSliceTitleInput placeholder="" ' ,
             '               oninput=handleNewSliceInput>' ,

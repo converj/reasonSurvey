@@ -32,16 +32,20 @@
 #pageEditAutocomplete                   .QuestionDeleteButton {  position:absolute;  right:0px;  top:5px;  padding:4px 10px 4px 10px;  box-shadow:-1px -1px 5px #bbbbbb inset;  }
 #pageEditAutocomplete               .Answers {  }
 #pageEditAutocomplete                   .Answer {  position:relative;  margin-top:5px;  transition:max-height 1s;  }
-#pageEditAutocomplete                       .AnswerEdit {  margin:20px 0px 20px 0px;  padding:5px;  background:#f8f8f8;  box-shadow:0px 0px 10px #bbbbbb;  border-radius:3px;  line-height:2.5em;  }
+#pageEditAutocomplete                       .AnswerEdit {  margin:20px 10px 30px 10px;  padding:5px;  background:#f8f8f8;  box-shadow:0px 0px 10px #bbbbbb;  border-radius:5px;  line-height:2.5em;  }
 #pageEditAutocomplete                           .AnswerEdit label {  opacity:1.0;  }
+#pageEditAutocomplete                           .Question[questiontype='rank'] .AnswerContentLabel {  display:none;  }
+#pageEditAutocomplete                           .Question[questiontype='autocomplete'] .AnswerRankOptionLabel {  display:none;  }
 #pageEditAutocomplete                           input.AnswerContentInput {  line-height:1.25em;  height:1.5em;  width:calc(100% - 15px);  border:solid 1px #cccccc;  }
-#pageEditAutocomplete                           [hidereasons='true']  .AnswerReasonLabel {  display:none;  }
+#pageEditAutocomplete                           .AnswerReasonLabel {  display:none;  }
 #pageEditAutocomplete                           textarea.AnswerReasonInput {  line-height:1.25em;  height:1.5em;  width:calc(100% - 15px);  border:solid 1px #cccccc;  }
-#pageEditAutocomplete                           [hidereasons='true']  textarea.AnswerReasonInput {  display:none;  }
-#pageEditAutocomplete                       .AnswerEditingButtons {  position:absolute;  right:0px;  top:5px;  }
+#pageEditAutocomplete                           textarea.AnswerReasonInput {  display:none;  }
+#pageEditAutocomplete                       .AnswerEditingButtons {  position:absolute;  right:10px;  top:0px;  }
 #pageEditAutocomplete                           .AnswerDeleteButton {  padding:4px 10px 4px 10px;  box-shadow:-1px -1px 5px #bbbbbb inset;  }
-#pageEditAutocomplete               .NewAnswer {  margin-top:10px;  padding:2px;  }
+#pageEditAutocomplete               .NewAnswer {  margin:10px;  padding:2px;  }
 #pageEditAutocomplete                   .NewAnswer label {  opacity:1.0;  }
+#pageEditAutocomplete                   .Question[questiontype='rank'] .newAnswerLabel { display:none; }
+#pageEditAutocomplete                   .Question[questiontype='autocomplete'] .newOptionLabel { display:none; }
 #pageEditAutocomplete                   textarea.NewAnswerInput {  width:calc(100% - 10px);  height:2.0em;  border:solid 1px #cccccc;  }
 #pageEditAutocomplete       .NewQuestion {  margin:50px 0px 40px 0px;  padding:20px 5px 20px 5px;  background:#f0f0f0;  box-shadow:0 0 20px #888888;  border-radius:3px;  }
 #pageEditAutocomplete           .NewQuestion label {  opacity:1.0;  font-weight:bold;  }

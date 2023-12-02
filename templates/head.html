@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{SITE_NAME}}</title>
+    <meta charset='UTF-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description"
+        content="Create free online surveys that reveal both participants' opinions and also reasons.
+            Use deliberative forms which automate deliberative democracy processes.
+            Enjoy the simplicity of Google Forms or Survey Monkey, with the deliberation of forums like consider.it or pol.is" />
+    <link rel='stylesheet' href='{{ url_for('static', filename='main.css') }}' />
+    <link rel='stylesheet' href='{{ url_for('static', filename='autocomplete/main.css') }}' />
+    <link rel='stylesheet' href='{{ url_for('static', filename='budget/main.css') }}' />
+    <link rel='stylesheet' href='{{ url_for('static', filename='multi/main.css') }}' />
+</head>
+<body>
+<div id=content>
+
+    {% include 'loginPopups.html' %}
+
+    <!-- Menus -->
+    <details id=menuMobile>
+        <summary tabindex=-1 aria-label=Menu>
+            <button id=menuLink translate=true> Menu </button>
+        </summary>
+        <nav class=menu role=nav role=menu>
+            <div>
+                <!-- Include fake hrefs to get screen-reader focus -->
+                <a class=menuItemLink id=menuItemLinkBackProposals href='/#page=request'> &larr; <span translate=true>Proposals</span> </a>
+                <a class=menuItemLink id=menuItemLinkBackResults href='/#page=results'> &larr; <span translate=true>Results</span> </a>
+                <a class=menuItemLink id=menuItemLinkView title='View' href='/#page=view'> &larr; <span translate=true>View</span> </a>
+                <a class=menuItemLink id=menuItemLinkEdit title='Edit' href='/#page=edit'> &larr; <span translate=true>Edit</span> </a>
+
+                <a class=menuItemLink translate=true href='/#page=home'> New Survey </a>
+                <a class=menuItemLink translate=true href='/#page=recent'> Recent </a>
+                <a class=menuItemLink translate=true href='/about'> About </a>
+
+                <div class=menuItem id=menuItemCity></div>
+                <button class=menuItem id=menuItemLogin translate=true> Log in </button>
+                <button class=menuItem id=menuItemLogout translate=true> Log out </button>
+            </div>
+            <div id=menuLoginStatus></div>
+        </nav>
+        <div id=contentCover></div>
+    </details>
+
+    <div id=siteName>{{SITE_NAME}}</div>
+

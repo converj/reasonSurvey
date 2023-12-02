@@ -1,0 +1,118 @@
+{% include 'head.html' %}
+<div id=pageAbout>
+
+
+            <h1 class=title translate=true> About </h1>
+            <div id=aboutContent>
+                <p>
+                    {{SITE_NAME}} is a website where you can create deliberative surveys, for free.
+                </p>
+                <h3> The problem </h3>
+                <p>
+                    Most social-networks are "divergent", grouping us into "filter-bubbles" of like-minded people.
+                    These groups are comfortable, and the more time we spend there, 
+                    the more we hear our own opinions reflected back to ourselves,
+                    and the more extreme we become in our views.
+                </p>
+                <p>
+                    But when we leave our comfortable bubbles to make decisions for the larger society,
+                    the conflicting extreme opinions create chaos.
+                    Decision-making for our city, state, & nation becomes more and more difficult
+                    as people become further & further away from consensus.
+                </p>
+                <h3> {{SITE_NAME}} </h3>
+                <p>
+                    We need a way to understand the world outside our own filter-bubble.
+                    We need a way to re-converge our isolated islands of belief, back into a single mainland society.
+                    We need a way for people to disagree, but still understand each other, and understand the facts.
+                    We need a way to plan a future together.
+                </p>
+                <p>
+                    {{SITE_NAME}} is a forum that breaks filter-bubbles, creates consensus in diverse groups,
+                    and improves the quality of group-decisions.
+                    {{SITE_NAME}} is run by a privately-held company, operated "for benefit",
+                    seeking profit only to operate sustainably.
+                </p>
+
+                <h3> Reason-based voting </h3>
+                <p>
+                    When opinions conflict, voting alone does not bring opinions closer together.
+                    Competitive voting can even increase partisanship.
+                    But reason-based voting helps people to learn more, both about their own ideas, and about opposing ideas,
+                    finding new common ground.
+                </p>
+                <h3> Minimizing the burden of knowledge </h3>
+                <p>
+                    We do not like to waste time.
+                    So these survey tools have been designed to make it fast & easy for people to express their reasons,
+                    and to comprehend others' reasons.
+                </p>
+                <h3> Anti-abuse </h3>
+                <p>
+                    Some small fraction of people will try to break, misuse, and corrupt any forum,
+                    sometimes using coordinated campaigns of abuse.
+                    A forum for all people must allow subversion to exist, but limit the impact of their abuse.
+                    These tools are designed to allow noisy special-interest-groups to speak their mind,
+                    without preventing coherent planning.
+                </p>
+
+
+                <details class=aboutDetails>
+                    <summary> Background documents </summary>
+                    <ul>
+                        <li> <a href='/problems'> Group decision problems </a>
+                        <li> <a href='/glossary'> Civic participation key words </a>
+                        <li> <a href='/apps'> Civic participation apps </a>
+                        <li> <a href='{{ url_for('static', filename='doc/experimentSummary.html') }}' target=_blank> Experiment summary </a>
+                        <li> <a href='{{ url_for('static', filename='doc/openVoterId.html') }}' target=_blank> Open voter ID </a>
+                        <li> <a href='/us'> About us </a>
+                    </ul>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Intellectual property </summary>
+                    <div>
+                        You may copy this site.
+                        These ideas are unpatented, straightforward applications of prior art from projects like Consider.it, Tricider, and more.
+                    </div>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Open-source code </summary>
+                    <div>
+                        The code for this site is open-source, under Apache license, at: 
+                        <br><a href='https://github.com/converj/reasonSurvey' target=_blank
+                            > https://github.com/converj/reasonSurvey </a>
+                    </div>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Legal documents </summary>
+                    <ul>
+                        <li> <a href=termsOfService.html target=_blank> Terms of Service </a>
+                        <li> <a href=privacyPolicy.html target=_blank> Privacy Policy </a>
+                    </ul>
+                </details>
+
+                <details class=aboutDetails>
+                    <summary> Accessibility </summary>
+                    <div>
+                        This website is periodically reviewed for accessibility.  The goal is to
+                        support keyboard navigation, and screen-reader navigation with:
+                        <ul>
+                            <li> VoiceOver on MacOS
+                            <li> VoiceOver on iOS
+                            <li> Talkback on Android
+                            <li> ChromeVox on ChromeOS
+                        </ul>
+                    </div>
+                </details>
+
+            </div>
+        </div>
+
+
+<div class=tryBottomDiv><a href='/'> Try {{SITE_NAME}} </a></div>
+
+</div>
+{% include 'foot.html' %}
