@@ -5,7 +5,7 @@
             <h1 class=title translate=true> About </h1>
             <div id=aboutContent>
                 <p>
-                    {{SITE_NAME}} is a website where you can create deliberative surveys, for free.
+                    {{SITE_NAME}} is a website where you can create online deliberative surveys, for free.
                 </p>
                 <h3> The problem </h3>
                 <p>
@@ -28,32 +28,28 @@
                     We need a way to plan a future together.
                 </p>
                 <p>
-                    {{SITE_NAME}} is a forum that breaks filter-bubbles, creates consensus in diverse groups,
+                    {{SITE_NAME}} is a forum that bursts filter-bubbles, encourages consensus in diverse groups,
                     and improves the quality of group-decisions.
-                    {{SITE_NAME}} is run by a privately-held company, operated "for benefit",
-                    seeking profit only to operate sustainably.
-                </p>
-
-                <h3> Reason-based voting </h3>
-                <p>
+                    <ul>
+                        <li><h4> Reason-based voting </h4>
                     When opinions conflict, voting alone does not bring opinions closer together.
                     Competitive voting can even increase partisanship.
                     But reason-based voting helps people to learn more, both about their own ideas, and about opposing ideas,
                     finding new common ground.
-                </p>
-                <h3> Minimizing the burden of knowledge </h3>
-                <p>
+
+                        <li><h4> Minimizing the knowledge burden </h4>
                     We do not like to waste time.
-                    So these survey tools have been designed to make it fast & easy for people to express their reasons,
+                    So {{SITE_NAME}} is designed to make it fast & easy for people to express their reasons,
                     and to comprehend others' reasons.
-                </p>
-                <h3> Anti-abuse </h3>
-                <p>
-                    Some small fraction of people will try to break, misuse, and corrupt any forum,
-                    sometimes using coordinated campaigns of abuse.
+
+                        <li><h4> Anti-abuse </h4>
+                    Some small fraction of people will try to break, misuse, and corrupt any forum.
                     A forum for all people must allow subversion to exist, but limit the impact of their abuse.
-                    These tools are designed to allow noisy special-interest-groups to speak their mind,
-                    without preventing coherent planning.
+                    {{SITE_NAME}} is designed to allow noisy special-interests to speak their mind,
+                    without interrupting coherent deliberation.
+
+                        <li><h4> For benefit </h4>  {{SITE_NAME}} is run by a privately-held company, seeking profit only to operate sustainably.
+                    </ul>
                 </p>
 
 
@@ -108,6 +104,17 @@
                     </div>
                 </details>
 
+                <details class=aboutDetails>
+                    <summary> Contact Us </summary>
+                    <div>
+                        <p> Use this form to send a message to the website administrator <span id=adminEmail></span> </p>
+                        <label for=messageToAdminInput translate=yes> Message </label>
+                        <textarea id=messageToAdminInput placeholder='Hello...'></textarea>
+                        <button id=messageToAdminButton translate=yes> Send </button>
+                        <div class=Message id=messageToAdminStatus></div>
+                    </div>
+                </details>
+
             </div>
         </div>
 
@@ -116,3 +123,50 @@
 
 </div>
 {% include 'foot.html' %}
+
+
+<script>
+    requestInitialCookie();
+
+    // Reveal admin email after a long wait, to block bots that lack javascript or which are impatient
+    setTimeout( function(){
+        document.getElementById('adminEmail').innerHTML = 'contact+public';
+        document.getElementById('adminEmail').innerHTML += '@';
+        document.getElementById('adminEmail').innerHTML += 'converj.net';
+    } , 11000 );
+
+    document.getElementById('messageToAdminButton').onclick = function( ){
+        let messageToAdminStatus = document.getElementById('messageToAdminStatus');
+        let messageToAdminInput = document.getElementById('messageToAdminInput');
+        let messageContent = messageToAdminInput.value  ||  '';
+        if ( ! messageContent.trim() ){  return;  }
+
+        // Send to server
+        showMessage( 'Sending message...', GREY, null, messageToAdminStatus );
+        messageToAdminInput.setCustomValidity('');
+        let dataSend = { crumb:crumb , fingerprint:fingerprint , message:messageContent };
+        let url = 'messageToAdmin';
+        ajaxPost( dataSend, url, function(error, status, data){
+            if ( !error  &&  data  &&  data.success ){
+                // Show success and reset form
+                showMessage( 'Sent message', GREEN, 9000, messageToAdminStatus );
+                messageToAdminInput.setCustomValidity('');
+                messageToAdminInput.value = '';
+            }
+            else {
+                // Handle error cases
+                let message = 'Failed to send message.';
+
+                if ( data  &&  data.message == NO_COOKIE ){  message = 'No cookie present';  }
+                else if ( data  &&  data.message == BAD_CRUMB ){  message = 'No crumb present';  }
+                else if ( data  &&  data.message == TOO_SHORT ){
+                    message = 'Message is empty';
+                    messageToAdminInput.setCustomValidity( message );
+                }
+
+                showMessage( message, RED, 9000, messageToAdminStatus );
+            }
+        } );
+    };
+
+</script>

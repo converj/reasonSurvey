@@ -20,7 +20,9 @@ KEY_RATING_MIN_LABEL = 'minRatingLabel'
 KEY_RATING_MAX_LABEL = 'maxRatingLabel'
 KEY_OPTIONS = 'options'
 KEY_BUDGET_TOTAL = 'maxTotal'
+KEY_MAX_ITEMS = 'maxItems'
 KEY_REQUIRE_REASON = 'requireReason'
+KEY_IMAGE_ID = 'imageId'
 
 TYPE_INFO = 'info'
 TYPE_RATE = 'rate'
@@ -28,10 +30,12 @@ TYPE_RANK = 'rank'
 TYPE_CHECKLIST = 'checklist'
 TYPE_TEXT = 'text'
 TYPE_BUDGET = 'budget'
+TYPE_LIST = 'list'
 TYPE_PROPOSAL = 'proposal'
 TYPE_REQUEST_SOLUTIONS = 'solutions'
 TYPE_REQUEST_PROBLEMS = 'problems'
-QUESTION_TYPES = [ TYPE_INFO, TYPE_RATE, TYPE_RANK, TYPE_CHECKLIST, TYPE_TEXT, TYPE_BUDGET, TYPE_PROPOSAL, TYPE_REQUEST_SOLUTIONS, TYPE_REQUEST_PROBLEMS ]
+QUESTION_TYPES = [ TYPE_INFO, TYPE_RATE, TYPE_RANK, TYPE_CHECKLIST, TYPE_TEXT, TYPE_BUDGET, TYPE_LIST,
+    TYPE_PROPOSAL, TYPE_REQUEST_SOLUTIONS, TYPE_REQUEST_PROBLEMS ]
 
 
 class MultipleQuestionSurvey( ndb.Model ):
@@ -97,6 +101,14 @@ class MultipleQuestionSurvey( ndb.Model ):
         question = self.getQuestion( questionId )
         question[ KEY_TITLE ] = title
         question[ KEY_DETAIL ] = detail
+
+    def setQuestionImageId( self, questionId, imageId ):
+        question = self.getQuestion( questionId )
+        question[ KEY_IMAGE_ID ] = imageId
+
+    def getQuestionImageId( self, questionId ):
+        question = self.getQuestion( questionId )
+        return question.get( KEY_IMAGE_ID, None )
 
     def setQuestionType( self, questionId, newType ):
         if newType not in QUESTION_TYPES:  raise KeyError( 'newType not in QUESTION_TYPES' )
@@ -165,6 +177,14 @@ class MultipleQuestionSurvey( ndb.Model ):
         option = self.getQuestionOption( questionId, optionId )
         option[ KEY_TITLE ] = content
 
+    def setOptionImageId( self, questionId, optionId, imageId ):
+        option = self.getQuestionOption( questionId, optionId )
+        option[ KEY_IMAGE_ID ] = imageId
+
+    def getOptionImageId( self, questionId, optionId ):
+        option = self.getQuestionOption( questionId, optionId )
+        return option.get( KEY_IMAGE_ID, None )
+
     def getQuestionOption( self, questionId, optionId ):
         question = self.getQuestion( questionId )
         optionsMatchingId = [ o  for o in question[KEY_OPTIONS]  if o[KEY_ID] == optionId ]
@@ -209,6 +229,10 @@ class MultipleQuestionSurvey( ndb.Model ):
             'options': [ self.optionToClient(o, userId)  for o in surveyQuestion.get(KEY_OPTIONS, []) ] ,
             'requireReason': surveyQuestion.get( KEY_REQUIRE_REASON, True ) ,
         }
+
+        imageId = surveyQuestion.get( KEY_IMAGE_ID, None )
+        if imageId is not None:  questionStruct['image'] = imageId
+
         if ( questionType == TYPE_RATE ):
             questionStruct['ratingMin'] = surveyQuestion.get( KEY_RATING_MIN, None )
             questionStruct['ratingMax'] = surveyQuestion.get( KEY_RATING_MAX, None )
@@ -216,11 +240,19 @@ class MultipleQuestionSurvey( ndb.Model ):
             questionStruct['ratingMaxLabel'] = surveyQuestion.get( KEY_RATING_MAX_LABEL, None )
         if ( questionType == TYPE_BUDGET ):
             questionStruct['maxTotal'] = surveyQuestion.get( KEY_BUDGET_TOTAL, None )
+        if ( questionType == TYPE_LIST ):
+            questionStruct['maxItems'] = surveyQuestion.get( KEY_MAX_ITEMS, 5 )
+
         return questionStruct
 
     def optionToClient( self, surveyQuestionOption, userId ):
-        return {
+        jsonData = {
             'id': str(  surveyQuestionOption[ KEY_ID ]  ) ,
             'title': surveyQuestionOption.get( KEY_TITLE, None ) ,
         }
+
+        imageId = surveyQuestionOption.get( KEY_IMAGE_ID, None )
+        if imageId is not None:  jsonData['image'] = imageId
+
+        return jsonData
 

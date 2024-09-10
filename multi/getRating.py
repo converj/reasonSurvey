@@ -603,7 +603,7 @@ def budgetTopItems( linkKeyStr, questionId ):
     allocationsUnderLimit = []
     sum = 0
     for a in answerVoteCounts:
-        amount = a.medianChild()
+        amount = a.medianChild()  or  0
         sum += amount
         excess = (sum - 100)
         remainingAmount = amount - excess
@@ -640,3 +640,48 @@ def budgetItemTopReasons( linkKeyStr, questionId, itemId ):
     return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
+
+# For showing list-question result items
+@app.get( r'/multi/listTopItems/<alphanumeric:linkKeyStr>/<alphanumeric:questionId>' )
+def listTopItems( linkKeyStr, questionId ):
+    # Collect inputs
+    httpRequest, httpResponse = httpServer.requestAndResponse()
+    responseData, cookieData, userId, errorMessage = parseInputs( httpRequest, httpResponse, idRequired=True )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Retrieve link
+    linkKeyRecord, surveyId, errorMessage = retrieveLink( linkKeyStr, enforceLogin=False )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Retrieve top-voted list-items
+    parentSubkeys = [ voteAggregates.SubKey(questionId, isId=True) ]
+    answerVoteCounts, cursor, more = voteAggregates.retrieveTopByVotes( surveyId, parentSubkeys, maxRecords=10 )
+    logging.debug(LogMessage('answerVoteCounts=', answerVoteCounts))
+
+    # Send allocations to client
+    itemsForClient = [ {'answerId':a.lastSubkeyHash(), 'answer':a.lastSubkeyText, 'votes':a.voteCount}  for a in answerVoteCounts ]
+    responseData.update(  { 'success':True , 'answers':itemsForClient }  )
+    return httpServer.outputJson( cookieData, responseData, httpResponse )
+
+# For showing list-item result reasons
+@app.get( r'/multi/listItemTopReasons/<alphanumeric:linkKeyStr>/<alphanumeric:questionId>/<alphanumeric:itemId>' )
+def listItemTopReasons( linkKeyStr, questionId, itemId ):
+    # Collect inputs
+    httpRequest, httpResponse = httpServer.requestAndResponse()
+    responseData, cookieData, userId, errorMessage = parseInputs( httpRequest, httpResponse, idRequired=True )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Retrieve link
+    linkKeyRecord, surveyId, errorMessage = retrieveLink( linkKeyStr, enforceLogin=False )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Retrieve top-voted answers
+    parentSubkeys = [ SubKey(questionId, isId=True) , SubKey(itemId, isId=True) ]
+    reasonVoteCounts, cursor, more = voteAggregates.retrieveTopByVotes( surveyId, parentSubkeys, subkeyIsGrandparent=False )
+    logging.debug(LogMessage('reasonVoteCounts=', reasonVoteCounts))
+
+    # Send reasons to client
+    reasonsForDisplay = [  
+        { 'reasonId':a.lastSubkeyHash(), 'reason':a.lastSubkeyText, 'votes':a.voteCount }  for a in reasonVoteCounts  ]
+    responseData.update(  { 'success':True , 'reasons':reasonsForDisplay }  )
+    return httpServer.outputJson( cookieData, responseData, httpResponse )

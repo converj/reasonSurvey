@@ -11,6 +11,7 @@ import httpServer
 from httpServer import app
 from budget import httpServerBudget
 import linkKey
+import mail
 from budget import budget
 import secrets
 import text
@@ -63,6 +64,7 @@ def budgetNew( ):
         # Construct and store link key
         budgetId = str( budgetRecordKey.id() )
         linkKeyRecord = httpServer.createAndStoreLinkKey( conf.BUDGET_CLASS_NAME, budgetId, loginRequired, cookieData )
+        mail.sendEmailToAdminSafe( f'Created budget survey. \n\n linkKeyRecord={linkKeyRecord}' , subject='New survey' )
 
         # Display budget
         budgetDisplay = httpServerBudget.budgetToDisplay( budgetRecord, userId )

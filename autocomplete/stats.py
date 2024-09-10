@@ -7,6 +7,7 @@ import re
 import sys
 # Import app modules
 from autocomplete.configAutocomplete import const as conf
+import text
 
 
 
@@ -16,10 +17,10 @@ def medianKey( keyToCount ):
     # Sum half the counts
     sumCount = sum(  [ count  for key, count in keyToCount.items() ]  )
     halfSumCount = float(sumCount) / 2.0
-    logging.debug( 'halfSumCount={} keyToCount={}'.format(halfSumCount, keyToCount) )
     # Return key matching half the count, ordered by key as integer
     runningSumCount = 0
-    keysSorted = sorted( [k for k,c in keyToCount.items() if c] , key=int )  # Filter zero-counts, and sort by key's numeric value
+    # Filter zero-counts, and sort by key's numeric value, but keep keys as strings for accessing keyToCount
+    keysSorted = sorted(  ( k  for k,c in keyToCount.items()  if c and text.isNumber(k) ) , key=int  )
     logging.debug( 'keysSorted={}'.format(keysSorted) )
     for k in range( len(keysSorted) ):
         key = keysSorted[ k ]
@@ -38,7 +39,7 @@ def averageKey( keyToCount ):
     sumCount = sum( count  for key,count in keyToCount.items() )
     if not sumCount:  return None
     # Sum the count-weighed keys
-    weightedSumKeys = sum( count * int(key)  for key,count in keyToCount.items()  if count )  # Filter zero counts
+    weightedSumKeys = sum( count * int(key)  for key,count in keyToCount.items()  if count and text.isNumber(key) )  # Filter zero counts
     logging.debug( 'sumCount={} weightedSumKeys={}'.format(sumCount, weightedSumKeys) )
     # Return the weighted average
     return weightedSumKeys / sumCount;

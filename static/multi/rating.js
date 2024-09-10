@@ -113,6 +113,8 @@
         RatingResultDisplay.prototype.
     retrieveResults = function( initial ){
 
+        if ( this.rating.rating == 'None' ){  return;  }
+
         if ( this.cursorReasonsDone ){
             this.optionDisplay.moreMessage = { color:GREY, text:'No more reasons yet', ms:5000 };
             this.optionDisplay.messagesUpdated();
@@ -129,6 +131,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint , cursor:this.cursorReasons  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'RatingResultDisplay.retrieveResults() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 // Sort by votes
                 let newReasons = receiveData.reasons || [];
@@ -155,11 +158,246 @@
 
 
 /////////////////////////////////////////////////////////////////////////////////
+// Display for uploading & viewing an image, functional class
+
+        function
+    ImageDisplay( ){
+        // Object.call( this );  // Do not inherit member data
+    }
+    // ImageDisplay.prototype = Object.create( Object.prototype );  // Do not inherit methods
+
+        ImageDisplay.prototype.
+    htmlForImageEdit = function( ){
+        return '\n\n' + [
+            '       <div class=imageDiv> ',
+            '           <details> ',
+            '               <summary style="opacity:0.5;" translate=yes> Image </summary> ',
+            '               <div style="padding-left:20px;"> ',
+            '                   <label translate=yes for=imageFileInput> Choose a JPEG or PNG up to 500 x 1000 pixels </label> ',
+            '                   <input type=file id=imageFileInput accept="image/jpeg, image/png" oninput=onInputImage> ',
+            '                   <div style="display:inline-block;"> ',
+            '                       <button id=imageUploadButton onclick=onClickImageUpload translate=yes> Save image </button> ',
+            '                       <button onclick=onClickImageRemove translate=yes> Remove image </button> ',
+            '                   </div> ',
+            '               </div> ',
+            '            </details> ',
+            '           <div><img class=editImage id=editImage /></div> ',
+            '       </div> '
+        ].join('\n');
+    };
+
+        ImageDisplay.prototype.
+    htmlForImageView = function( ){
+        return '\n\n' + [
+            '           <img class=viewImage id=viewImage /> '
+        ].join('\n');
+    };
+
+        ImageDisplay.prototype.
+    onInputImage = function( ){
+        let imageFileInput = this.getSubElement('imageFileInput');
+        if ( imageFileInput.files.length < 1 ) {
+            this.message = { color:RED, text:'No image file is chosen', ms:9000 };
+            this.messagesUpdated();
+            return;
+        }
+        const imageFile = ( 0 < imageFileInput.files.length )?  imageFileInput.files[0]  :  null;
+        console.debug( 'ImageDisplay.onInputImage()', 'imageFile=', imageFile );
+        
+        // If image has ok format and size... focus the upload button
+        let thisCopy = this;
+        this.checkImage( imageFile, (valid) => {
+            if ( ! valid ){  return;  }
+            this.message = { color:GREEN, text:'Image chosen.  Upload it?', ms:9000 };
+            this.messagesUpdated();
+            thisCopy.getSubElement('imageUploadButton').focus();
+        } );
+    };
+
+        ImageDisplay.prototype.
+    onClickImageUpload = function( ){
+        // Check that file is chosen
+        let imageFileInput = this.getSubElement('imageFileInput');
+        if ( imageFileInput.files.length < 1 ) {
+            this.message = { color:RED, text:'No image file is chosen', ms:9000 };
+            this.imageValidity = this.message.text;
+            this.messagesUpdated();
+            return;
+        }
+        const imageFile = imageFileInput.files[ 0 ];
+
+        // If image passes client-side checks for format and size...
+        let thisCopy = this;
+        this.checkImage( imageFile, (valid) => {
+            if ( ! valid ){  return;  }
+            thisCopy.storeImage( imageFile );
+        } );
+    };
+
+        ImageDisplay.prototype.
+    checkImage = function( imageFile, callback ){
+        if ( ! imageFile ){  return;  }  // Allow null image
+
+        // Check maximum file size
+        if ( MAX_IMAGE_BYTES < imageFile.size ){
+            this.message = { color:RED, text:'Image file is too large', ms:9000 };
+            this.imageValidity = this.message.text;
+            this.messagesUpdated();
+            if ( callback ){  callback( false );  }
+            return;
+        }
+
+        // Check maximum pixels by converting file to image
+        let thisCopy = this;
+        const fileReader = new FileReader();
+        fileReader.onerror = function() {
+            console.debug( 'ImageDisplay.checkImage()', 'fileReader.onerror()' );
+            thisCopy.message = { color:RED, text:'Image file could not be read', ms:9000 };
+            thisCopy.imageValidity = thisCopy.message.text;
+            thisCopy.messagesUpdated();
+            if ( callback ){  callback( false );  }
+        };
+        fileReader.onload = function( eventFileRead ) {
+            console.debug( 'ImageDisplay.checkImage()', 'eventFileRead=', eventFileRead );
+            const imageObject = new Image();
+            imageObject.onerror = function(){
+                thisCopy.message = { color:RED, text:'Image file could not be read', ms:9000 };
+                thisCopy.imageValidity = thisCopy.message.text;
+                thisCopy.messagesUpdated();
+                if ( callback ){  callback( false );  }
+            };
+            imageObject.onload = function(){
+                console.debug( 'ImageDisplay.checkImage()', 'image onload' );
+                console.debug( 'ImageDisplay.onClickImageUpload()', 'imageObject.width=', imageObject.width, 'imageObject.height=', imageObject.height );
+                let errorMessage = null;
+                if ( MAX_IMAGE_PIXELS < imageObject.width * imageObject.height ){  errorMessage = 'Image has too many pixels';  }
+                else if ( MAX_IMAGE_WIDTH < imageObject.width ){  errorMessage = 'Image is too wide';  }
+                else if ( MAX_IMAGE_WIDTH < imageObject.height ){  errorMessage = 'Image is too tall';  }
+
+                thisCopy.message = ( errorMessage )?  { color:RED, text:errorMessage, ms:9000 }  :  { color:GREEN, text:'' };
+                thisCopy.imageValidity = thisCopy.message.text;
+                thisCopy.messagesUpdated();
+                if ( callback ){  callback( ! errorMessage );  }
+            };
+            imageObject.src = eventFileRead.target.result;
+        };
+        fileReader.readAsDataURL( imageFile );
+    };
+
+        ImageDisplay.prototype.
+    onClickImageRemove = function( displayData ){
+        if ( ! displayData  ||  ! displayData.image ){  return;  }
+        if (  ! confirm( translate('Delete this image?') )  ){  return;  }
+
+        let imageFileInput = this.getSubElement('imageFileInput');
+        imageFileInput.value = '';
+
+        this.message = { color:GREY, text:'' };
+        this.imageValidity = '';
+        this.messagesUpdated();
+
+        this.storeImage( null );
+    };
+
+        ImageDisplay.prototype.
+    imagesUpdated = function( displayData ){
+        // Image input validity
+        let imageFileInput = this.getSubElement('imageFileInput');
+        imageFileInput.setCustomValidity( this.imageValidity || '' );
+        // Image for edit
+        const imageSrc = ( displayData && displayData.image )?  'https://storage.googleapis.com/' + STORAGE_BUCKET_IMAGES + '/' + displayData.image  :  null;
+        let editImage = this.getSubElement('editImage');
+        editImage.style.display = imageSrc ?  null  :  'none';
+        if ( imageSrc ){  editImage.src = imageSrc;  }
+        // Image for view
+        let viewImage = this.getSubElement('viewImage');
+        viewImage.style.display = imageSrc ?  null  :  'none';
+        if ( imageSrc ){  viewImage.src = imageSrc;  }
+    };
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// Display for option, abstract base class for shared functions
+
+        function
+    QuestionOptionBase( displayId ){
+        ElementWrap.call( this );  // Inherit member data
+    }
+    QuestionOptionBase.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
+
+    QuestionOptionBase.prototype.htmlForOptionImageEdit = ImageDisplay.prototype.htmlForImageEdit;
+
+    QuestionOptionBase.prototype.htmlForOptionImageView = ImageDisplay.prototype.htmlForImageView;
+
+    QuestionOptionBase.prototype.onInputImage = ImageDisplay.prototype.onInputImage;
+
+    QuestionOptionBase.prototype.onClickImageUpload = ImageDisplay.prototype.onClickImageUpload;
+
+    QuestionOptionBase.prototype.checkImage = ImageDisplay.prototype.checkImage;
+
+        QuestionOptionBase.prototype.
+    onClickImageRemove = function( ){
+        ImageDisplay.prototype.onClickImageRemove.call( this, this.option );
+    };
+
+        QuestionOptionBase.prototype.
+    storeImage = function( imageFile ){
+        let formData = new FormData();
+        formData.append( 'image', imageFile );
+
+        let message = imageFile ?  'Saving image...'  :  'Removing image...';
+        this.message = { color:GREY, text:message };
+        this.messagesUpdated();
+
+        // Send to server
+        const url = '/multi/setQuestionOptionImage';
+        formData.append( 'crumb', crumb );
+        formData.append( 'fingerprint', fingerprint );
+        formData.append( 'linkKey', this.surveyDisplay.link.id );
+        formData.append( 'questionId', this.questionDisplay.question.id );
+        formData.append( 'optionId', this.option.id );
+        const defaultMessage = 'Failed to change image';
+        let thisCopy = this;
+        fetch( url, {method:'POST', body:formData} )
+        .then( response => response.json() )
+        .then( receiveData => {
+            if ( receiveData  &&  receiveData.success  &&  receiveData.survey ){
+                message = imageFile ?  'Saved image'  :  'Removed image';
+                thisCopy.message = { color:GREEN, text:message, ms:5000 };
+                thisCopy.messagesUpdated();
+                thisCopy.surveyDisplay.setSurveyData( receiveData.survey );
+            }
+            else {
+                let message = defaultMessage;
+                if ( receiveData ){
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit option created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit option that already has answers';  }
+                    else if ( receiveData.message == TOO_LONG ){  message = 'Image is too large';  }
+                }
+                thisCopy.message = { color:RED, text:message };
+                thisCopy.messagesUpdated();
+            }
+        } )
+        .catch( error => {
+            thisCopy.message = { color:RED, text:defaultMessage };
+            thisCopy.messagesUpdated();
+        } );
+    };
+
+        QuestionOptionBase.prototype.
+    imagesUpdated = function( ){
+        ImageDisplay.prototype.imagesUpdated.call( this, this.option );
+    };
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
 // Display for option
 
         function
     RatingOptionDisplay( displayId ){
-        ElementWrap.call( this );  // Inherit member data
+        QuestionOptionBase.call( this );  // Inherit member data
 
         // User-interface state variables (not persistent)
         let thisCopy = this;
@@ -168,6 +406,10 @@
         // Create html element, store it in this.element
         this.createFromHtml( displayId, '\n\n' + [
             ' <div class=RatingOptionDisplay id=Option>',
+            //  Message
+            '   <div class=MessageWrap> ',
+            '       <div class="Message" id=optionMessage aria-live=polite></div> ',
+            '   </div> ',
             //  Edit
             '   <div class=Edit> ',
             '       <div class=EditRow> ',
@@ -179,6 +421,7 @@
             '           </div><div class=OptionDeleteButtonCell> ',
             '               <button class=OptionDeleteButton id=OptionDeleteButton title="Delete" onclick=handleDeleteClick> X </button> ',
             '           </div> ',
+                        this.htmlForOptionImageEdit() ,
             '       </div> ',
             '   </div> ',
             //  View
@@ -195,6 +438,7 @@
             '           ></textarea/> ',
             '       </div> ',
             '       <button class=RatingIncrementButton id=RatingDownButton onclick=ratingDownClick onfocus=onReasonInputFocus onblur=onReasonInputBlur> &darr; </button> ',
+                    this.htmlForOptionImageView() ,
             '   </div> ',
             //  Result
             '   <div class=Result> ',
@@ -210,14 +454,11 @@
             '           </div> ',
             '       </details> ',
             '   </div> ',
-            //  Message
-            '   <div class=MessageWrap> ',
-            '       <div class="Message" id=optionMessage aria-live=polite></div> ',
-            '   </div> ',
             ' </div> '
         ].join('\n') );
     }
-    RatingOptionDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
+    RatingOptionDisplay.prototype = Object.create( QuestionOptionBase.prototype );  // Inherit methods
+
 
         RatingOptionDisplay.prototype.
     setInitialData = function( optionData, questionDisplay, surveyDisplay ){
@@ -245,6 +486,7 @@
         this.reasonInput = this.getSubElement('ReasonInput');
 
         this.messagesUpdated();
+        this.imagesUpdated();
 
         // Set attributes
         this.ratingInput.min = this.questionDisplay.question.ratingMin;
@@ -307,7 +549,7 @@
 
         // Result
         this.setInnerHtml( 'OptionResultContent', this.option.title );
-        this.setInnerHtml( 'OptionResultMedian', (this.distribution && this.distribution.median)? this.distribution.median : '' );
+        this.setInnerHtml( 'OptionResultMedian', (this.distribution && !isEmptyString(this.distribution.median))? this.distribution.median : '' );
 
         // Subdisplays for results
         let optionVotes = this.totalVotes();
@@ -421,9 +663,9 @@
                         message = 'Option is too short.';
                         thisCopy.optionTooShort = true;
                     }
-                    else if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit option created by someone else.';  }
-                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit option that already has votes.';  }
-                    else if ( receiveData.message == ERROR_DUPLICATE ){  message = 'Duplicate option.';  }
+                    else if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit option created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit option that already has votes';  }
+                    else if ( receiveData.message == ERROR_DUPLICATE ){  message = 'Duplicate option';  }
                 }
                 thisCopy.message = { color:RED, text:message };
                 thisCopy.dataUpdated();
@@ -481,8 +723,8 @@
             else {
                 let message = 'Failed to move option';
                 if ( receiveData ){
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit option created by someone else.';  }
-                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit option that already has votes.';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit option created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit option that already has votes';  }
                 }
                 thisCopy.message = { color:RED, text:message };
                 thisCopy.dataUpdated();
@@ -515,8 +757,8 @@
             else {
                 let message = 'Failed to delete option';
                 if ( receiveData ){
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit option created by someone else.';  }
-                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit option that already has votes.';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit option created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit option that already has votes';  }
                 }
                 thisCopy.message = { color:RED, text:message };
                 thisCopy.dataUpdated();
@@ -603,6 +845,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RatingOptionDisplay.handleRatingInput()', 'error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.answers ){
                 thisCopy.message = { color:GREEN, text:'Saved rating', ms:3000 };
                 thisCopy.dataUpdated();
@@ -613,6 +856,7 @@
                 if ( receiveData ){
                     if ( receiveData.message == TOO_SHORT ){  message = 'Reason is too short';  thisCopy.reasonValidity = message;  }
                     if ( receiveData.message == FROZEN ){  message = 'Survey is frozen';  }
+                    if ( receiveData.message == INSULT ){  message = 'Reason is a personal insult';  }
                     if ( receiveData.message == UNCHANGED ){  message = null;  }
                 }
                 thisCopy.message = { color:RED, text:message };
@@ -674,6 +918,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RatingOptionDisplay.retrieveSuggestions() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.suggestions ){
                 // Collect suggestions and calculate IDF weights across reason words
                 if ( ! thisCopy.suggestionTextToData ){  thisCopy.suggestionTextToData = {};  }  // map{ suggestionText -> {scoreMatch, scoreTotal...} }
@@ -907,6 +1152,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RatingQuestionDisplay.handleRatingLimitInput()', 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.survey ){
                 thisCopy.questionDisplay.message = { color:GREEN, text:'Saved rating limit', ms:5000 };
                 thisCopy.questionDisplay.dataUpdated();
@@ -917,8 +1163,8 @@
             else {
                 let message = 'Failed to save rating limit';
                 if ( receiveData ){
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else.';  }
-                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has responses.';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers';  }
                 }
                 thisCopy.questionDisplay.message = { color:RED, text:message };
                 thisCopy.questionDisplay.dataUpdated();
@@ -937,6 +1183,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RatingQuestionDisplay.onRequireReasonInput()', 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.survey ){
                 thisCopy.questionDisplay.message = { color:GREEN, text:'Saved reason requirement', ms:5000 };
                 thisCopy.questionDisplay.messagesUpdated();
@@ -947,8 +1194,8 @@
             else {
                 let message = 'Failed to save reason requirement';
                 if ( receiveData ){
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else.';  }
-                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has responses.';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers';  }
                 }
                 thisCopy.questionDisplay.message = { color:RED, text:message };
                 thisCopy.questionDisplay.messagesUpdated();
@@ -992,7 +1239,7 @@
             else {
                 let message = 'Failed to add option';
                 if ( receiveData ){
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit survey created by someone else';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else';  }
                     if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers';  }
                     if ( receiveData.message == TOO_MANY_OPTIONS ){  message = 'Question has too many options';  }
                 }
@@ -1015,6 +1262,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'RatingQuestionDisplay.retrieveResults() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 // Sort each option's results by rating
                 let optionToOrderedResults = { };

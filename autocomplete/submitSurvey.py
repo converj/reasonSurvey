@@ -11,6 +11,7 @@ import httpServer
 from httpServer import app
 from autocomplete import httpServerAutocomplete
 import linkKey
+import mail
 from autocomplete import question
 import secrets
 from autocomplete import survey
@@ -61,6 +62,7 @@ def newSurvey( ):
         # Construct and store link key.
         surveyId = str( surveyRecordKey.id() )
         linkKeyRecord = httpServer.createAndStoreLinkKey( conf.SURVEY_CLASS_NAME, surveyId, loginRequired, cookieData )
+        mail.sendEmailToAdminSafe( f'Created autocomplete survey. \n\n linkKeyRecord={linkKeyRecord}' , subject='New survey' )
 
         # Display survey.
         surveyDisplay = httpServerAutocomplete.surveyToDisplay( surveyRecord, userId )

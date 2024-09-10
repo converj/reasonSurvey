@@ -1,17 +1,21 @@
 # HTTP service endpoints
 
 # External modules
-from google.appengine.ext import ndb
+from google.cloud import storage
+from io import BytesIO
 import json
 import logging
 import os
+from PIL import Image
 import time
+
 # Application modules
 import common
 from multi.configMulti import conf
 import httpServer
 from httpServer import app
 import linkKey
+import mail
 import secrets
 from multi import survey
 import user
@@ -22,13 +26,13 @@ from text import LogMessage
 ################################################################################################
 # Methods: shared
 
-def parseInputs( httpRequest, httpResponse ):
+def parseInputs( httpRequest, httpResponse, parseJson=True ):
     httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
     responseData = { 'success':False, 'httpRequestId':httpRequestId }
     errorMessage = None
 
-    inputData = httpRequest.postJsonData()
-    logging.debug(LogMessage('parseInputs', 'inputData=', inputData))
+    inputData = httpRequest.postJsonData()  if parseJson  else httpRequest.postFormParams()
+    logging.debug(LogMessage('inputData=', inputData))
     cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, outputError=False )
     if not cookieData.valid():  errorMessage = conf.NO_COOKIE
     userId = cookieData.id()
@@ -96,6 +100,8 @@ def setMultiQuestionSurvey( ):
         surveyId = str( surveyRecordKey.id() )
         loginRequired = False
         linkKeyRecord = httpServer.createAndStoreLinkKey( conf.MULTI_SURVEY_CLASS_NAME, surveyId, loginRequired, cookieData )
+
+        mail.sendEmailToAdminSafe( f'Created multi-question survey. \n\n linkKeyRecord={linkKeyRecord}' , subject='New survey' )
 
     # Update survey record
     surveyRecord.title = title
@@ -213,6 +219,49 @@ def editQuestionInMultiQuestionSurvey( ):
 
 
 
+@app.post('/multi/setQuestionImage') 
+def setQuestionImage( ):
+    httpRequest, httpResponse = httpServer.requestAndResponse()
+
+    # Collect inputs
+    responseData, cookieData, userId, inputData, linkKeyString, errorMessage = parseInputs( httpRequest, httpResponse, parseJson=False )
+    logging.debug(LogMessage( 'errorMessage=', errorMessage ))
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    questionId = inputData['questionId']
+    if not survey.MultipleQuestionSurvey.isValidQuestionId( questionId ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Invalid questionId' )
+
+    logging.debug(LogMessage( 'httpRequest.flaskRequest.files=', httpRequest.flaskRequest.files ))
+    imageFile = httpRequest.flaskRequest.files.get( 'image', None )
+    imageObject, errorMessage = checkImage( imageFile )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Retrieve link-key record, survey record
+    linkKeyRecord, surveyId, errorMessage = retrieveLink( linkKeyString )
+    surveyRecord, errorMessage = retrieveSurvey( surveyId, userId, errorMessage=errorMessage )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Delete old image from gcloud-storage
+    storageBucket = storage.Client().bucket( conf.STORAGE_BUCKET_IMAGES )
+    deleteBlob( surveyRecord.getQuestionImageId(questionId), storageBucket )
+
+    # Store image to gcloud-storage, naming with timestamp so that updated image has a new name
+    imageIdNew = None
+    if imageObject:
+        imageIdNew = makeQuestionImageId( surveyId, questionId )
+        saveImage( imageIdNew, imageFile, imageObject.format, storageBucket )
+
+    # Update survey record
+    surveyRecord.setQuestionImageId( questionId, imageIdNew )
+    surveyRecord.put()
+    
+    # Send updated survey to client
+    surveyDisplay = surveyRecord.toClient( userId )
+    responseData.update(  { 'success':True, 'survey':surveyDisplay }  )
+    return httpServer.outputJson( cookieData, responseData, httpResponse )
+
+
+
 @app.post('/multi/changeQuestionType') 
 def changeQuestionType( ):
     httpRequest, httpResponse = httpServer.requestAndResponse()
@@ -246,7 +295,7 @@ def changeQuestionType( ):
 
 
 
-@app.post('/multi/setBudgetMaxTotal') 
+@app.post('/multi/setBudgetMaxTotal')
 def setBudgetMaxTotal( ):
     httpRequest, httpResponse = httpServer.requestAndResponse()
 
@@ -269,6 +318,39 @@ def setBudgetMaxTotal( ):
 
     # Update survey record
     surveyRecord.getQuestion( questionId )[ survey.KEY_BUDGET_TOTAL ] = newTotal
+    surveyRecord.put()
+    
+    # Send updated survey to client
+    surveyDisplay = surveyRecord.toClient( userId )
+    responseData.update(  { 'success':True, 'survey':surveyDisplay }  )
+    return httpServer.outputJson( cookieData, responseData, httpResponse )
+
+
+
+@app.post('/multi/setListMaxItems')
+def setListMaxItems( ):
+    httpRequest, httpResponse = httpServer.requestAndResponse()
+
+    # Collect inputs
+    responseData, cookieData, userId, inputData, linkKeyString, errorMessage = parseInputs( httpRequest, httpResponse )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    questionId = inputData['questionId']
+    if not survey.MultipleQuestionSurvey.isValidQuestionId( questionId ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Invalid questionId' )
+
+    maxItems = int( inputData['maxItems'] )
+    if ( maxItems < 1 ) or ( 10 < maxItems ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.OUT_OF_RANGE )
+
+    # Retrieve link-key record
+    linkKeyRecord, surveyId, errorMessage = retrieveLink( linkKeyString )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Retrieve survey record
+    surveyRecord, errorMessage = retrieveSurvey( surveyId, userId )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Update survey record
+    surveyRecord.getQuestion( questionId )[ survey.KEY_MAX_ITEMS ] = maxItems
     surveyRecord.put()
     
     # Send updated survey to client
@@ -338,6 +420,14 @@ def deleteQuestionInMultiQuestionSurvey( ):
     if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
     surveyRecord, errorMessage = retrieveSurvey( surveyId, userId )
     if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Delete question-image from gcloud-storage
+    storageBucket = storage.Client().bucket( conf.STORAGE_BUCKET_IMAGES )
+    deleteBlob( surveyRecord.getQuestionImageId(questionId), storageBucket )
+
+    # Delete option-images from gcloud-storage
+    for optionId in surveyRecord.getQuestionOptionIds( questionId ):
+        deleteBlob( surveyRecord.getOptionImageId(questionId, optionId), storageBucket )
 
     # Update survey record
     surveyRecord.deleteQuestion( questionId )
@@ -419,7 +509,7 @@ def setQuestionRequireReason( ):
 
     # Update survey record
     question = surveyRecord.getQuestion( questionId )
-    if question.get( survey.KEY_TYPE, None ) not in [ survey.TYPE_RATE, survey.TYPE_RANK, survey.TYPE_CHECKLIST, survey.TYPE_TEXT, survey.TYPE_BUDGET ]:
+    if question.get( survey.KEY_TYPE, None ) not in [ survey.TYPE_RATE, survey.TYPE_RANK, survey.TYPE_CHECKLIST, survey.TYPE_TEXT, survey.TYPE_BUDGET, survey.TYPE_LIST ]:
         return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.WRONG_TYPE )
     question[ survey.KEY_REQUIRE_REASON ] = require
     surveyRecord.put()
@@ -495,6 +585,52 @@ def setQuestionOption( ):
     return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
+
+@app.post('/multi/setQuestionOptionImage') 
+def setQuestionOptionImage( ):
+    httpRequest, httpResponse = httpServer.requestAndResponse()
+
+    # Collect inputs
+    responseData, cookieData, userId, inputData, linkKeyString, errorMessage = parseInputs( httpRequest, httpResponse, parseJson=False )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    questionId = inputData['questionId']
+    if not survey.MultipleQuestionSurvey.isValidQuestionId( questionId ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Invalid questionId' )
+
+    optionId = inputData['optionId']
+    if not survey.MultipleQuestionSurvey.isValidOptionId( optionId ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Invalid optionId' )
+
+    logging.debug(LogMessage( 'httpRequest.flaskRequest.files=', httpRequest.flaskRequest.files ))
+    imageFile = httpRequest.flaskRequest.files.get( 'image', None )
+    imageObject, errorMessage = checkImage( imageFile )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Retrieve link-key record, survey record
+    linkKeyRecord, surveyId, errorMessage = retrieveLink( linkKeyString )
+    surveyRecord, errorMessage = retrieveSurvey( surveyId, userId, errorMessage=errorMessage )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    # Delete old image from gcloud-storage
+    storageBucket = storage.Client().bucket( conf.STORAGE_BUCKET_IMAGES )
+    deleteBlob( surveyRecord.getOptionImageId(questionId, optionId), storageBucket )
+
+    # Store image to gcloud-storage, naming with timestamp so that updated image has a new name
+    imageIdNew = None
+    if imageObject:
+        imageIdNew = makeOptionImageId( surveyId, questionId, optionId )
+        saveImage( imageIdNew, imageFile, imageObject.format, storageBucket )
+
+    # Update survey record
+    surveyRecord.setOptionImageId( questionId, optionId, imageIdNew )
+    surveyRecord.put()
+    
+    # Send updated survey to client
+    surveyDisplay = surveyRecord.toClient( userId )
+    responseData.update(  { 'success':True, 'survey':surveyDisplay }  )
+    return httpServer.outputJson( cookieData, responseData, httpResponse )
+
+
+
 @app.post('/multi/reorderQuestionOptions')
 def reorderQuestionOptions( ):
     httpRequest, httpResponse = httpServer.requestAndResponse()
@@ -524,7 +660,6 @@ def reorderQuestionOptions( ):
     # Keep only option-IDs that exist in the survey-record
     optionIds = surveyRecord.getQuestionOptionIds( questionId )
     if ( len(optionIds) <= newIndex ):  newIndex = len(optionIds) - 1
-
 
     # Remove optionId, reinsert at new position
     oldIndex = optionIds.index( optionId )
@@ -559,6 +694,10 @@ def deleteQuestionOption( ):
     surveyRecord, errorMessage = retrieveSurvey( surveyId, userId, errorMessage=errorMessage )
     if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
 
+    # Delete option-image from gcloud-storage
+    storageBucket = storage.Client().bucket( conf.STORAGE_BUCKET_IMAGES )
+    deleteBlob( surveyRecord.getOptionImageId(questionId, optionId), storageBucket )
+
     # Update survey record
     surveyRecord.deleteQuestionOption( questionId, optionId )
     surveyRecord.put()
@@ -567,5 +706,52 @@ def deleteQuestionOption( ):
     surveyDisplay = surveyRecord.toClient( userId )
     responseData.update(  { 'success':True, 'survey':surveyDisplay }  )
     return httpServer.outputJson( cookieData, responseData, httpResponse )
+
+
+
+################################################################################################
+# Methods: image storage
+
+def checkImage( imageFile ):
+    logging.debug(LogMessage( 'imageFile=', imageFile ))
+    if ( not imageFile ) or ( not imageFile.filename ):  return None, None
+
+    # Convert the file storage to a BytesIO object, then open it with PIL to check size limits
+    imageObject = Image.open( BytesIO(imageFile.read()), formats=('jpeg','png') )
+    logging.debug(LogMessage( 'imageObject=', imageObject ))
+    logging.debug(LogMessage( 'format=', imageObject.format ))
+    logging.debug(LogMessage( 'width=', imageObject.width, 'height=', imageObject.height ))
+    
+    if ( conf.MAX_IMAGE_WIDTH < imageObject.width ) or ( conf.MAX_IMAGE_WIDTH < imageObject.height ):  return imageObject, conf.TOO_LONG
+    if ( conf.MAX_IMAGE_PIXELS < (imageObject.width * imageObject.height) ):  return imageObject, conf.TOO_LONG
+
+    return imageObject, None
+
+
+def makeQuestionImageId( surveyId, questionId ):
+    # Include timestamp in name, because image-blobs are cached, so a new name is needed to display the updated image
+    now = int( time.time() )
+    return f'{surveyId}-{questionId}-{now}'
+
+def makeOptionImageId( surveyId, questionId, optionId ):
+    # Include timestamp in name, because image-blobs are cached, so a new name is needed to display the updated image
+    now = int( time.time() )
+    return f'{surveyId}-{questionId}-{optionId}-{now}'
+
+
+def deleteBlob( imageId, storageBucket ):
+    logging.debug(LogMessage( 'imageId=', imageId ))
+    if ( imageId ):
+        storageBlob = storageBucket.blob( imageId )
+        try:
+            storageBlob.delete()
+        except Exception as e:
+            logging.debug(LogMessage( 'Blob storage exception=', e ))
+
+def saveImage( imageId, imageFile, imageMimeType, storageBucket ):
+    logging.debug(LogMessage( 'imageId=', imageId ))
+    storageBlob = storageBucket.blob( imageId )
+    storageBlob.upload_from_file( imageFile, content_type=imageMimeType, rewind=True )
+
 
 

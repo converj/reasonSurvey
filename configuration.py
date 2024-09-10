@@ -49,7 +49,7 @@ const.VOTER_ID_TIMEOUT_SEC = 600   # 10 minutes
 const.VOTER_ID_LOGIN_SIG_LENGTH = 30
 const.VOTER_ID_LOGIN_REQUEST_ID_LENGTH = 30
 
-# Minimum content lengths
+# Content lengths
 const.minLengthRequest = 30
 const.minLengthProposal = 30
 const.minLengthReason = 20
@@ -58,6 +58,11 @@ const.maxLengthReason = 2000
 const.recentRequestsMax = 10
 
 const.MAX_TOP_REASONS = 6
+
+const.MAX_IMAGE_WIDTH = 1024
+const.MAX_IMAGE_PIXELS = 512 * 1024;
+const.MAX_IMAGE_BYTES = 5 * 1024 * 1024;  # 5MB upload limit
+const.STORAGE_BUCKET_IMAGES = 'survey_option_images'
 
 # HTTP/JSON request response codes
 const.TOO_MANY_QUESTIONS = 'TOO_MANY_QUESTIONS'
@@ -69,6 +74,7 @@ const.TOO_SHORT = 'TOO_SHORT'
 const.TOO_LONG = 'TOO_LONG'
 const.REASON_TOO_SHORT = 'REASON_TOO_SHORT'
 const.DUPLICATE = 'DUPLICATE'
+const.INSULT = 'INSULT'
 const.BAD_CRUMB = 'BAD_CRUMB'
 const.NO_COOKIE = 'NO_COOKIE'
 const.NO_LOGIN = 'NO_LOGIN'

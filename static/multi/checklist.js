@@ -8,7 +8,7 @@
 
         function
     ChecklistOptionDisplay( displayId ){
-        ElementWrap.call( this );  // Inherit member data
+        QuestionOptionBase.call( this );  // Inherit member data
 
         // User-interface state variables (not persistent)
         this.resultDisplays = { data:[] };
@@ -16,6 +16,10 @@
         // Create html element, store it in this.element
         this.createFromHtml( displayId, '\n\n' + [
             ' <div class=CheckboxOptionDisplay id=Option> ',
+            //  Message
+            '   <div class=MessageWrap> ',
+            '       <div class="Message" id=optionMessage aria-live=polite></div> ',
+            '   </div> ',
             //  Edit
             '   <div class=Edit> ',
             '       <div class=EditRow> ',
@@ -25,6 +29,7 @@
             '           </div><div class=OptionDeleteButtonCell> ',
             '               <button class=OptionDeleteButton id=OptionDeleteButton title="Delete" onclick=handleDeleteClick> X </button> ',
             '           </div> ',
+                        this.htmlForOptionImageEdit() ,
             '       </div> ',
             '   </div> ',
             //  View
@@ -39,6 +44,7 @@
             '               onfocus=onReasonInputFocus onblur=onReasonInputBlur ></textarea/> ',
             '       </div> ',
             '       <button class=CheckboxIncrementButton id=CheckboxDownButton onclick=checkboxDownClick onfocus=onReasonInputFocus onblur=onReasonInputBlur> No </button> ',
+                    this.htmlForOptionImageView() ,
             '   </div> ',
             //  Result
             '   <div class=Result> ',
@@ -54,14 +60,10 @@
             '           </div> ',
             '       </details> ',
             '   </div> ',
-            //  Message
-            '   <div class=MessageWrap> ',
-            '       <div class="Message" id=optionMessage aria-live=polite></div> ',
-            '   </div> ',
             ' </div> '
         ].join('\n') );
     }
-    ChecklistOptionDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
+    ChecklistOptionDisplay.prototype = Object.create( QuestionOptionBase.prototype );  // Inherit methods
 
         ChecklistOptionDisplay.prototype.
     setInitialData = RatingOptionDisplay.prototype.setInitialData;
@@ -76,6 +78,7 @@
         this.reasonInput = this.getSubElement('ReasonInput');
 
         this.messagesUpdated();
+        this.imagesUpdated();
 
         // Edit
         this.setProperty( 'OptionContentInput', 'defaultValue', this.option.title );
@@ -113,12 +116,17 @@
 
         // Result
         this.setInnerHtml( 'OptionResultContent', this.option.title );
+        let noResult = ( this.results )?  this.results.find( r => (r.rating == '0') )  :  null;
+        let noCount = ( noResult && noResult.votes )?  noResult.votes  :  0;
         let yesResult = ( this.results )?  this.results.find( r => (r.rating == '1') )  :  null;
         let yesCount = ( yesResult && yesResult.votes )?  yesResult.votes  :  0;
-        this.setInnerHtml(  'OptionResultAverage' , ( this.questionDisplay.voterCount ? Math.floor(100 * yesCount / this.questionDisplay.voterCount) : 0 ) + '%'  );
+        let totalCount = yesCount + noCount;
+        let yesPercent = totalCount ?  Math.floor(100 * yesCount / totalCount)  :  0;
+        this.setInnerHtml(  'OptionResultAverage' , yesPercent + '%'  );
 
         // Subdisplays for results
         this.resultDisplays.data = this.results || [];
+        this.resultDisplays.data = this.resultDisplays.data.filter( r => (r.rating in {'0':true,'1':true}) );
         this.resultDisplays.data.forEach(  r => { r.key = String(r.rating) }  );  // Ensure each data has a key string
         let optionVotes = this.totalVotes();
         this.updateSubdisplays( this.resultDisplays, this.getSubElement('OptionCheckboxResults') ,
@@ -128,7 +136,7 @@
         );
         if ( this.resultDisplays.displays ){   this.resultDisplays.displays.forEach(  (r,i) => {
             r.isBoolean = true;
-            r.setData( thisCopy.results[i], optionVotes );
+            r.setData( thisCopy.resultDisplays.data[i], optionVotes );
         }  );   }
     };
 
@@ -256,6 +264,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'ChecklistOptionDisplay.storeCheckbox() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.answers ){
                 thisCopy.message = { color:GREEN, text:'Saved checkmark', ms:3000 };
                 thisCopy.dataUpdated();
@@ -267,6 +276,7 @@
                     if ( receiveData.message == TOO_SHORT ){  message = 'Reason is too short';  thisCopy.reasonValidity = message;  }
                     if ( receiveData.message == FROZEN ){  message = 'Survey is frozen';  }
                     if ( receiveData.message == UNCHANGED ){  message = null;  }
+                    if ( receiveData.message == INSULT ){  message = 'Reason is a personal insult';  }
                 }
                 thisCopy.message = { color:RED, text:message, ms:9000 };
                 thisCopy.dataUpdated();
@@ -436,6 +446,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'ChecklistQuestionDisplay.retrieveResults() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.options ){
                 thisCopy.results = receiveData.options;
                 thisCopy.optionToRatingDistribution = receiveData.optionToRatingDistribution;

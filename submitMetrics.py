@@ -11,11 +11,12 @@ from autocomplete.survey import Survey
 from autocomplete import httpServerAutocomplete
 from budget.budget import Budget
 from budget import httpServerBudget
-import globalRecord
+from globalRecord import GlobalRecord
 import httpServer
 from httpServer import app
 from linkKey import LinkKey
 import metrics
+import multi.survey
 from requestForProposals import RequestForProposals
 import os
 from proposal import Proposal
@@ -54,13 +55,13 @@ def adminPasswordSave( ):
     if not adminPassword:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Admin password missing' )
 
     # Retrieve global record
-    globalRec = globalRecord.retrieve()
+    globalRec = GlobalRecord.retrieve()
     if conf.isDev:  logging.debug(LogMessage('adminPasswordSave', 'globalRec=', globalRec))
 
     if not globalRec:
         # Only auto-create global-record on dev-instance
         if not conf.isDev:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Global record is null' )
-        globalRec = globalRecord.new()
+        globalRec = GlobalRecord.new()
 
     if globalRec.adminPassword:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Admin password already exists' )
 
@@ -107,7 +108,7 @@ def linksPage( ):
     # Verify admin password
     if not adminPassword:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Admin password missing' )
     adminPasswordHash = security.hashForPassword( secrets.adminSalt, adminPassword )
-    globalRec = globalRecord.retrieve()
+    globalRec = GlobalRecord.retrieve()
     if conf.isDev:  logging.debug(LogMessage('linksPage', 'globalRec=', globalRec))
     if not globalRec:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Global record is null' )
     if (not globalRec.adminPassword) or (adminPasswordHash != globalRec.adminPassword):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Admin password mismatch' )
@@ -126,6 +127,7 @@ def linksPage( ):
         elif ( linkRecord.destinationType == conf.REQUEST_CLASS_NAME ):  surveyRecord = RequestForProposals.get_by_id( destinationId )
         elif ( linkRecord.destinationType == conf.SURVEY_CLASS_NAME ):  surveyRecord = Survey.get_by_id( destinationId )
         elif ( linkRecord.destinationType == conf.BUDGET_CLASS_NAME ):  surveyRecord = Budget.get_by_id( destinationId )
+        elif ( linkRecord.destinationType == conf.MULTI_SURVEY_CLASS_NAME ):  surveyRecord = multi.survey.MultipleQuestionSurvey.retrieve( destinationId )
         
         if conf.isDev:  logging.debug(LogMessage('linksPage', 'surveyRecord=', surveyRecord))
 
@@ -187,7 +189,7 @@ def resetSurveyCounts( ):
     # Verify admin password
     if not adminPassword:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Admin password missing' )
     adminPasswordHash = security.hashForPassword( secrets.adminSalt, adminPassword )
-    globalRec = globalRecord.retrieve()
+    globalRec = GlobalRecord.retrieve()
     if conf.isDev:  logging.debug(LogMessage('incrementSurveyCounts', 'globalRec=', globalRec))
     if not globalRec:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Global record is null' )
     if (not globalRec.adminPassword) or (adminPasswordHash != globalRec.adminPassword):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Admin password mismatch' )
@@ -197,7 +199,7 @@ def resetSurveyCounts( ):
     globalRec.put()
     if conf.isDev:  logging.debug(LogMessage('incrementSurveyCounts', 'Resetting metrics in globalRec=', globalRec))
 
-    responseData['globalRec'] = globalRecord.toDisplay( globalRec )
+    responseData['globalRec'] = globalRec.toDisplay()
 
     # Delete all metrics records
     metricsRecords = metrics.Metrics.query().fetch()
@@ -229,7 +231,7 @@ def incrementSurveyCounts( ):
     # Verify admin password
     if not adminPassword:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Admin password missing' )
     adminPasswordHash = security.hashForPassword( secrets.adminSalt, adminPassword )
-    globalRec = globalRecord.retrieve()
+    globalRec = GlobalRecord.retrieve()
     if conf.isDev:  logging.debug(LogMessage('incrementSurveyCounts', 'globalRec=', globalRec))
     if not globalRec:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Global record is null' )
     if (not globalRec.adminPassword) or (adminPasswordHash != globalRec.adminPassword):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='Admin password mismatch' )
@@ -247,7 +249,8 @@ def incrementSurveyCounts( ):
     surveyTypes = [ (conf.SURVEY_TYPE_PROPOSAL, globalRec.latestMetricUpdateForProposal) , 
         (conf.SURVEY_TYPE_REQUEST_PROPOSALS, globalRec.latestMetricUpdateForRequestProposals) , 
         (conf.SURVEY_TYPE_AUTOCOMPLETE, globalRec.latestMetricUpdateForAutocomplete) , 
-        (conf.SURVEY_TYPE_BUDGET, globalRec.latestMetricUpdateForBudget)
+        (conf.SURVEY_TYPE_BUDGET, globalRec.latestMetricUpdateForBudget) ,
+        (conf.MULTI_SURVEY_CLASS_NAME, globalRec.latestMetricUpdateForMulti)
     ]
     surveyTypes = sorted( surveyTypes, key=lambda t: t[1] )
     nextSurveyType = surveyTypes[ 0 ][ 0 ]
@@ -284,6 +287,15 @@ def incrementSurveyCounts( ):
         if conf.isDev:  logging.debug(LogMessage('incrementSurveyCounts', 'unaggregatedSurveys=', unaggregatedSurveys))
         latest = __collectMetricIncrements( unaggregatedSurveys, conf.SURVEY_TYPE_BUDGET, increments )
         globalRec.latestMetricUpdateForBudget = max( globalRec.latestMetricUpdateForBudget, latest )
+        responseData['surveysAggregated'].extend(  [ __surveyToDisplay(s)  for s in unaggregatedSurveys ]  )
+
+    # Multi-question survey
+    if nextSurveyType == conf.MULTI_SURVEY_CLASS_NAME:
+        unaggregatedSurveys = multi.survey.MultipleQuestionSurvey.query(
+            multi.survey.MultipleQuestionSurvey.timeCreated > globalRec.latestMetricUpdateForMulti ).fetch( limit=MAX_SURVEYS_TO_AGG_PER_TYPE )
+        if conf.isDev:  logging.debug(LogMessage('incrementSurveyCounts', 'unaggregatedSurveys=', unaggregatedSurveys))
+        latest = __collectMetricIncrements( unaggregatedSurveys, conf.MULTI_SURVEY_CLASS_NAME, increments )
+        globalRec.latestMetricUpdateForMulti = max( globalRec.latestMetricUpdateForMulti, latest )
         responseData['surveysAggregated'].extend(  [ __surveyToDisplay(s)  for s in unaggregatedSurveys ]  )
 
     if conf.isDev:  logging.debug(LogMessage('incrementSurveyCounts', 'increments=', increments))
@@ -325,7 +337,7 @@ def incrementSurveyCounts( ):
     responseData['dayToMetrics'] = dayToMetricsDisplays
 
     # Collect display data
-    responseData['globalRec'] = globalRecord.toDisplay( globalRec )
+    responseData['globalRec'] = globalRec.toDisplay()
     responseData['success'] = True
     return httpServer.outputJson( cookieData, responseData, httpResponse )
 

@@ -44,10 +44,10 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
         #siteName {  text-align:center;  font-weight:normal;  color:#aaaaaa;  }
         .title {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:1.6rem;  color:#777777;  }
 
-        h1 {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:1.4rem;  color:#888888;  }
-        h2 {  margin:5px 0px 5px 0px;  font-weight:bold;  font-size:1.3rem;  color:black;  }
-        h3 {  }
-        h4 {  margin:15px 0px 0px 0px;  }
+        h1 {  margin:15px 0px 20px 0px;  text-align:center;  font-weight:bold;  font-size:1.4rem;  color:#888888;  line-height:1.5em;  }
+        h2 {  margin:5px 0px 5px 0px;  font-weight:bold;  font-size:1.3rem;  color:black;  line-height:1.5em;  }
+        h3 {  line-height:1.5em;  }
+        h4 {  margin:15px 0px 0px 0px;  line-height:1.5em;  }
         p {  line-height:1.7em;  }
 
         ul {  margin:10px 0px 10px 0px;  }
@@ -60,7 +60,7 @@ body {  padding:0px;  margin:0px;  font-family:sans-serif;  line-height:1.3em;  
         dialog::backdrop {  background:rgba(100, 100, 100, 0.75);  }
 
 
-.Message {  opacity:0.0;  transition:opacity 2.0s, height 2.0s;  overflow-y:hidden;  }
+.Message {  opacity:0.0;  transition:opacity 2.0s, height 2.0s;  overflow-y:hidden;  font-weight:bold;  }
 
 
 .Highlight {  background-color:yellow;  }

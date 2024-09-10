@@ -167,6 +167,11 @@ class SurveyAnswers( ndb.Model ):
         if not budgetItemToAnswer:  return 0
         return sum(  int( amountAndReason[KEY_CONTENT] )  for budgetItem, amountAndReason in budgetItemToAnswer.items()  )
 
+    def numItems( self, questionId ):
+        if not self.answers:  return 0
+        itemToAnswer = self.answers.get( questionId, None )
+        return len( itemToAnswer )  if itemToAnswer  else 0
+
 
     ######################################################################################
     # Methods for filtering data for display in client

@@ -25,6 +25,8 @@
         ajaxGet( dataSend, url, function(error, status, dataReceive){
 
             if ( !error  &&  dataReceive  &&  dataReceive.success  &&  dataReceive.recents  &&  Array.isArray(dataReceive.recents) ){
+                console.debug( 'recentHandleLoad() dataReceive=', dataReceive );
+
                 // For each linkKey... build html with html builder object, or html->element function?
                 for ( let s = 0;  s < dataReceive.recents.length;  ++s ){
                     let recent = dataReceive.recents[s];
@@ -40,6 +42,7 @@
                         '<div class=recentRequest tabindex=0>',
                         '    <div class=recentRequestType translate=true>' + linkType.display + '</div>',
                         '    <div class=recentRequestType translate=true>' + (recent.frozen ? '(frozen)' : '') + '</div>',
+                        '    <div class=recentRequestType translate=true>' + (recent.mine ? '(mine)' : '') + '</div>',
                         '    <div class=recentRequestType translate=true>' + (recent.freezeNewProposals ? '(frozen proposals)' : '') + '</div>',
                         '    <div class=recentRequestType translate=true>' + (recent.hideReasons ? '(reasons hidden)' : '') + '</div>',
                         '    <h2 class=recentRequestTitle>' + recent.title + '</h2>',

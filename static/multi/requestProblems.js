@@ -134,6 +134,9 @@
     isVoted = function( ){  return this.answer && this.reason && ( this.answer.content == this.reason.id );  };
 
         SolutionReasonDisplay.prototype.
+    focusVote = function( ){  this.voteCheckbox.focus();  };
+
+        SolutionReasonDisplay.prototype.
     setMode = function( newMode ){
         this.mode = newMode;
         this.attributesUpdated();
@@ -184,6 +187,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'SolutionReasonDisplay.onEditSaveClick() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.reason ){
                 thisCopy.message = { color:GREEN, text:'Saved reason', ms:5000 };
                 thisCopy.reason = receiveData.reason;
@@ -198,6 +202,8 @@
                     if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit survey created by someone else';  }
                     if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit reason that already has votes';  }
                     if ( receiveData.message == FROZEN ){  message = 'Survey is frozen';  }
+                    if ( receiveData.message == DUPLICATE ){  message = 'Reason already exists.';  }
+                    if ( receiveData.message == UNCHANGED ){  message = '';  thisCopy.onEditCancelClick();  }
                 }
                 thisCopy.message = { color:RED, text:message, ms:9000 };
             }
@@ -242,6 +248,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'SolutionReasonDisplay.onReasonVoteCheckboxClick()', 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 let message = ( vote )?  'Saved vote. Limit is 1 vote per proposal.'  :  'Saved. 1 vote available.';
                 thisCopy.message = {  color:GREEN , text:message , ms:5000  };
@@ -256,7 +263,6 @@
                 let message = 'Failed to save vote';
                 if ( receiveData ){
                     if ( receiveData.message == FROZEN ){  message = 'Survey is frozen';  }
-                    else if ( receiveData.message == UNCHANGED ){  message = 'Vote not changed';  }
                 }
                 thisCopy.message = { color:RED, text:message, ms:9000 };
                 thisCopy.dataUpdated();
@@ -290,7 +296,8 @@
             '       <summary id=ExpanderSummary> ',
             //          Edit
             '           <div class=Edit> ',
-            '               <span class=ContentTag translate=yes> Solution </span> ',
+            '               <span class=ContentTag data-type=solution translate=yes> Solution </span> ',
+            '               <span class=ContentTag data-type=proposal translate=yes> Proposal </span> ',
             '               <textarea class=SolutionContentInput id=SolutionContentInput title="Solution" oninput=onEditSolutionInput placeholder="I suggest..."></textarea> ',
             '               <div class=SaveOrCancelButtons> ',
             '                   <button class=SaveButton id=SaveButton translate=yes onclick=onEditSolutionSaveClick> Save </button> ',
@@ -300,7 +307,8 @@
             //          View
             '           <div class=View> ',
             '               <div class=ContentViewWrap> ',
-            '                   <span class=ContentTag translate=yes> Solution </span> ',
+            '                   <span class=ContentTag data-type=solution translate=yes> Solution </span> ',
+            '                   <span class=ContentTag data-type=proposal translate=yes> Proposal </span> ',
             '                   <span class=SolutionViewContent id=SolutionViewContent></span> ',
             '               </div> ',
             '               <div class=SolutionViewButtons> ',
@@ -310,7 +318,8 @@
             //          Result
             '           <div class=Result> ',
             '               <div> ',
-            '                   <span class=ContentTag translate=yes> Solution </span> ',
+            '                   <span class=ContentTag data-type=solution translate=yes> Solution </span> ',
+            '                   <span class=ContentTag data-type=proposal translate=yes> Proposal </span> ',
             '                   <span id=SolutionResultContent class=SolutionResultContent></span> ',
             '               </div> ',
             '           </div> ',
@@ -396,11 +405,17 @@
         let hasSuggestionMatches = this.suggestions  &&  ( 0 < this.suggestions.length );
         let hasReasons =  ( ! isEmpty(this.pros) )  ||  ( ! isEmpty(this.cons) )  ||  hasSuggestionMatches;
         this.setAttribute( 'Solution', 'hasreasons', (hasReasons ? TRUE : FALSE) );
+        // Interleave pros & cons
         if ( hasSuggestionMatches  &&  (this.mode == VIEW) ){
-            this.reasonDisplays.data = this.suggestions;
+            this.reasonDisplays.data = [];
+            let pros = this.suggestions.filter( r => (r.proOrCon == PRO) );
+            let cons = this.suggestions.filter( r => (r.proOrCon == CON) );
+            for (  let i = 0;  ( pros && (i < pros.length) )  ||  ( cons && (i < cons.length) );  ++i ){
+                if ( i < pros.length ){  this.reasonDisplays.data.push( pros[i] );  }
+                if ( i < cons.length ){  this.reasonDisplays.data.push( cons[i] );  }
+            }
         }
         else {
-            // Merge pros & cons
             this.reasonDisplays.data = [];
             for (  let i = 0;  ( this.pros && (i < this.pros.length) )  ||  ( this.cons && (i < this.cons.length) );  ++i ){
                 if ( i < this.pros.length ){  this.reasonDisplays.data.push( this.pros[i] );  }
@@ -454,6 +469,9 @@
     };
 
         SolutionDisplay.prototype.
+    focusAddOrFind = function( ){  this.reasonInput.focus();  };
+
+        SolutionDisplay.prototype.
     collapse = function( ){  this.getSubElement('Expander').open = false;  }
 
         SolutionDisplay.prototype.
@@ -481,6 +499,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'SolutionDisplay.retrieveReasons()', 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 // Collect map{ id -> reason }
                 if ( receiveData.pros ){   receiveData.pros.forEach(  r => { if (r.id) thisCopy.idToReason[r.id] = r; }  )   }
@@ -563,8 +582,9 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'SolutionDisplay.onEditSolutionSaveClick() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.solution ){
-                thisCopy.message = { color:GREEN, text:'Saved solution', ms:5000 };
+                thisCopy.message = { color:GREEN, text:'Saved proposal', ms:5000 };
                 thisCopy.solution = receiveData.solution;
                 thisCopy.onEditSolutionCancelClick();
                 thisCopy.getParentDisplay().updateSolution( receiveData.solution );
@@ -573,10 +593,12 @@
             else {
                 let message = 'Failed to save solution';
                 if ( receiveData ){
-                    if ( receiveData.message == TOO_SHORT ){  message = 'Solution is too short';  thisCopy.solutionValidity = message;  }
-                    if ( receiveData.message == TOO_LONG ){  message = 'Solution is too long';  thisCopy.solutionValidity = message;  }
+                    if ( receiveData.message == TOO_SHORT ){  message = 'Proposal is too short';  thisCopy.solutionValidity = message;  }
+                    if ( receiveData.message == TOO_LONG ){  message = 'Proposal is too long';  thisCopy.solutionValidity = message;  }
                     if ( receiveData.message == FROZEN ){  message = 'Survey is frozen';  }
-                    if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit solution that already has responses';  }
+                    if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit proposal that already has responses';  }
+                    if ( receiveData.message == DUPLICATE ){  message = 'Identical proposal already exists';  }
+                    if ( receiveData.message == UNCHANGED ){  message = '';  thisCopy.onEditSolutionCancelClick();  }
                 }
                 thisCopy.message = { color:RED, text:message, ms:9000 };
             }
@@ -644,6 +666,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'SolutionDisplay.retrieveReasonSuggestions() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.suggestions ){
                 // Collect suggestions and calculate IDF weights across reason words 
                 if ( ! thisCopy.suggestionTextToData ){  thisCopy.suggestionTextToData = {};  }  // map{ suggestionProposal -> {scoreMatch, scoreTotal...} }
@@ -658,10 +681,15 @@
 
                 // Find top-scored suggestions with at least some matching keyword
                 thisCopy.scoreMatches( contentStart );
+                let hadSuggestions = ! isEmpty( thisCopy.suggestions );
                 thisCopy.suggestions = Object.values( thisCopy.suggestionTextToData )
                     .filter( s => (0 < s.scoreMatch) )
                     .sort( (a,b) => (b.scoreTotal - a.scoreTotal) );
                 thisCopy.highlightWordsForReasons = ( thisCopy.suggestions )?  contentStart  :  null;
+                if ( (! hadSuggestions)  &&  (! isEmpty(thisCopy.suggestions)) ){
+                    thisCopy.message = { color:GREEN, text:'Showing matches', ms:9000 };
+                    thisCopy.messagesUpdated();
+                }
 
                 thisCopy.dataUpdated();
             }
@@ -714,17 +742,24 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'SolutionDisplay.saveNewReason() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.reason ){
-                thisCopy.message = { color:GREEN, text:'Saved reason', ms:3000 };
+                thisCopy.message = { color:GREEN, text:'Saved reason', ms:5000 };
 
                 if ( thisCopy.pros == null ){  thisCopy.pros = [];  }
                 if ( thisCopy.cons == null ){  thisCopy.cons = [];  }
                 if ( receiveData.reason.proOrCon == PRO ){  thisCopy.pros.push( receiveData.reason );  }
-                else {  thisCopy.cons.push( receiveData.reason );  }
+                else if ( receiveData.reason.proOrCon == CON ){  thisCopy.cons.push( receiveData.reason );  }
 
                 thisCopy.reasonInput.value = '';
                 thisCopy.highlightWordsForReasons = null;
                 thisCopy.suggestions = null;
+                thisCopy.dataUpdated();
+
+                let newReasonDisplay = thisCopy.getReasonDisplay( receiveData.reason.id );
+                newReasonDisplay.focusVote();
+                newReasonDisplay.message = { color:GREEN, text:'Saved reason', ms:5000 };
+                newReasonDisplay.messagesUpdated();
             }
             else {
                 let message = 'Failed to save reason';
@@ -734,9 +769,15 @@
                     if ( receiveData.message == FROZEN ){  message = 'Survey is frozen';  }
                 }
                 thisCopy.message = { color:RED, text:message, ms:9000 };
+                thisCopy.messagesUpdated();
             }
-            thisCopy.dataUpdated();
         } );
+    };
+
+
+        SolutionDisplay.prototype.
+    getReasonDisplay = function( reasonId ){
+        return this.reasonDisplays.displays.find( r => (r.reason.id == reasonId) );
     };
 
         SolutionDisplay.prototype.
@@ -878,6 +919,9 @@
             s.setData( thisCopy.solutionDisplays.data[i], solutionAnswer, thisCopy.highlightWordsForSolutions );
         }  );   }
         this.setSolutionModes( this.mode );
+
+
+        translateScreen( this.getSubElement('Problem') );  // Problems seem to be re-updated after top-level translation, so need re-translation
     };
 
         ProblemDisplay.prototype.
@@ -907,6 +951,9 @@
         if ( newMode == EDIT ){  return;  }
         this.solutionDisplays.displays.forEach( d => d.setMode(newMode) );
     };
+
+        ProblemDisplay.prototype.
+    focusAddOrFind = function( ){  this.solutionInput.focus();  };
 
         ProblemDisplay.prototype.
     collapseOtherSolutions = function( expandedSolutionDisplay ){
@@ -939,6 +986,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'ProblemDisplay.retrieveSolutions() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 // Collect map{ id -> solution }
                 if ( receiveData.solutions ){   receiveData.solutions.forEach(  s => { if (s.id) thisCopy.idToSolution[s.id] = s; }  )   }
@@ -1014,6 +1062,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'SolutionDisplay.onEditProblemSaveClick() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.problem ){
                 thisCopy.message = { color:GREEN, text:'Saved problem', ms:5000 };
                 thisCopy.problem = receiveData.problem;
@@ -1028,6 +1077,8 @@
                     if ( receiveData.message == TOO_LONG ){  message = 'Problem is too long';  thisCopy.problemValidity = message;  }
                     if ( receiveData.message == FROZEN ){  message = 'Survey is frozen';  }
                     if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit problem that already has responses';  }
+                    if ( receiveData.message == DUPLICATE ){  message = 'Identical problem already exists';  }
+                    if ( receiveData.message == UNCHANGED ){  message = '';  thisCopy.onEditProblemCancelClick();  }
                 }
                 thisCopy.message = { color:RED, text:message, ms:9000 };
             }
@@ -1104,6 +1155,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'ProblemDisplay.retrieveSolutionSuggestions() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.suggestions ){
                 // Collect suggestions and calculate IDF weights across words 
                 if ( ! thisCopy.suggestionTextToData ){  thisCopy.suggestionTextToData = {};  }
@@ -1117,13 +1169,18 @@
                 }
 
                 // Find top-scored suggestions with at least some matching keyword
+                let hadSuggestions = ! isEmpty( thisCopy.suggestions );
                 thisCopy.scoreMatches( contentStart );
                 thisCopy.suggestions = Object.values( thisCopy.suggestionTextToData )
                     .filter( s => (0 < s.scoreMatch) )
                     .sort( (a,b) => (b.scoreTotal - a.scoreTotal) );
                 thisCopy.highlightWordsForSolutions = ( thisCopy.suggestions )?  contentStart  :  null;
-
                 thisCopy.dataUpdated();
+
+                if ( (! hadSuggestions)  &&  (! isEmpty(thisCopy.suggestions)) ){
+                    thisCopy.message = { color:GREEN, text:'Showing matches', ms:9000 };
+                    thisCopy.messagesUpdated();
+                }
             }
         } );
     };
@@ -1142,7 +1199,7 @@
     };
 
         ProblemDisplay.prototype.
-    onNewSolutionSaveClick = function( ){  this.saveNewSolution();  }
+    onNewSolutionSaveClick = function( ){  this.saveNewSolution();  };
 
         ProblemDisplay.prototype.
     saveNewSolution = function( ){
@@ -1171,8 +1228,9 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'ProblemDisplay.saveNewSolution() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.solution ){
-                thisCopy.message = { color:GREEN, text:'Saved solution', ms:3000 };
+                thisCopy.message = { color:GREEN, text:'Saved solution', ms:5000 };
 
                 if ( thisCopy.solutions == null ){  thisCopy.solutions = [];  }
                 thisCopy.solutions.push( receiveData.solution );
@@ -1182,7 +1240,11 @@
                 thisCopy.suggestions = null;
 
                 thisCopy.dataUpdated();
-                last( thisCopy.solutionDisplays.displays ).expand();
+                let newSolutionDisplay = last( thisCopy.solutionDisplays.displays );
+                newSolutionDisplay.expand();
+                newSolutionDisplay.focusAddOrFind();
+                newSolutionDisplay.message = { color:GREEN, text:'Saved solution', ms:5000 };
+                newSolutionDisplay.messagesUpdated();
             }
             else {
                 let message = 'Failed to save solution';
@@ -1331,6 +1393,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'RequestProblemsQuestionDisplay.retrieveProblems() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 // Collect map{ id -> problem }
                 if ( receiveData.problems ){   receiveData.problems.forEach(  p => { if (p.id) thisCopy.idToProblem[p.id] = p; }  )   }
@@ -1410,6 +1473,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RequestProblemsQuestionDisplay.retrieveProblemSuggestions() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.suggestions ){
                 // Collect suggestions and calculate IDF weights across words 
                 if ( ! thisCopy.suggestionTextToData ){  thisCopy.suggestionTextToData = {};  }
@@ -1423,12 +1487,17 @@
                 }
 
                 // Find top-scored suggestions with at least some matching keyword
+                let hadSuggestions = ! isEmpty( thisCopy.suggestions );
                 thisCopy.scoreMatches( contentStart );
                 thisCopy.suggestions = Object.values( thisCopy.suggestionTextToData )
                     .filter( s => (0 < s.scoreMatch) )
                     .sort( (a,b) => (b.scoreTotal - a.scoreTotal) );
                 thisCopy.highlightWords = ( thisCopy.suggestions )?  contentStart  :  null;
 
+                if ( (! hadSuggestions)  &&  (! isEmpty(thisCopy.suggestions)) ){
+                    thisCopy.message = { color:GREEN, text:'Showing matches', ms:9000 };
+                    thisCopy.messagesUpdated();
+                }
                 thisCopy.dataUpdated();
             }
         } );
@@ -1448,7 +1517,7 @@
     };
 
         RequestProblemsQuestionDisplay.prototype.
-    onNewProblemSaveClick = function( ){  this.saveNewProblem();  }
+    onNewProblemSaveClick = function( ){  this.saveNewProblem();  };
 
         RequestProblemsQuestionDisplay.prototype.
     saveNewProblem = function( ){
@@ -1477,8 +1546,9 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RequestProblemsQuestionDisplay.saveNewProblem() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.problem ){
-                thisCopy.message = { color:GREEN, text:'Saved problem', ms:3000 };
+                thisCopy.message = { color:GREEN, text:'Saved problem', ms:5000 };
 
                 if ( thisCopy.problems == null ){  thisCopy.problems = [];  }
                 thisCopy.problems.push( receiveData.problem );
@@ -1488,7 +1558,11 @@
                 thisCopy.suggestions = null;
 
                 thisCopy.dataUpdated();
-                last( thisCopy.problemDisplays.displays ).expand();
+                let newProblemDisplay = last( thisCopy.problemDisplays.displays );
+                newProblemDisplay.expand();
+                newProblemDisplay.focusAddOrFind();
+                newProblemDisplay.message = { color:GREEN, text:'Saved problem', ms:5000 };
+                newProblemDisplay.messagesUpdated();
             }
             else {
                 let message = 'Failed to save problem';
@@ -1524,8 +1598,8 @@
             //  View
             '   <div class=View> ',
             '       <div class=NewSolutionWrap> ',
-            '           <label for=NewSolutionInput translate=yes> Add or find solution </label> ',
-            '           <textarea class=NewSolutionInput id=NewSolutionInput placeholder="..." oninput=onNewSolutionInput></textarea> ',
+            '           <label for=NewSolutionInput translate=yes> Add or find proposal </label> ',
+            '           <textarea class=NewSolutionInput id=NewSolutionInput placeholder="I propose..." oninput=onNewSolutionInput></textarea> ',
             '           <div class=SaveOrCancelButtons> ',
             '               <button class=SaveButton id=SaveButton translate=yes onclick=onNewSolutionSaveClick> Save </button> ',
             '               <button class=CancelButton id=CancelButton translate=yes onclick=onNewSolutionCancelClick> Cancel </button> ',
@@ -1632,6 +1706,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'RequestSolutionsQuestionDisplay.retrieveSolutions() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 // Collect map{ id -> solution }
                 if ( receiveData.solutions ){   receiveData.solutions.forEach(  s => { if (s.id) thisCopy.idToSolution[s.id] = s; }  )   }
@@ -1711,6 +1786,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RequestSolutionsQuestionDisplay.retrieveSolutionSuggestions() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.suggestions ){
                 // Collect suggestions and calculate IDF weights across words 
                 if ( ! thisCopy.suggestionTextToData ){  thisCopy.suggestionTextToData = {};  }
@@ -1724,12 +1800,17 @@
                 }
 
                 // Find top-scored suggestions with at least some matching keyword
+                let hadSuggestions = ! isEmpty( thisCopy.suggestions );
                 thisCopy.scoreMatches( contentStart );
                 thisCopy.suggestions = Object.values( thisCopy.suggestionTextToData )
                     .filter( s => (0 < s.scoreMatch) )
                     .sort( (a,b) => (b.scoreTotal - a.scoreTotal) );
                 thisCopy.highlightWords = ( thisCopy.suggestions )?  contentStart  :  null;
 
+                if ( (! hadSuggestions)  &&  (! isEmpty(thisCopy.suggestions)) ){
+                    thisCopy.message = { color:GREEN, text:'Showing matches', ms:5000 };
+                    thisCopy.messagesUpdated();
+                }
                 thisCopy.dataUpdated();
             }
         } );
@@ -1778,8 +1859,9 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RequestSolutionsQuestionDisplay.saveNewSolution() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.solution ){
-                thisCopy.message = { color:GREEN, text:'Saved solution', ms:3000 };
+                thisCopy.message = { color:GREEN, text:'Saved solution', ms:5000 };
 
                 if ( thisCopy.solutions == null ){  thisCopy.solutions = [];  }
                 thisCopy.solutions.push( receiveData.solution );
@@ -1788,7 +1870,11 @@
                 thisCopy.suggestions = null;
                 thisCopy.dataUpdated();
 
-                last( thisCopy.solutionDisplays.displays ).expand();
+                let newSolutionDisplay = last( thisCopy.solutionDisplays.displays );
+                newSolutionDisplay.expand();
+                newSolutionDisplay.focusAddOrFind();
+                newSolutionDisplay.message = { color:GREEN, text:'Saved solution', ms:5000 };
+                newSolutionDisplay.messagesUpdated();
             }
             else {
                 let message = 'Failed to save solution';

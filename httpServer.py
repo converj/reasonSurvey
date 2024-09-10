@@ -30,6 +30,7 @@ log = False
 
 def createFlaskApp( filename ):
     app = flask.Flask( filename, static_url_path='' )  # Use static_url_path to maintain the existing path to docs
+    app.config['MAX_CONTENT_LENGTH'] = conf.MAX_IMAGE_BYTES  # File upload size limit
     app.wsgi_app = google.appengine.api.wrap_wsgi_app( app.wsgi_app )
     return app
 

@@ -21,7 +21,8 @@
                 Create a free survey, where participants express both their opinions and their reasons.
                 Participants can also learn from each other's reasons.
             </p>
-            <p> <span translate=yes>Start here</span>: </p>
+
+            <h2> <span translate=yes>Start here</span> </h2>
 
             <table class=newSurveyTable>
                 <tr>
@@ -31,6 +32,7 @@
                             <span translate=yes> Deliberative Form </span>
                             <span class=newSurveyLinkDetail translate=yes> Ask a series of survey questions. </span></a>
                     </td><td class=newSurveyExample>
+                        <a href='{{SITE_URL}}/example' target=_blank translate=yes> Example </a>
                     </td>
                 </tr>
             </table>
@@ -81,30 +83,26 @@
             <div class=productValue>
                 <p>
                     Sometimes leaders need to discover the best way to help their constituents.
-                    Sometimes a leader needs to prevent upsetting surprises.
                     Sometimes the leader needs to discover what they did not even think to ask about.
-                    With {{SITE_NAME}}, you don't just collect participants' answers.
-                    {{SITE_NAME}} helps reveal why people gave those answers, not in terms of demographics, but in their own words.
+                    Sometimes a leader needs to prevent upsetting surprises.
+                    With {{SITE_NAME}}, you don't just collect participants' answers, 
+                    you reveal why people gave those answers, not in terms of demographics, but in their own words.
                 </p>
-                <p>
-                    {{SITE_NAME}} Features:
-                </p>
+                <h4> Features </h4>
                 <ul>
                     <li> Rating, ranking, checklists, budgets, write-in answers, and proposals
                     <li> Request-for-proposals forum
                     <li> Hosts can suggest answers, and participants can also add any new answer
-                    <li> Participants are nudged to converge toward a few popular answers, to surface clear and informed perspectives
+                    <li> Participants are nudged to converge toward a few main answers, to make results clear
                 </ul>
-                <p style='margin:1.5em 0 .5em 0;'>
-                    Why {{SITE_NAME}}?
-                </p>
+                <h4> Why {{SITE_NAME}}? </h4> 
                 <ul>
+                    <li> Deliberation built in:  No need to choose between surveys versus forums
                     <li> Free
-                    <li> Easy enrollment:  No sign-up process for hosts nor citizens
-                    <li> Privacy:  No participant identity tracking
-                    <li> No moderation required:  Only the best, most relevant, user content is presented
+                    <li> Easy enrollment:  No sign-up process for hosts nor participants
                     <li> Simple:  As easy as creating a web survey, with realtime results
-                    <li> Deliberation built in:  No need to choose between surveys and forums
+                    <li> No moderation required:  Only the best quality, most relevant, user content is presented
+                    <li> Privacy:  No identity tracking
                 </ul>
                 <!-- Demo video / page, testimonials, latest updates... -->
             </div>
@@ -115,11 +113,7 @@
 
         <div id=pageMultiQuestion class=Page>
             <h1 class=title translate=yes> Survey </h1>
-            <p translate=yes>
-                Survey your participants with a series of form questions -- like ratings, rankings, checkboxes, budgets, and proposals --
-                that reveal participants' opinions and reasons, and which build greater understanding between participants.
-            </p>
-            <div id=MultiQuestionSurvey></div>
+            <p> (Javascript error) </p>
         </div>
 
 
@@ -147,12 +141,11 @@
                     <legend> Experimental </legend>
                     <div>
                         <label for=experimentalPasswordForRequest> Password </label>
-                        <input type=password class=experimentalPasswordInput id=experimentalPasswordForRequest
-                            placeholder='Secret to enable experimental options' />
+                        <input type=password class=experimentalPasswordInput id=experimentalPasswordForRequest />
                     </div>
                     <div>
                         <label for=doneLinkInput> Done-link </label>
-                        <input type=text class=doneLinkInput id=doneLinkInput  placeholder='Relative-link to next survey' />
+                        <input type=text class=doneLinkInput id=doneLinkInput />
                     </div>
                     <div>
                         <label for=hideReasonsForRequest> Hide reasons </label>
@@ -240,8 +233,7 @@
                     <legend> Experimental </legend>
                     <div>
                         <label for=experimentalPasswordForProposal> Password </label>
-                        <input type=password class=experimentalPasswordInput id=experimentalPasswordForProposal
-                            placeholder='Secret to enable experimental options' />
+                        <input type=password class=experimentalPasswordInput id=experimentalPasswordForProposal />
                     </div>
                     <div>
                         <label for=hideReasonsForProposal> Hide reasons </label>
@@ -287,8 +279,7 @@
                     <legend> Experimental </legend>
                     <div>
                         <label for=experimentalPasswordForAutocomplete> Password </label>
-                        <input type=password class=experimentalPasswordInput id=experimentalPasswordForAutocomplete
-                            placeholder='Secret to enable experimental options' />
+                        <input type=password class=experimentalPasswordInput id=experimentalPasswordForAutocomplete />
                     </div>
                     <div>
                         <label for=hideReasonsForAutocomplete> Hide reasons </label>
@@ -366,7 +357,7 @@
 
         <div id=pageBudgetNew class=Page>
             <h1 class=title translate=yes> New Participatory Budget </h1>
-            <p>
+            <p translate=yes>
                 Discover a group's budget preferences, allowing participants to both introduce new budget items,
                 and to negotiate better allocations of resources.
             </p>
@@ -394,8 +385,7 @@
                     <legend> Experimental </legend>
                     <div>
                         <label for=experimentalPasswordForBudget> Password </label>
-                        <input type=password class=experimentalPasswordInput id=experimentalPasswordForBudget
-                            placeholder='Secret to enable experimental options' />
+                        <input type=password class=experimentalPasswordInput id=experimentalPasswordForBudget />
                     </div>
                     <div>
                         <label for=hideReasonsForBudget> Hide reasons </label>

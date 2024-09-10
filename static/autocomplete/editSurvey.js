@@ -632,13 +632,13 @@
                 thisCopy.dataUpdated();
             }
             else if ( receiveData  &&  receiveData.message == NOT_OWNER ){  
-                var message = 'Cannot edit question created by someone else.';
+                var message = 'Cannot edit question created by someone else';
                 thisCopy.editMessage = { color:RED, text:message };
                 thisCopy.questionValidity = message;
                 thisCopy.dataUpdated();
             }
             else if ( receiveData  &&  receiveData.message == HAS_RESPONSES ){  
-                var message = 'Cannot edit question that already has answers.';
+                var message = 'Cannot edit question that already has answers';
                 thisCopy.editMessage = { color:RED, text:message };
                 thisCopy.questionValidity = message;
                 thisCopy.dataUpdated();
@@ -742,11 +742,11 @@
                 thisCopy.dataUpdated();
             }
             else if ( receiveData  &&  receiveData.message == NOT_OWNER ){  
-                thisCopy.editMessage = { color:RED, text:'Cannot edit question created by someone else.' };
+                thisCopy.editMessage = { color:RED, text:'Cannot edit question created by someone else' };
                 thisCopy.dataUpdated();
             }
             else if ( receiveData  &&  receiveData.message == HAS_RESPONSES ){  
-                thisCopy.editMessage = { color:RED, text:'Cannot edit question that already has votes.' };
+                thisCopy.editMessage = { color:RED, text:'Cannot edit question that already has votes' };
                 thisCopy.dataUpdated();
             }
             else {

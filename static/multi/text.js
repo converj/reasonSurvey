@@ -229,7 +229,7 @@
         // Subdisplays for reason results
         let thisCopy = this;
         this.reasonResultDisplays.data = this.reasons || [];
-        this.reasonResultDisplays.data.forEach(  r => { r.key = r.key || r.reasonId }  );  // Ensure each data has a key string
+        this.reasonResultDisplays.data.forEach(  r => { r.key = r.reasonId }  );  // Ensure each data has a key string
         this.updateSubdisplays( this.reasonResultDisplays, this.getSubElement('OptionReasonResults') ,
             ( optionReasonResult ) => new TextReasonResultDisplay( 
                 [thisCopy.questionDisplay.question.id, thisCopy.option.id, optionReasonResult.reasonId].join('-') )
@@ -251,6 +251,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'TextOptionResultDisplay.retrieveResults() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.reasons ){
                 // Sort by votes
                 thisCopy.reasons = receiveData.reasons.sort( (a,b) => b.votes - a.votes );
@@ -391,6 +392,7 @@
         else if ( this.mode == RESULT ){
             // Result
             this.resultOptionDisplays.data = ( this.results )?  Object.values( this.results )  :  [];
+            this.resultOptionDisplays.data = this.resultOptionDisplays.data.filter( o => o.answer && !o.answer.match(/^o\d+$/) );
             this.resultOptionDisplays.data.forEach( o => {o.key = o.id = String(o.answerId);} );  // Ensure each data has a key string
             this.updateSubdisplays( this.resultOptionDisplays, this.getSubElement('ResultOptions'),
                 (optionData) => new TextOptionResultDisplay( optionData.id ).setInitialData( optionData, thisCopy, thisCopy.surveyDisplay )
@@ -502,6 +504,8 @@
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.suggestions ){
+                console.info( 'TextQuestionDisplay.retrieveSuggestions() receiveData.suggestions=', receiveData.suggestions );
+
                 // Collect suggestions and calculate IDF weights across reason words 
                 if ( ! thisCopy.suggestionTextToData ){  thisCopy.suggestionTextToData = {};  }  // map{ suggestionText -> {scoreMatch, scoreTotal...} }
                 for ( let s = 0;  s < receiveData.suggestions.length;  ++s ){
@@ -569,6 +573,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RankingOptionDisplay.handleRankingInput() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.answers ){
                 thisCopy.message = { color:GREEN, text:'Saved answer', ms:3000 };
                 thisCopy.dataUpdated();
@@ -620,6 +625,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint , cursor:this.cursorResults };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'TextQuestionDisplay.retrieveResults() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
 
                 let newAnswers = receiveData.answers || [];

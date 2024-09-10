@@ -151,6 +151,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'ProposalReasonDisplay.onEditReasonSaveClick()', 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.reason ){
                 thisCopy.reasonInput.value = '';
                 thisCopy.message = { color:GREEN, text:'Reason saved', ms:5000 };
@@ -207,6 +208,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'ProposalReasonDisplay.storeVote()', 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 let message = ( vote )?  'Saved vote. Limit is 1 vote per proposal.'  :  'Saved. 1 vote available.';
                 thisCopy.message = {  color:GREEN , text:message , ms:5000  };
@@ -497,6 +499,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'ProposalQuestionDisplay.retrieveSuggestions() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.suggestions ){
                 // Collect suggestions and calculate IDF weights across reason words 
                 if ( ! thisCopy.suggestionTextToData ){  thisCopy.suggestionTextToData = {};  }  // map{ suggestionProposal -> {scoreMatch, scoreTotal...} }
@@ -569,6 +572,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'ProposalQuestionDisplay.saveNewReason() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.reason ){
                 thisCopy.message = { color:GREEN, text:'Saved reason', ms:3000 };
 
@@ -604,7 +608,6 @@
 
         ProposalQuestionDisplay.prototype.
     retrieveReasons = function( initial ){
-
         if ( this.cursorProDone  &&  this.cursorConDone ){
             this.moreMessage = { color:GREY, text:'No more reasons yet', ms:5000 };
             this.messagesUpdated();
@@ -624,6 +627,7 @@
         };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'ProposalQuestionDisplay.retrieveReasons() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
 
                 if ( ! initial  &&  isEmpty(receiveData.pros)  &&  isEmpty(receiveData.cons) ){

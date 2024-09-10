@@ -101,6 +101,10 @@
 #pageMultiQuestion                                      .RatingOptionDisplay .EditRow input.OptionContentInput {  width:calc(100% - 10px);  }
 #pageMultiQuestion                                      .RatingOptionDisplay .EditRow input.OptionPositionInput {  width:4em;  }
 #pageMultiQuestion                                  .RatingOptionDisplay .EditRow > .OptionDeleteButtonCell {  padding:0px;  }
+#pageMultiQuestion                                  .Options .imageDiv {  max-width:calc(100% - 20px);  grid-column:1/4;  }
+#pageMultiQuestion                                      .imageDiv label {  display:block;  width:100%;  }
+#pageMultiQuestion                                      .imageDiv input {  width:20em;  }
+#pageMultiQuestion                                      .editImage {  max-width:100%;  border:solid 1px #ccc;  }
 #pageMultiQuestion                              .RatingOptionDisplay[hasoptioninput='true'] .Edit .SaveOrCancelButtons {  display:block;  }
 
 #pageMultiQuestion                          .Question[mode="view"] .RatingOptionDisplay .View {
@@ -108,19 +112,22 @@
                                                 grid-template-columns: 1fr auto 3fr;
 }
 #pageMultiQuestion                              .RatingOptionDisplay .View > * {  padding:10px;  }
-#pageMultiQuestion                                  .RatingLabel {
-                                                        opacity:1.0;
-                                                        grid-row:2;  grid-column:1;
-                                                        text-align:right;
+#pageMultiQuestion                              .RatingLabel {
+                                                    opacity:1.0;
+                                                    grid-row:2;  grid-column:1;
+                                                    text-align:right;
 }
-#pageMultiQuestion                                  .RatingInputWrap {  grid-row:2;  grid-column:2;  }
-#pageMultiQuestion                                      .RatingInput {  }
-#pageMultiQuestion                                  .RatingOptionDisplay .RatingIncrementButton {  width:calc(100% - 10px);  text-align:left;  display:none;  }
-#pageMultiQuestion                                  .RatingOptionDisplay[ratinginputfocused='true'] .RatingIncrementButton {  grid-column:3;  display:block;  }
-#pageMultiQuestion                                  .UpButton {  grid-row:1;  }
-#pageMultiQuestion                                  .DownButton {  grid-row:3;  }
-#pageMultiQuestion                                  .RatingOptionDisplay .ReasonCell {  grid-row:2;  grid-column:3;  }
-#pageMultiQuestion                                      .RatingOptionDisplay .ReasonInput { }
+#pageMultiQuestion                              .RatingInputWrap {  grid-row:2;  grid-column:2;  }
+#pageMultiQuestion                                  .RatingInput {  }
+#pageMultiQuestion                              .RatingOptionDisplay .RatingIncrementButton {  width:calc(100% - 10px);  text-align:left;  display:none;  }
+#pageMultiQuestion                              .RatingOptionDisplay[ratinginputfocused='true'] .RatingIncrementButton {  grid-column:3;  display:block;  }
+#pageMultiQuestion                              .UpButton {  grid-row:1;  }
+#pageMultiQuestion                              .DownButton {  grid-row:3;  }
+#pageMultiQuestion                              .RatingOptionDisplay .ReasonCell {  grid-row:2;  grid-column:3;  }
+#pageMultiQuestion                                  .RatingOptionDisplay .ReasonInput { }
+
+#pageMultiQuestion                              .viewImage {  max-width:calc(100% - 20px);  margin:10px;  border:solid 1px #ccc;  padding:0px !important;  }
+#pageMultiQuestion                              .Options .View .viewImage {  grid-row:3;  grid-column:1/4;  }
 
 #pageMultiQuestion                          .RatingOptionDisplay .MessageWrap {  grid-column:1/4;  }
 #pageMultiQuestion                              .RatingOptionDisplay .Message { }
@@ -138,6 +145,10 @@
 }
 #pageMultiQuestion                              .RatingResult summary .Rating::before {  content:" \25B6 \00a0 ";  }
 #pageMultiQuestion                              .RatingResult > details[open] summary .Rating::before {  content:" \25BC \00a0 ";  }
+/*  "..."    "-"    "\2195" up/down arrows
+/*  25B6 triangle right black    25BC triangle down black   25BD triangle down white   25B3 triangle up white
+/*  2295 circled plus    2219 black pixel   2022 small black circle    00B0 degree symbol     22C5 tiny black square   25E6 white bullet
+*/
 #pageMultiQuestion                                  .RatingResult .VoteCount {
                                                         position:relative;  grid-column:4;  margin-top:0.3em;  height:1.3em;  line-height:1.5em;
                                                         font-weight:bolder;  text-shadow:0px 0px 1px white, 0px 0px 2px white, 0px 0px 3px white, 0px 0px 4px white, 0px 0px 5px white;
@@ -370,7 +381,7 @@
 #pageMultiQuestion                      .BudgetOptionEditDisplay {  border:solid 1px #aaaaaa;  }
 
 #pageMultiQuestion                          .Question[mode="edit"] .BudgetOptionEditDisplay .Edit {  display:block;  }
-#pageMultiQuestion                              .BudgetOptionEditDisplay .EditRow {  display:grid;  grid-template-columns:1fr auto;  grid-template-rows:60px;  }
+#pageMultiQuestion                              .BudgetOptionEditDisplay .EditRow {  display:grid;  grid-template-columns:1fr auto;  grid-template-rows:65px;  }
 #pageMultiQuestion                                  .BudgetOptionEditDisplay .EditRow > * {  padding:10px;  }
 #pageMultiQuestion                                      .BudgetOptionEditDisplay .EditRow input.OptionContentInput {  width:calc(100% - 10px);  }
 #pageMultiQuestion                                      .BudgetOptionEditDisplay .EditRow .OptionDeleteCell {  padding:0px;  }
@@ -407,6 +418,52 @@
 }
 #pageMultiQuestion                                      .BudgetOptionResultDisplay .BudgetReasonResult .ReasonAmount {  margin-left:5px;  }
 
+
+
+/* List question */
+#pageMultiQuestion              .ListQuestionDisplay { }
+#pageMultiQuestion                  .ListQuestionDisplay .TotalAmountWrap {  padding:20px 0px 10px 0px;  }
+#pageMultiQuestion                  .ListQuestionDisplay .NewOptionWrap {  display:none;  padding:20px 0px 10px 0px;  }
+#pageMultiQuestion                  .ListQuestionDisplay[mode='edit'] .NewOptionWrap {  display:block;  }
+#pageMultiQuestion                      .ListQuestionDisplay[hasnewoptioninput='true'] .NewOptionWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                  .ListQuestionDisplay .EditHeadings {  display:grid;  grid-template-columns:1fr auto auto;  }
+#pageMultiQuestion                      .ListQuestionDisplay .EditHeadings > * {  padding:10px 20px 10px 0px;  }
+
+#pageMultiQuestion                  .ListQuestionDisplay .Totals {  margin:10px 0px 10px 0px;  line-height:2em;  }
+#pageMultiQuestion                      .ListQuestionDisplay .Totals .Amount {  margin-right:20px;  white-space:nowrap;  }
+#pageMultiQuestion                      .ListQuestionDisplay .Totals .Used {  white-space:nowrap;  }
+#pageMultiQuestion                  .ListQuestionDisplay .ViewHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns:1fr 1fr 2fr;
+}
+#pageMultiQuestion                      .ListQuestionDisplay .ViewHeadings > * {  padding:10px 15px 5px 10px;  }
+
+#pageMultiQuestion                  .ListQuestionDisplay .ResultHeadings {
+                                        width:calc(100% - 12px);  border:solid 1px #aaaaaa;
+                                        display:grid;  grid-template-columns:1fr 3fr auto;
+}
+#pageMultiQuestion                      .ListQuestionDisplay .ResultHeadings * {  padding:10px;  }
+#pageMultiQuestion                      .ListQuestionDisplay .ResultHeadings .Votes {  margin-right:20px;  }
+
+#pageMultiQuestion                  .ListQuestionDisplay .Options {  width:calc(100% - 10px);  }
+#pageMultiQuestion                          .Question[mode="view"] .ListItemViewDisplay {  border:solid 1px #aaaaaa;  }
+#pageMultiQuestion                              .ListItemViewDisplay .ViewRow {  display:grid;  grid-template-columns:1fr 3fr auto;  }
+#pageMultiQuestion                                  .ListItemViewDisplay .Content {  padding:5px;  }
+#pageMultiQuestion                                  .ListItemViewDisplay .ReasonCell {  padding:5px;  }
+#pageMultiQuestion                                      .ListItemViewDisplay .ReasonInput {  width:calc(100% - 12px);  }
+#pageMultiQuestion                              [hasnewiteminput="true"] .NewAllocationWrap .ReasonLabel {  display:block;  }
+#pageMultiQuestion                              [hasnewiteminput="true"] .NewAllocationWrap .ReasonInput {  display:block;  }
+#pageMultiQuestion                              [hasnewiteminput="true"] .NewAllocationWrap .SaveOrCancelButtons {  display:block;  }
+
+#pageMultiQuestion                          .Question[mode="result"] .ListItemResultDisplay {  border:solid 1px #aaaaaa;  }
+#pageMultiQuestion                              .ListItemResultDisplay > details > summary {
+                                                    display:grid;  grid-template-columns:1fr auto;  min-height:2em;
+}
+#pageMultiQuestion                                      .ListItemResultDisplay .VoteCount {  margin-right:50px;  text-align:right;  }
+#pageMultiQuestion                                  .ListItemResultDisplay .BudgetReasonResult {
+                                                        display:grid;  grid-template-columns:1fr 3fr auto;  margin-bottom:10px;
+}
 
 
 /* Proposal question */
@@ -517,6 +574,10 @@
 #pageMultiQuestion                              .Solutions {  }
 #pageMultiQuestion                                  .SolutionDisplay {  margin:10px 0 20px 20px;  }
 #pageMultiQuestion                                    .SolutionDisplay summary {  display:inline-block;  width:100%;  }
+
+#pageMultiQuestion                                      .Question[type='problems'] .ContentTag[data-type='proposal'] {  display:none;  }
+#pageMultiQuestion                                      .Question[type='solutions'] .ContentTag[data-type='solution'] {  display:none;  }
+
 #pageMultiQuestion                                      .SolutionDisplay > details > summary > div.Edit {  display:none;  }
 #pageMultiQuestion                                      .SolutionDisplay[mode='edit'] > details > summary > div.Edit {
                                                             display:block;  margin:15px 0 0 0;  padding:10px 0 15px 0;

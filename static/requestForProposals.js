@@ -285,7 +285,7 @@
                     }
                     else if ( receiveData.message == HAS_RESPONSES ){  
                         thisCopy.handleEditReasonCancel();
-                        message = 'Cannot edit reason that already has votes.';
+                        message = 'Cannot edit reason that already has votes';
                     }
                 }
                 if ( message ){  millisec = 10000;  }
@@ -1561,7 +1561,6 @@
     };
 
 
-    // Set all data.
         RequestForProposalsDisplay.prototype.
     setAllData = function( reqPropData ){
         // Set proposals data. No need to create/update proposal display here, because dataUpdated() will do it.
@@ -2373,9 +2372,6 @@
 
         function
     retrieveProposalReasons( proposalDisp, onlyTopReasons=false, nextPage=false ){
-
-        console.log( 'retrieveProposalReasons() onlyTopReasons=', onlyTopReasons, 'nextPage=', nextPage );
-
         // reasons:series[reason] , modified
         let proposalData = proposalDisp.proposal;
 

@@ -41,6 +41,7 @@ import getRecent
 import getRequestData
 import httpServer
 from httpServer import app
+import mail
 import multi.getSurvey
 import multi.getRating
 import multi.submitSurvey
@@ -73,6 +74,10 @@ templateValues = {
     'MAX_OPTIONS': conf.MAX_OPTIONS ,
     'MIN_OPTION_LENGTH': conf.MIN_OPTION_LENGTH ,
     'MAX_OPTION_LENGTH': conf.MAX_OPTION_LENGTH ,
+    'MAX_IMAGE_WIDTH': conf.MAX_IMAGE_WIDTH ,
+    'MAX_IMAGE_PIXELS': conf.MAX_IMAGE_PIXELS ,
+    'MAX_IMAGE_BYTES': conf.MAX_IMAGE_BYTES ,
+    'STORAGE_BUCKET_IMAGES': conf.STORAGE_BUCKET_IMAGES ,
     'minLengthAnswer': conf.minLengthAnswer,
     'minLengthBudgetIntro': conf.minLengthBudgetIntro ,
     'minLengthSliceTitle': conf.minLengthSliceTitle ,
@@ -86,6 +91,7 @@ templateValues = {
     'TOO_LONG': conf.TOO_LONG,
     'REASON_TOO_SHORT': conf.REASON_TOO_SHORT,
     'DUPLICATE': conf.DUPLICATE,
+    'INSULT': conf.INSULT ,
     'NO_COOKIE': conf.NO_COOKIE,
     'NO_LOGIN': conf.NO_LOGIN,
     'BAD_CRUMB': conf.BAD_CRUMB,
@@ -143,6 +149,35 @@ def aboutUsPage( ):
     httpRequest, httpResponse = httpServer.requestAndResponse()
     if conf.isDev:  logging.debug(LogMessage('httpRequest=', httpRequest))
     return httpServer.outputTemplate( 'us.html', templateValues, httpResponse )
+
+@app.get('/example')
+def examplePage( ):
+    return flask.redirect( 'https://converj.net/#page=multi&link=onYHycxqCuiSOyzA0b4R0gl9TenHEVkPlkwQ6fU5rTohuuzfXs' )
+
+
+
+@app.post('/messageToAdmin')
+def messageToAdmin( ):
+    httpRequest, httpResponse = httpServer.requestAndResponse()
+    if conf.isDev:  logging.debug( 'initialCookie() httpRequest=' + str(httpRequest) )
+
+    # Collect inputs
+    requestLogId = os.environ.get( conf.REQUEST_LOG_ID )
+    responseData = { 'success':False, 'requestLogId':requestLogId }
+    inputData = httpRequest.postJsonData()
+
+    message = inputData.get( 'message', None )
+    if not message:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
+
+    # Require user cookie
+    cookieData = httpServer.validate( httpRequest, inputData, responseData, httpResponse, loginRequired=False )
+    if not cookieData.valid():  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NO_COOKIE )
+
+    # Send email to admin
+    mail.sendEmailToAdmin( message )
+
+    responseData['success'] = True
+    return httpServer.outputJson( cookieData, responseData, httpResponse )
 
 
 

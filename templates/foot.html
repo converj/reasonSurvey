@@ -16,6 +16,10 @@
     const MAX_OPTIONS = {{MAX_OPTIONS}};
     const MIN_OPTION_LENGTH = {{MIN_OPTION_LENGTH}};
     const MAX_OPTION_LENGTH = {{MAX_OPTION_LENGTH}};
+    const MAX_IMAGE_WIDTH = {{MAX_IMAGE_WIDTH}};
+    const MAX_IMAGE_PIXELS = {{MAX_IMAGE_PIXELS}};
+    const MAX_IMAGE_BYTES = {{MAX_IMAGE_BYTES}};
+    const STORAGE_BUCKET_IMAGES = '{{STORAGE_BUCKET_IMAGES}}';
     const minLengthAnswer = {{minLengthAnswer}};
     const minLengthBudgetIntro = {{minLengthBudgetIntro}};
     const minLengthSliceTitle = {{minLengthSliceTitle}};
@@ -29,6 +33,7 @@
     const TOO_LONG = '{{TOO_LONG}}';
     const REASON_TOO_SHORT = '{{REASON_TOO_SHORT}}';
     const DUPLICATE = '{{DUPLICATE}}';
+    const INSULT = '{{INSULT}}';
     const NO_COOKIE = '{{NO_COOKIE}}';
     const NO_LOGIN = '{{NO_LOGIN}}';
     const BAD_CRUMB = '{{BAD_CRUMB}}';
@@ -88,10 +93,10 @@
 <script src='{{ url_for('static', filename='multi/proposal.js') }}'></script>
 <script src='{{ url_for('static', filename='multi/requestProblems.js') }}'></script>
 <script src='{{ url_for('static', filename='multi/budget.js') }}'></script>
+<script src='{{ url_for('static', filename='multi/list.js') }}'></script>
 <script src='{{ url_for('static', filename='multi/survey.js') }}'></script>
 
 <script src='{{ url_for('static', filename='menu.js') }}'></script>
-
 
 </body>
 </html>

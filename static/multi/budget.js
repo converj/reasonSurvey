@@ -53,7 +53,6 @@ const ALLOCATION_INCREMENT = 5;
     // Update this.element
         BudgetOptionEditDisplay.prototype.
     dataUpdated = function( ){
-
         this.contentInput = this.getSubElement('OptionContentInput');
         this.deleteButton = this.getSubElement('OptionDeleteButton');
 
@@ -63,7 +62,6 @@ const ALLOCATION_INCREMENT = 5;
         this.contentInput.defaultValue = this.option.title;
         this.contentInput.disabled = this.questionDisplay.allowInput() ?  null  :  true;
         this.deleteButton.disabled = this.questionDisplay.allowInput() ?  null  :  true;
-
 
         translateScreen( this.getSubElement('Option') );  // Options seem to be re-updated after top-level translation, so need re-translation
     };
@@ -274,6 +272,7 @@ const ALLOCATION_INCREMENT = 5;
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'BudgetAllocationViewDisplay.storeAllocation()', 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.answers ){
                 thisCopy.surveyDisplay.setAnswerData( receiveData.answers );
                 if ( amountValue <= 0 ){
@@ -281,7 +280,7 @@ const ALLOCATION_INCREMENT = 5;
                     thisCopy.questionDisplay.dataUpdated();
                 }
                 else {
-                    thisCopy.message = {  color:GREEN , text:'Saved budget item. ' + thisCopy.questionDisplay.amountRemaining() + '% remaining.' , ms:5000  };
+                    thisCopy.message = {  color:GREEN , text:translate('Saved budget item. Budget remaining:') + ' ' + thisCopy.questionDisplay.amountRemaining() + '%' , ms:5000  };
                     thisCopy.dataUpdated();
                     thisCopy.focusAmountInput();
                 }
@@ -492,6 +491,7 @@ const ALLOCATION_INCREMENT = 5;
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'BudgetOptionResultDisplay.retrieveResults() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.reasons ){
                 // Sort by votes
                 thisCopy.reasons = receiveData.reasons.sort( (a,b) => b.votes - a.votes );
@@ -504,7 +504,7 @@ const ALLOCATION_INCREMENT = 5;
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// Display for ranking-question
+// Display for budget-question
 
         function
     BudgetSuggestionViewDisplay( displayId ){
@@ -696,6 +696,7 @@ const ALLOCATION_INCREMENT = 5;
             // Allocations
             this.setStyle( 'ViewHeadings', 'display', isEmpty(this.allocationDisplays.data)? 'none' : null );
             this.allocationDisplays.data = ( this.answers )?  Object.entries( this.answers ).map(  a => { return {content:a[0], amount:a[1].content, reason:a[1].reason, id:a[1].id} }  )  :  [];
+            this.allocationDisplays.data = this.allocationDisplays.data.filter( a => (a.id != null) );  // Skip answers created by question-types without answer-IDs
             this.allocationDisplays.data.sort( (a,b) => b.amount - a.amount );  // Sort allocations from large to small
             this.allocationDisplays.data.forEach( o => {o.key = String(o.id)} );
             this.updateSubdisplays( this.allocationDisplays, this.getSubElement('ViewOptions'),
@@ -727,6 +728,7 @@ const ALLOCATION_INCREMENT = 5;
             // Result
             this.setInnerHtml( 'AmountAbsoluteResult', this.question.maxTotal );
             this.resultOptionDisplays.data = ( this.results )?  Object.values( this.results ).sort( (a,b) => b.medianSize - a.medianSize )  :  [];
+            this.resultOptionDisplays.data = this.resultOptionDisplays.data.filter( o => o.medianSize );
             this.resultOptionDisplays.data.forEach( o => {o.key = o.id = String(o.answerId);} );
             this.updateSubdisplays( this.resultOptionDisplays, this.getSubElement('ResultOptions'),
                 (optionData) => new BudgetOptionResultDisplay( thisCopy.question.id + '-' + optionData.id )
@@ -751,7 +753,7 @@ const ALLOCATION_INCREMENT = 5;
 
         BudgetQuestionDisplay.prototype.
     amountAllocated = function( ){
-        return ( this.answers )?  Object.values( this.answers ).reduce( (agg,i) => agg + i.content , 0 )  :  0;
+        return ( this.answers )?  Object.values( this.answers ).filter( a => (a.id != null) ).reduce( (agg,i) => agg + parseInt(i.content) , 0 )  :  0;
     };
 
         BudgetQuestionDisplay.prototype.
@@ -823,8 +825,8 @@ const ALLOCATION_INCREMENT = 5;
             else {
                 let message = 'Failed to save total budget amount';
                 if ( receiveData ){
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else.';  }
-                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers.';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers';  }
                 }
                 thisCopy.message = { color:RED, text:message };
                 thisCopy.dataUpdated();
@@ -885,6 +887,8 @@ const ALLOCATION_INCREMENT = 5;
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.suggestions ){
+                console.info( 'BudgetQuestionDisplay.retrieveSuggestions() receiveData.suggestions=', receiveData.suggestions );
+
                 // Collect suggestions and calculate IDF weights across reason words 
                 if ( ! thisCopy.suggestionTextToData ){  thisCopy.suggestionTextToData = {};  }  // map{ suggestionText -> {scoreMatch, scoreTotal...} }
                 for ( let s = 0;  s < receiveData.suggestions.length;  ++s ){
@@ -911,6 +915,9 @@ const ALLOCATION_INCREMENT = 5;
 
         BudgetQuestionDisplay.prototype.
     onClickSuggestion = function( suggestionDisplay ){
+
+        if ( ! this.surveyDisplay.confirmUseSuggestion() ){  return false;  }
+
         this.contentInput.value = ( suggestionDisplay.suggestion.content == null )?  ''  :  suggestionDisplay.suggestion.content;
         this.reasonInput.value = ( suggestionDisplay.suggestion.reason == null )?  ''  :  suggestionDisplay.suggestion.reason;
         this.reasonInput.focus();
@@ -957,6 +964,7 @@ const ALLOCATION_INCREMENT = 5;
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'BudgetQuestionDisplay.onNewAllocationSaveClick()', 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.answers ){
                 thisCopy.message = { color:GREEN , text:'Created budget item' , ms:5000 };
                 thisCopy.dataUpdated();
@@ -989,6 +997,7 @@ const ALLOCATION_INCREMENT = 5;
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'BudgetQuestionDisplay.retrieveResults() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.answers ){
                 thisCopy.results = receiveData.answers;
                 thisCopy.dataUpdated();

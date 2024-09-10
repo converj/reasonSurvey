@@ -7,6 +7,11 @@ import re
 from configuration import const as conf
 
 
+def isEmpty( text ):  return ( text is None ) or ( (type(text) == str) and (text.strip() == '') )
+
+
+def isNumber( text ):  return bool( re.match(r'^[+-]?\d+$', text) )
+
 
 def isAscii( text ):
     if not text:  return False

@@ -10,6 +10,7 @@ from configuration import const as conf
 import httpServer
 from httpServer import app
 import linkKey
+import mail
 import proposal
 import reason
 import requestForProposals
@@ -78,6 +79,8 @@ def submitNewProposal( ):
 
         # Construct and store link key
         proposalLinkKeyRecord = httpServer.createAndStoreLinkKey( conf.PROPOSAL_CLASS_NAME, proposalId, loginRequired, cookieData )
+
+        mail.sendEmailToAdminSafe( f'Created proposal survey. \n\n linkKeyRecord={proposalLinkKeyRecord}' , subject='New survey' )
 
         # Display proposal
         linkKeyDisplay = httpServer.linkKeyToDisplay( proposalLinkKeyRecord )

@@ -2,6 +2,7 @@
 
 # Import external modules
 from collections import namedtuple
+import copy
 import datetime
 from google.appengine.ext import ndb
 import logging
@@ -91,9 +92,9 @@ class VoteAggregate( ndb.Model ):
         record.greatgrandparentKey = VoteAggregate.toKeyId( surveyId, subkeys[0 : -3] )
 
         lastSubkey = subkeys[ -1 ]
-        record.lastSubkeyText = str( lastSubkey.value )  or None
-        record.parentSubkeyText = str( subkeys[-2].value )  if ( 2 <= len(subkeys) ) and subkeys[-2].value  else None
-        record.grandparentSubkeyText = str( subkeys[-3].value )  if ( 3 <= len(subkeys) ) and subkeys[-3].value  else None
+        record.lastSubkeyText = str( lastSubkey.value )  if not text.isEmpty(lastSubkey.value)  else None
+        record.parentSubkeyText = str( subkeys[-2].value )  if ( 2 <= len(subkeys) ) and not text.isEmpty(subkeys[-2].value)  else None
+        record.grandparentSubkeyText = str( subkeys[-3].value )  if ( 3 <= len(subkeys) ) and not text.isEmpty(subkeys[-3].value)  else None
 
         # Interpret last-subkey: parse as number or index words
         if lastSubkey.isText():
@@ -205,22 +206,50 @@ def vote( userId, surveyId, subkeys, answerContent, reason, numericAnswer=False,
 
 
 
-# For budget-question, which has to set 3 answer levels: content, amount, reason
-# Caller must specify the old content, so this function can remove or modify the old allocation
-@ndb.transactional(xg=True, retries=conf.MAX_VOTE_RETRY)
 def voteRanking( userId, surveyId, questionId, optionId, rankNew, reasonNew, ranking=None, optionsAllowed=None ):
 
     logging.debug(LogMessage( 'userId=', userId, 'surveyId=', surveyId, 'questionId=', questionId, 'optionId=', optionId, 'rankNew=', rankNew, 'reasonNew=', reasonNew ))
     logging.debug(LogMessage( 'ranking=', ranking ))
     logging.debug(LogMessage( 'optionsAllowed=', optionsAllowed ))
 
+    userVoteRecord, rankingOld, rankingNew = voteRankingChangeUserVote(
+        userId, surveyId, questionId, optionId, rankNew, reasonNew, ranking=ranking, optionsAllowed=optionsAllowed )
+
+    # For each option... incrementVoteAggregates() with its old & new rank
+    for o in set( rankingOld.keys() ).union( set(rankingNew.keys()) ):
+        logging.debug(LogMessage('o=', o))
+
+        oldAnswer = rankingOld.get( o, {} )
+        newAnswer = rankingNew.get( o, {} )
+
+        oldContent = oldAnswer.get( multi.userAnswers.KEY_CONTENT, None )
+        newContent = newAnswer.get( multi.userAnswers.KEY_CONTENT, None )
+        
+        oldReason = oldAnswer.get( multi.userAnswers.KEY_REASON, None )
+        newReason = newAnswer.get( multi.userAnswers.KEY_REASON, None )
+
+        logging.debug(LogMessage('oldAnswer=', oldAnswer, 'newAnswer=', newAnswer))
+
+        if ( oldContent == newContent ) and ( oldReason == newReason ):  continue
+
+        # Have to change each aggregate in a separate transaction to avoid "operating on too many entity groups in a single transaction"
+        # Since all options are re-voted on each change, error recovery is quick,
+        # so each aggregate-path can be changed in a separate transaction
+        voteRankingChangeAggregate( surveyId, questionId, o,
+            (int(newContent) if newContent else None), newReason,
+            (int(oldContent) if oldContent else None), oldReason )
+
+    return userVoteRecord
+
+@ndb.transactional(xg=True, retries=conf.MAX_VOTE_RETRY)
+def voteRankingChangeUserVote( userId, surveyId, questionId, optionId, rankNew, reasonNew, ranking=None, optionsAllowed=None ):
     # Store answer in user-survey-answers
     userVoteRecord = multi.userAnswers.SurveyAnswers.retrieveOrCreate( surveyId, userId )
     logging.debug(LogMessage('userVoteRecord=', userVoteRecord))
 
     # Update user answers, maintaining a valid ranking
     rankingOld = userVoteRecord.getQuestionAnswers( questionId )  or  {}
-    rankingOld = rankingOld.copy()
+    rankingOld = copy.deepcopy( rankingOld )
     logging.debug(LogMessage('rankingOld=', rankingOld))
 
     userVoteRecord.setRanking( questionId, optionsAllowed, ranking, optionId, rankNew, reasonNew )
@@ -229,43 +258,34 @@ def voteRanking( userId, surveyId, questionId, optionId, rankNew, reasonNew, ran
     logging.debug(LogMessage('rankingOld=', rankingOld))
     logging.debug(LogMessage('rankingNew=', rankingNew))
     userVoteRecord.put()
+    
+    return userVoteRecord, rankingOld, rankingNew
 
-    # For each option... incrementVoteAggregates() with its old & new rank
-    for o in set( rankingOld.keys() ).union( set(rankingNew.keys()) ):
-        oldAnswer = rankingOld.get( o, {} )
-        newAnswer = rankingNew.get( o, {} )
+@ndb.transactional(xg=True, retries=conf.MAX_VOTE_RETRY)
+def voteRankingChangeAggregate( surveyId, questionId, optionId, newRank, newReason, oldRank, oldReason ):
+    if ( oldRank == newRank ) and ( oldReason == newReason ):  return
 
-        oldContent = oldAnswer.get( multi.userAnswers.KEY_CONTENT, None )
-        newContent = newAnswer.get( multi.userAnswers.KEY_CONTENT, None )
+    # Prepare subkeys for incrementing vote-aggregates
+    subkeysWithAnswerOld = [
+        SubKey(value=questionId, isId=True) ,
+        SubKey(value=optionId, isId=True, doAggregate=True, childDistribution=True) ,
+        SubKey(value=oldRank, isNumber=True, doAggregate=True) ,
+        SubKey(value=oldReason, doAggregate=True)
+    ]
+    logging.debug(LogMessage('subkeysWithAnswerOld=', subkeysWithAnswerOld))
 
-        oldReason = oldAnswer.get( multi.userAnswers.KEY_REASON, None )
-        newReason = newAnswer.get( multi.userAnswers.KEY_REASON, None )
+    subkeysWithAnswerNew = [
+        SubKey(value=questionId, isId=True) ,
+        SubKey(value=optionId, isId=True, doAggregate=True, childDistribution=True) ,
+        SubKey(value=newRank, isNumber=True, doAggregate=True) ,
+        SubKey(value=newReason, doAggregate=True)
+    ]
+    logging.debug(LogMessage('subkeysWithAnswerNew=', subkeysWithAnswerNew))
 
-        logging.debug(LogMessage('oldContent=', oldContent, 'newContent=', newContent, 'oldReason=', oldReason, 'newReason=', newReason))
-        if ( oldContent == newContent ) and ( oldReason == newReason ):  continue
-
-        # Prepare subkeys for incrementing vote-aggregates
-        subkeysWithAnswerOld = [
-            SubKey(value=questionId, isId=True) ,
-            SubKey(value=o, isId=True, doAggregate=True, childDistribution=True) ,
-            SubKey(value=(int(oldContent)  if oldContent  else None), isNumber=True, doAggregate=True) ,
-            SubKey(value=oldReason, doAggregate=True)
-        ]
-        logging.debug(LogMessage('subkeysWithAnswerOld=', subkeysWithAnswerOld))
-
-        subkeysWithAnswerNew = [
-            SubKey(value=questionId, isId=True) ,
-            SubKey(value=o, isId=True, doAggregate=True, childDistribution=True) ,
-            SubKey(value=(int(newContent)  if newContent  else None), isNumber=True, doAggregate=True) ,
-            SubKey(value=newReason, doAggregate=True)
-        ]
-        logging.debug(LogMessage('subkeysWithAnswerNew=', subkeysWithAnswerNew))
-
-        oldAnswerIsNull = multi.userAnswers.answerIsEmpty( oldContent, oldReason )
-        newAnswerIsNull = multi.userAnswers.answerIsEmpty( newContent, newReason )
-        aggregateRecordsNew, aggregateRecordsOld = incrementVoteAggregates( surveyId, subkeysWithAnswerOld, subkeysWithAnswerNew, oldAnswerIsNull, newAnswerIsNull )
-
-    return userVoteRecord
+    oldAnswerIsNull = multi.userAnswers.answerIsEmpty( oldRank, oldReason )
+    newAnswerIsNull = multi.userAnswers.answerIsEmpty( newRank, newReason )
+    aggregateRecordsNew, aggregateRecordsOld = incrementVoteAggregates(
+        surveyId, subkeysWithAnswerOld, subkeysWithAnswerNew, oldAnswerIsNull, newAnswerIsNull )
 
 
 
@@ -326,7 +346,68 @@ def voteBudgetItem( userId, surveyId, questionId, itemOld, itemNew, amountNew, r
 
 
 
+# For list-question, caller must specify the old content, so this function can remove or modify the old answer
+@ndb.transactional(xg=True, retries=conf.MAX_VOTE_RETRY)
+def voteListItem( userId, surveyId, questionId, itemOld, itemNew, reasonNew, maxItems=5 ):
+
+    logging.debug(LogMessage('userId=', userId, 'surveyId=', surveyId, 'questionId=', questionId, 'itemOld=', itemOld, 'itemNew=', itemNew, 'reasonNew=', reasonNew))
+
+    # Store answer in user-survey-answers
+    userVoteRecord = multi.userAnswers.SurveyAnswers.retrieveOrCreate( surveyId, userId )
+    logging.debug(LogMessage('userVoteRecord=', userVoteRecord))
+
+    # Check for duplicate new item
+    questionAnswers = userVoteRecord.getQuestionAnswers( questionId )
+    if ( itemOld != itemNew ) and questionAnswers and ( itemNew in questionAnswers ):  return None, None, None, conf.DUPLICATE
+
+    # Remove old reason
+    # For user-answers, item-subkey should not be hashed, so that it is displayable in client
+    subkeysOld = [ SubKey(value=questionId, isId=True) , SubKey(value=itemOld, isId=True) ]
+    subkeysNew = [ SubKey(value=questionId, isId=True) , SubKey(value=itemNew, isId=True) ]
+    logging.debug(LogMessage('subkeysToStrings(subkeysOld)=', VoteAggregate.subkeysToStrings(subkeysOld) ))
+    answerOld = userVoteRecord.removeAnswer( VoteAggregate.subkeysToStrings(subkeysOld) )
+    logging.debug(LogMessage('answerOld=', answerOld))
+    # Remove old item
+    if questionAnswers:  questionAnswers.pop( itemOld, None )
+    logging.debug(LogMessage('userVoteRecord=', userVoteRecord))
+    # Set new item
+    if not multi.userAnswers.answerIsEmpty( itemNew, reasonNew ):
+        # For new item, set an index-number, so that item order can be sorted consistently
+        content = None
+        answerNew = userVoteRecord.setAnswer( VoteAggregate.subkeysToStrings(subkeysNew), content, reasonNew, setId=True, id=answerOld.id )
+        logging.debug(LogMessage('userVoteRecord=', userVoteRecord))
+
+    # Check number of items inside vote-transaction, because limit depends on current user-answers
+    numItems = userVoteRecord.numItems( questionId )
+    if ( maxItems < numItems ):  raise ValueError( 'maxItems={} < numItems={}'.format(maxItems, numItems) )
+
+    userVoteRecord.put()
+
+    # Prepare subkeys for incrementing vote-aggregates
+    subkeysWithAnswerOld = [
+        SubKey(value=questionId, isId=True) ,
+        SubKey(value=itemOld, doAggregate=True, mergeWords=True, childDistribution=True) ,  # For vote-aggregates, item-subkey should be marked text, so that it is merged into search text for reason
+        SubKey(value=answerOld.reason, doAggregate=True)
+    ]
+    subkeysWithAnswerNew = [
+        SubKey(value=questionId, isId=True) ,
+        SubKey(value=itemNew, doAggregate=True, mergeWords=True, childDistribution=True) ,
+        SubKey(value=reasonNew, doAggregate=True)
+    ]
+    logging.debug(LogMessage('subkeysWithAnswerNew=', subkeysWithAnswerNew))
+
+    oldAnswerIsNull = multi.userAnswers.answerIsEmpty( itemOld, answerOld.reason )
+    newAnswerIsNull = multi.userAnswers.answerIsEmpty( itemNew, reasonNew )
+    aggregateRecordsNew, aggregateRecordsOld = incrementVoteAggregates( surveyId, subkeysWithAnswerOld, subkeysWithAnswerNew, oldAnswerIsNull, newAnswerIsNull )
+    return userVoteRecord, aggregateRecordsNew, aggregateRecordsOld, None
+
+
+
+
 def incrementVoteAggregates( surveyId, subkeysWithAnswerOld, subkeysWithAnswerNew, oldAnswerIsNull, newAnswerIsNull ):
+
+    logging.debug(LogMessage('subkeysWithAnswerOld=', subkeysWithAnswerOld, 'subkeysWithAnswerNew=', subkeysWithAnswerNew, 'oldAnswerIsNull=', oldAnswerIsNull, 'newAnswerIsNull=', newAnswerIsNull))
+
     # Increment aggregates from least to most contended record, to minimize time that contended record is locked
     aggregateRecordsNew = []
     aggregateRecordsOld = []
@@ -360,7 +441,9 @@ def incrementVoteAggregates( surveyId, subkeysWithAnswerOld, subkeysWithAnswerNe
 # Returns updated aggregate-record, or throws transaction-conflict exception
 def incrementVoteAggregate( surveyId, subkeysForAggregateOld, subkeysForAggregateNew, oldAnswerIsNull, newAnswerIsNull,
     childOld, childNew, childVotesOld, childVotesNew ):
-    logging.debug(LogMessage('surveyId=', surveyId, 'subkeysForAggregateOld=', subkeysForAggregateOld, 'subkeysForAggregateNew=', subkeysForAggregateNew, 'oldAnswerIsNull=', oldAnswerIsNull, 'newAnswerIsNull=', newAnswerIsNull))
+    logging.debug(LogMessage('surveyId=', surveyId, 'subkeysForAggregateOld=', subkeysForAggregateOld,
+        'subkeysForAggregateNew=', subkeysForAggregateNew, 'oldAnswerIsNull=', oldAnswerIsNull, 'newAnswerIsNull=', newAnswerIsNull,
+        'childOld=', childOld, 'childNew=', childNew, 'childVotesOld=', childVotesOld, 'childVotesNew=', childVotesNew))
 
     # Only change aggregate-votes when answer moved outside that ancestor?
     #  + More efficient
@@ -371,35 +454,40 @@ def incrementVoteAggregate( surveyId, subkeysForAggregateOld, subkeysForAggregat
     sameAnswer = sameSubkeys and ( oldAnswerIsNull == newAnswerIsNull )
     storeDistribution = subkeysForAggregateNew[-1].childDistribution
     collectDistribution = subkeysForAggregateNew[-2].childDistribution
+    logging.debug(LogMessage('sameSubkeys=', sameSubkeys, 'sameAnswer=', sameAnswer, 'storeDistribution=', storeDistribution, 'collectDistribution=', collectDistribution))
     if sameAnswer and (not storeDistribution) and (not collectDistribution):  return None, None
 
     # Decrement old answer
+    # Cannot skip retrieve aggregateRecord when answerIsNull
+    #  Causes the old child-distribution to be overwritten entirely, not incrementally
+    #  Causes an error in voteCount for any ancestor
     aggregateRecordOld = None
-    if not oldAnswerIsNull:
-        aggregateRecordOld = VoteAggregate.retrieve( surveyId, subkeysForAggregateOld )
-        if aggregateRecordOld:
-            aggregateRecordOld.incrementVoteCount( -1 )
-            if not sameSubkeys:
-                # Store decremented count
-                if ( aggregateRecordOld.voteCount <= 0 ):  aggregateRecordOld.key.delete()
-                else:  aggregateRecordOld.put()
+    aggregateRecordOld = VoteAggregate.retrieve( surveyId, subkeysForAggregateOld )
+    if aggregateRecordOld:
+        if not oldAnswerIsNull:  aggregateRecordOld.incrementVoteCount( -1 )
+        # Store decremented count
+        if not sameSubkeys:
+            if ( aggregateRecordOld.voteCount <= 0 ):  aggregateRecordOld.key.delete()
+            else:  aggregateRecordOld.put()
+        logging.debug(LogMessage('aggregateRecordOld=', aggregateRecordOld))
 
     # Increment new answer
     aggregateRecordNew = None
-    if not newAnswerIsNull:
-        aggregateRecordNew = aggregateRecordOld  if sameSubkeys  else VoteAggregate.retrieve( surveyId, subkeysForAggregateNew )
-        if not aggregateRecordNew:  aggregateRecordNew = VoteAggregate.create( surveyId, subkeysForAggregateNew )
+    aggregateRecordNew = aggregateRecordOld  if sameSubkeys  else VoteAggregate.retrieve( surveyId, subkeysForAggregateNew )
+    if not aggregateRecordNew:  aggregateRecordNew = VoteAggregate.create( surveyId, subkeysForAggregateNew )
+    logging.debug(LogMessage('aggregateRecordNew=', aggregateRecordNew))
 
-        aggregateRecordNew.incrementVoteCount( 1 )
-        # Store incremented count
-        if ( aggregateRecordNew.voteCount <= 0 ):
-            aggregateRecordNew.voteCount = 0
-            aggregateRecordNew.key.delete()
-        else:
-            if storeDistribution:
-                if childOld:  aggregateRecordNew.setChildVotes( childOld, childVotesOld )
-                if childNew:  aggregateRecordNew.setChildVotes( childNew, childVotesNew )
-            aggregateRecordNew.put()
+    if not newAnswerIsNull:  aggregateRecordNew.incrementVoteCount( 1 )
+    # Store incremented count
+    if ( aggregateRecordNew.voteCount <= 0 ):
+        aggregateRecordNew.voteCount = 0
+        aggregateRecordNew.key.delete()
+    else:
+        if storeDistribution:
+            if childOld is not None:  aggregateRecordNew.setChildVotes( childOld, childVotesOld )
+            if childNew is not None:  aggregateRecordNew.setChildVotes( childNew, childVotesNew )
+        aggregateRecordNew.put()
+    logging.debug(LogMessage('aggregateRecordNew=', aggregateRecordNew))
 
     return aggregateRecordNew, aggregateRecordOld
 

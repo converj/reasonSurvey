@@ -115,6 +115,10 @@ collapseWhitespace( text ){
 ///////////////////////////////////////////////////////////////////////////////////////
 // Data structures
 
+
+    function
+isEmptyString( text ){  return [ undefined, null, '' ].includes( text );  }
+
     function
 isEmpty( container ){  return ( container )?  ( Object.keys(container).length <= 0 )  :  true;  }
 
@@ -693,16 +697,12 @@ endMessage( element, textDefault ){
     function
 hideMessage( element ){
     stopMessageTimer( element );
-    if ( isHidden( element ) ){  return;  }
-
     // Start transition
     element.style.opacity = 0.0;  // Requires MESSAGE_TRANSITION_MS
     element.style.height = '0px';
     // Empty the inner-html, to allow re-showing the same message
-    // Finish hiding message after transition.  Store timer in html-element, to ensure 1-to-1 relation.
-    //  Use a separate timer for text-clear vs text-hide
-    // Or, could change innerHTML without delay, because transitioning line-height is enough prevent visual jerk
-    element.clearTimer = setTimeout( () => setInnerHtml(element, '') , MESSAGE_TRANSITION_MS );
+    // Change innerHTML without fade delay because it causes timing errors, and transitioning line-height is enough prevent visual jerk
+    setInnerHtml( element, '' );
 }
 
     function

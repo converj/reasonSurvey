@@ -7,6 +7,7 @@ import logging
 import os
 # Application modules
 from multi.configMulti import conf
+import gcloudAi
 import httpServer
 from httpServer import app
 import linkKey
@@ -26,6 +27,9 @@ import user
 
 ################################################################################################
 # Methods: shared
+
+USE_INSULT_AI = False  # Feature flag
+
 
 def parseInputs( httpRequest, httpResponse ):
     httpRequestId = os.environ.get( conf.REQUEST_LOG_ID )
@@ -110,16 +114,16 @@ def rateQuestionOption( ):
     if surveyRecord.getQuestionRequiresReason( questionId ) and ( (not reasonContent) or (len(reasonContent) < conf.minLengthReason) ):
         return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
-    storeSurveyResponded( surveyRecord, userId )
+    if USE_INSULT_AI and gcloudAi.classifyInsult( reasonContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.INSULT )
 
     # Record vote
+    storeSurveyResponded( surveyRecord, userId )
     subkeys = [ SubKey(questionId, isId=True) , SubKey(optionId, isId=True, doAggregate=True, childDistribution=True) ]
     voteRecord, aggregateRecords, aggregateRecordsOld, questionVotes = multi.voteAggregates.vote(
         userId, surveyId, subkeys, newRating, reasonContent, numericAnswer=True )
     logging.debug(LogMessage('aggregateRecords=', aggregateRecords))
     if voteRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.UNCHANGED )
-    optionRecord = aggregateRecords[ 1 ]
-    reasonRecord = aggregateRecords[ 2 ]
+    questionRecord, optionRecord, reasonRecord = aggregateRecords
 
     # Display updated answers
     responseData.update(  { 'success':True , 'answers':voteRecord.toClient(userId) ,
@@ -156,9 +160,10 @@ def rankQuestionOptions( ):
     if surveyRecord.getQuestionRequiresReason( questionId ) and ( (not reasonContent) or (len(reasonContent) < conf.minLengthReason) ):
         return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
-    storeSurveyResponded( surveyRecord, userId )
+    if USE_INSULT_AI and gcloudAi.classifyInsult( reasonContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.INSULT )
 
     # Record vote
+    storeSurveyResponded( surveyRecord, userId )
     voteRecord = multi.voteAggregates.voteRanking(
         userId, surveyId, questionId, optionId, newRank, reasonContent, ranking=ranking, optionsAllowed=surveyRecord.getQuestionOptionIds(questionId) )
     if voteRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.UNCHANGED )
@@ -194,17 +199,16 @@ def answerChecklistQuestion( ):
     if surveyRecord.getQuestionRequiresReason( questionId ) and newCheckmark and ( (not reasonContent) or (len(reasonContent) < conf.minLengthReason) ):
         return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
 
-    storeSurveyResponded( surveyRecord, userId )
+    if USE_INSULT_AI and gcloudAi.classifyInsult( reasonContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.INSULT )
 
     # Record vote
+    storeSurveyResponded( surveyRecord, userId )
     subkeys = [ SubKey(questionId, isId=True) , SubKey(optionId, isId=True, doAggregate=True, childDistribution=True) ]
-
     voteRecord, aggregateRecords, aggregateRecordsOld, questionVotes = multi.voteAggregates.vote(
         userId, surveyId, subkeys, newCheckmark, reasonContent, numericAnswer=True, countUniqueVoters=True )
     logging.debug(LogMessage('aggregateRecords=', aggregateRecords))
     if voteRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.UNCHANGED )
-    optionRecord = aggregateRecords[ 1 ]
-    reasonRecord = aggregateRecords[ 2 ]
+    questionRecord, optionRecord, reasonRecord = aggregateRecords
 
     # Display updated answers
     responseData.update(  { 'success':True , 'answers':voteRecord.toClient(userId) ,
@@ -250,8 +254,7 @@ def answerTextQuestion( ):
         userId, surveyId, subkeys, answer, reasonContent, numericAnswer=False )
     logging.debug(LogMessage('aggregateRecords=', aggregateRecords))
     if voteRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.UNCHANGED )
-    answerRecord = aggregateRecords[ 0 ]
-    reasonRecord = aggregateRecords[ 1 ]
+    answerRecord, reasonRecord = aggregateRecords
 
     # Display updated answers
     responseData.update(  { 'success':True , 'answers':voteRecord.toClient(userId) ,
@@ -323,6 +326,57 @@ def voteBudgetAllocation( ):
 
 
 ################################################################################################
+# Methods: HTTP endpoints: answer list question
+
+@app.post('/multi/voteListItem')
+def voteListItem( ):
+    httpRequest, httpResponse = httpServer.requestAndResponse()
+
+    # Collect inputs
+    responseData, cookieData, userId, inputData, linkKeyString, errorMessage = parseInputs( httpRequest, httpResponse )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+
+    questionId = inputData['questionId']
+
+    # Use old item-content from client, get reason from user-answers, check for null
+    contentOld = text.formTextToStored( inputData.get('contentOld', None) )  # Allow null contentOld to create new item
+    contentNew = text.formTextToStored( inputData.get('contentNew', None) )
+    if contentNew and ( conf.maxLengthReason < len(contentNew) ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_LONG )
+
+    reasonNew = text.formTextToStored( inputData.get('reasonNew', None) )
+    if reasonNew and ( conf.maxLengthReason < len(reasonNew) ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_LONG )
+
+    # Retrieve link-key & survey records
+    linkKeyRecord, surveyId, errorMessage = retrieveLink( linkKeyString )
+    surveyRecord, errorMessage = retrieveSurvey( surveyId, userId, errorMessage=errorMessage )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+    if surveyRecord.getQuestionType( questionId ) != survey.TYPE_LIST:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.WRONG_TYPE )
+
+    if contentNew and surveyRecord.getQuestionRequiresReason( questionId ) and ( (not reasonNew) or (len(reasonNew) < conf.minLengthReason) ):
+        return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.TOO_SHORT )
+
+    maxItems = surveyRecord.getQuestion( questionId ).get( survey.KEY_MAX_ITEMS, 5 )
+    storeSurveyResponded( surveyRecord, userId )
+
+    # Record vote
+    voteRecord, aggregateRecords, aggregateRecordsOld, errorMessage = multi.voteAggregates.voteListItem(
+        userId, surveyId, questionId, contentOld, contentNew, reasonNew, maxItems=maxItems )
+    if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
+    if voteRecord is None:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.UNCHANGED )
+    contentAggregateRecord, reasonAggregateRecord = aggregateRecords
+
+    # Display updated answers
+    responseData.update(  {
+        'success':True ,
+        'answers':voteRecord.toClient( userId ) ,
+        'contentAggregateRecord':contentAggregateRecord.toClient(userId) if contentAggregateRecord else None ,
+        'reasonAggregateRecord':reasonAggregateRecord.toClient(userId) if reasonAggregateRecord else None ,
+    }  )
+    return httpServer.outputJson( cookieData, responseData, httpResponse )
+
+
+
+################################################################################################
 # Methods: HTTP endpoints: answer request-for-problems question
 
 # Problem / solution / reason and their vote-counts are stored in Content records, to allow content to persist without votes
@@ -382,14 +436,15 @@ def editProblem( ):
     if errorMessage:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=errorMessage )
     if ( surveyRecord.getQuestionType(questionId) != survey.TYPE_REQUEST_PROBLEMS ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.WRONG_TYPE )
 
-    # Check for existing identical problem
-    if Content.exists( surveyId, questionId, [], content=problemContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.DUPLICATE )
-
     # Retrieve problem record
     problemRecord = Content.retrieve( surveyId, questionId, [], contentId=problemId )
     if not problemRecord:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='problem not found' )
     if ( userId != problemRecord.creator ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
     if problemRecord.hasResponse:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
+    if ( problemRecord.content == problemContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.UNCHANGED )
+
+    # Check for existing identical problem
+    if Content.exists( surveyId, questionId, [], content=problemContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.DUPLICATE )
 
     # Store updated problem record
     problemRecord.setContent( problemContent )
@@ -475,14 +530,15 @@ def editSolution( ):
     if ( questionType not in [survey.TYPE_REQUEST_PROBLEMS, survey.TYPE_REQUEST_SOLUTIONS] ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.WRONG_TYPE )
     if ( questionType == survey.TYPE_REQUEST_PROBLEMS ) and ( problemId is None ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='problemId is null' )
 
-    # Check for existing identical solution
-    if Content.exists( surveyId, questionId, [problemId], content=solutionContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.DUPLICATE )
-
     # Retrieve solution record
     solutionRecord = Content.retrieve( surveyId, questionId, [problemId], contentId=solutionId )
     if not solutionRecord:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='solution not found' )
     if ( userId != solutionRecord.creator ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
     if solutionRecord.hasResponse:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
+    if ( solutionRecord.content == solutionContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.UNCHANGED )
+
+    # Check for existing identical solution
+    if Content.exists( surveyId, questionId, [problemId], content=solutionContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.DUPLICATE )
 
     # Store updated solution record
     solutionRecord.setContent( solutionContent )
@@ -571,14 +627,15 @@ def editSolutionReason( ):
     if ( questionType not in [survey.TYPE_REQUEST_PROBLEMS, survey.TYPE_REQUEST_SOLUTIONS] ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.WRONG_TYPE )
     if ( questionType == survey.TYPE_REQUEST_PROBLEMS ) and ( problemId is None ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='problemId is null' )
 
-    # Check for existing identical reason
-    if Content.exists( surveyId, questionId, [problemId, solutionId], content=reasonContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.DUPLICATE )
-
     # Retrieve reason record
     reasonRecord = Content.retrieve( surveyId, questionId, [problemId, solutionId], contentId=reasonId )
     if not reasonRecord:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage='reason not found' )
     if ( userId != reasonRecord.creator ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.NOT_OWNER )
     if reasonRecord.hasResponse:  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.HAS_RESPONSES )
+    if ( reasonRecord.content == reasonContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.UNCHANGED )
+
+    # Check for existing identical reason
+    if Content.exists( surveyId, questionId, [problemId, solutionId], content=reasonContent ):  return httpServer.outputJson( cookieData, responseData, httpResponse, errorMessage=conf.DUPLICATE )
 
     # Store updated reason record
     reasonRecord.setContent( reasonContent )

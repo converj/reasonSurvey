@@ -43,6 +43,7 @@ def recent( ):
             recentDestinationRecords = ndb.get_multi( recentDestinationKeys )
             
             # Collect destination summaries.
+            userId = cookieData.id()
             for r in recentDestinationRecords:
                 if r is None:  continue
                 destTypeAndId = ( r.key.kind(), str(r.key.id()) )
@@ -61,6 +62,7 @@ def recent( ):
                 detail = r.introduction  if introVsDetail  else r.detail
                 recentDestSummary['detail'] = detail  if detail  else ''
                 recentDestSummary['frozen'] = r.freezeUserInput
+                recentDestSummary['mine'] = ( r.creator == userId )
                 recentDestSummary['freezeNewProposals'] = ( r.key.kind() == requestForProposals.RequestForProposals.__name__ ) and r.freezeNewProposals
                 recentDestSummary['hideReasons'] = False  if ( r.key.kind() == MultipleQuestionSurvey.__name__ )  else r.hideReasons
                 recentDestSummaries.append( recentDestSummary )

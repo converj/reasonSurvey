@@ -80,6 +80,7 @@ const RESULT = 'result';
             '                   <option translate=yes value="rank"> Rank </option> ',
             '                   <option translate=yes value="checklist"> Checklist </option> ',
             '                   <option translate=yes value="text"> Write-in </option> ',
+            '                   <option translate=yes value="list"> List </option> ',
             '                   <option translate=yes value="budget"> Budget </option> ',
             '                   <option translate=yes value="proposal"> Proposal </option> ',
             '                   <option translate=yes value="solutions"> Request for Proposals </option> ',
@@ -92,11 +93,13 @@ const RESULT = 'result';
             //          Detail
             '           <textarea class=QuestionEditDetail id=QuestionEditDetail placeholder="More instructions or information..." ',
             '               oninput=handleEditQuestionInput onblur=handleEditQuestionSave ></textarea> ',
+                            ImageDisplay.prototype.htmlForImageEdit() ,
             '       </div> ',
             //      View
             '       <div class=View> ',
             '           <h3 class=QuestionTitle> <span id=QuestionPositionNumber></span>: <span id=QuestionTitle></span> </h3> ',
             '           <div class=QuestionDetail id=QuestionDetail></div> ',
+                        ImageDisplay.prototype.htmlForImageView() ,
             '       </div> ',
             //      Results
             '       <div class=Result> ',
@@ -106,7 +109,7 @@ const RESULT = 'result';
             //  Mode buttons for edit / view / results
             '   <div class=ModeButtons role=tablist> ',
             '       <button role=tab aria-controls=modeTabPanel class=EditButton title="Edit question" translate=yes onclick=handleEditClick> Edit </button> ',
-            '       <button class=QuestionDeleteButton title="Delete question" translate=yes onclick=handleQuestionDelete> X </button> ',
+            '       <button class=QuestionDeleteButton title="Delete question" translate=no onclick=handleQuestionDelete> X </button> ',
             '       <button role=tab aria-controls=modeTabPanel class=ViewButton title="View question" translate=yes onclick=handleViewClick> View </button> ',
             '       <button role=tab aria-controls=modeTabPanel class=ResultButton title="Question results" translate=yes onclick=handleResultClick> Result </button> ',
             '   </div> ',
@@ -141,6 +144,7 @@ const RESULT = 'result';
 
         this.messagesUpdated();
         this.attributesUpdated();
+        this.imagesUpdated();
 
         // Edit
         this.setProperty( 'QuestionEditTitle', 'defaultValue', this.question.title );
@@ -196,6 +200,12 @@ const RESULT = 'result';
         else if ( this.question.type == 'budget' ){
             if ( ! (this.typeSubdisplay instanceof BudgetQuestionDisplay) ){
                 this.typeSubdisplay = new BudgetQuestionDisplay( this.typeSubdisplayId ).setInitialData( this.question, this, this.surveyDisplay );
+                setChildren( this.getSubElement('QuestionSubclass'), [this.typeSubdisplay.element] );
+            }
+        }
+        else if ( this.question.type == 'list' ){
+            if ( ! (this.typeSubdisplay instanceof ListQuestionDisplay) ){
+                this.typeSubdisplay = new ListQuestionDisplay( this.typeSubdisplayId ).setInitialData( this.question, this, this.surveyDisplay );
                 setChildren( this.getSubElement('QuestionSubclass'), [this.typeSubdisplay.element] );
             }
         }
@@ -389,8 +399,7 @@ const RESULT = 'result';
     handleQuestionDelete = function( ){
         if ( this.surveyDisplay.link.loginRequired  &&  ! requireLogin() ){  return false;  }
 
-        let confirmMessage = translate( 'Delete this question?' );
-        if ( ! confirm(confirmMessage) ){  return;  }
+        if ( ! confirm( translate('Delete this question?') )  ){  return;  }
     
         this.message = { color:GREY, text:'Deleting...' };
         this.questionValidity = '';
@@ -399,10 +408,70 @@ const RESULT = 'result';
     };
 
 
+    QuestionDisplay.prototype.onInputImage = ImageDisplay.prototype.onInputImage;
+
+    QuestionDisplay.prototype.onClickImageUpload = ImageDisplay.prototype.onClickImageUpload;
+
+    QuestionDisplay.prototype.checkImage = ImageDisplay.prototype.checkImage;
+
+        QuestionDisplay.prototype.
+    onClickImageRemove = function( ){
+        ImageDisplay.prototype.onClickImageRemove.call( this, this.question );
+    };
+
+        QuestionDisplay.prototype.
+    storeImage = function( imageFile ){
+        let formData = new FormData();
+        formData.append( 'image', imageFile );
+
+        let message = imageFile ?  'Saving image...'  :  'Removing image...';
+        this.message = { color:GREY, text:message };
+        this.messagesUpdated();
+
+        // Send to server 
+        const url = '/multi/setQuestionImage';
+        formData.append( 'crumb', crumb );
+        formData.append( 'fingerprint', fingerprint );
+        formData.append( 'linkKey', this.surveyDisplay.link.id );
+        formData.append( 'questionId', this.question.id );
+        const defaultMessage = 'Failed to change image';
+        let thisCopy = this;
+        fetch( url, {method:'POST', body:formData} )
+        .then( response => response.json() )
+        .then( receiveData => {
+            if ( receiveData  &&  receiveData.success  &&  receiveData.survey ){
+                message = imageFile ?  'Saved image'  :  'Removed image';
+                thisCopy.message = { color:GREEN, text:message, ms:5000 };
+                thisCopy.messagesUpdated();
+                thisCopy.surveyDisplay.setSurveyData( receiveData.survey );
+            }
+            else {
+                let message = defaultMessage;
+                if ( receiveData ){
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers';  }
+                    else if ( receiveData.message == TOO_LONG ){  message = 'Image is too large';  }
+                }
+                thisCopy.message = { color:RED, text:message };
+                thisCopy.messagesUpdated();
+            }
+        } )
+        .catch( error => {
+            thisCopy.message = { color:RED, text:defaultMessage };
+            thisCopy.messagesUpdated();
+        } );
+    };
+
+        QuestionDisplay.prototype.
+    imagesUpdated = function( ){
+        ImageDisplay.prototype.imagesUpdated.call( this, this.question );
+    };
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////////
-// Survey editing display
+// Survey display for edit / admin / view
 
         function
     SurveyDisplay( displayId ){
@@ -489,6 +558,7 @@ const RESULT = 'result';
             '               <option translate=yes value="rank"> Rank </option> ',
             '               <option translate=yes value="checklist"> Checklist </option> ',
             '               <option translate=yes value="text"> Write-in </option> ',
+            '               <option translate=yes value="list"> List </option> ',
             '               <option translate=yes value="budget"> Budget </option> ',
             '               <option translate=yes value="proposal"> Proposal </option> ',
             '               <option translate=yes value="solutions"> Request for Proposals </option> ',
@@ -508,6 +578,9 @@ const RESULT = 'result';
             '   </details> ',
             ' </div> '
         ].join('\n') );
+
+        // Auto-focus on setting survey title
+        setTimeout( () =>{ this.getSubElement('NewSurveyTitleInput').focus(); } , 1000 );
     }
     SurveyDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
 
@@ -623,7 +696,7 @@ const RESULT = 'result';
         SurveyDisplay.prototype.
     confirmUseSuggestion = function( ){
         if ( this.confirmedUseSuggestion ){  return true;  }
-        let response = confirm( translate('Clicking suggestions like this will replace your answer.') );
+        let response = confirm( translate('Clicking this suggestion will replace your answer.') );
         this.confirmedUseSuggestion = true;
         return response;
     };
@@ -735,6 +808,7 @@ const RESULT = 'result';
         let url = '/multi/freezeSurvey';
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'SurveyDisplay.clickFreeze()', 'error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.freezeMessage = { color:GREEN , text:(freeze ? 'Froze' : 'Thawed') + ' survey' , ms:7000 };
                 thisCopy.survey.freezeUserInput = receiveData.survey.freezeUserInput;
@@ -848,6 +922,7 @@ const RESULT = 'result';
         let url = '/multi/addQuestion';
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'SurveyDisplay.handleNewQuestionSaveClick()', 'error=', error, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.survey  &&  receiveData.newQuestion ){
 
                 thisCopy.handleNewQuestionCancelClick();
@@ -880,6 +955,7 @@ const RESULT = 'result';
         let sendData = { surveyId:this.survey.id };
         let url = '/multi/getSurvey/' + this.link.id;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'SurveyDisplay.retrieveData() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( receiveData ){
                 if ( receiveData.success ){
                     thisCopy.linkValid = Boolean( receiveData.survey );
@@ -890,6 +966,12 @@ const RESULT = 'result';
                         thisCopy.link = receiveData.link;
                     }
                     thisCopy.dataUpdated();
+
+                    // Auto-focus on creating first question
+                    if ( (! thisCopy.retrieved)  &&  isEmpty(thisCopy.survey.questions) ){
+                        thisCopy.retrieved = true;
+                        setTimeout( () =>{ thisCopy.getSubElement('NewQuestionTitleInput').focus(); } , 1000 );
+                    }
 
                     // Retrieve questions specialized data
                     thisCopy.questions.displays.forEach(  d => { d.typeSubdisplay.retrieveData();  d.checkContentLength(); }  );
@@ -1010,8 +1092,8 @@ const RESULT = 'result';
                 if ( receiveData ){
                     if ( receiveData.message == TOO_SHORT ){  message = 'Question is too short.';  }
                     if ( receiveData.message == TOO_LONG ){  message = 'Question is too long.';  }
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else.';  }
-                    if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers.';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else';  }
+                    if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers';  }
                 }
                 questionDisplay.message = { color:RED, text:message };
                 questionDisplay.questionValidity = message;
@@ -1040,8 +1122,8 @@ const RESULT = 'result';
             else {
                 let message = 'Failed to save question type.';
                 if ( receiveData ){
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else.';  }
-                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers.';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else';  }
+                    else if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers';  }
                 }
                 questionDisplay.message = { color:RED, text:message };
                 questionDisplay.dataUpdated();
@@ -1077,7 +1159,7 @@ const RESULT = 'result';
                 let message = 'Failed to save question order';
                 if ( receiveData ){
                     if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit survey created by someone else';  }
-                    if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers.';  }
+                    if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has answers';  }
                 }
                 focusedQuestionDisplay.message = { color:RED, text:message };
                 focusedQuestionDisplay.questionValidity = message;
@@ -1104,8 +1186,8 @@ const RESULT = 'result';
             else {
                 let message = 'Failed to delete question';
                 if ( receiveData ){
-                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else.';  }
-                    if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has votes.';  }
+                    if ( receiveData.message == NOT_OWNER ){  message = 'Cannot edit question created by someone else';  }
+                    if ( receiveData.message == HAS_RESPONSES ){  message = 'Cannot edit question that already has votes';  }
                 }
                 questionDisplay.message = { color:RED, text:message };
                 questionDisplay.dataUpdated();

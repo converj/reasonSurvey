@@ -102,6 +102,14 @@ const englishToTranslations = {
 
 
   // Budget
+  "Discover a group's budget preferences, allowing participants to both introduce new budget items, and to negotiate better allocations of resources." : {
+   es:'Descubra las preferencias presupuestarias de un grupo, lo que permitirá a los participantes introducir nuevas partidas presupuestarias y negociar mejores asignaciones de recursos.' ,
+   cn:'发现团体的预算偏好，使参与者能够引入新的预算项目，并协商更好的资源分配。' ,
+   nl:'Ontdek de budgetvoorkeuren van een groep, waardoor deelnemers zowel nieuwe budgetitems kunnen introduceren als kunnen onderhandelen over een betere toewijzing van middelen.', 
+   fr:"Découvrez les préférences budgétaires d'un groupe, permettant aux participants à la fois d'introduire de nouveaux éléments budgétaires et de négocier de meilleures allocations de ressources." ,
+   pt:'Descubra as preferências orçamentárias de um grupo, permitindo que os participantes introduzam novos itens orçamentários e negociem melhores alocações de recursos.'
+  } ,
+
   'New Participatory Budget': { 
     es:'Nuevo Presupuesto Participativo' , cn:'新的参与式预算' , nl:'Nieuw participatief budget' , fr:'Nouveau budget participatif' , 
     pt:'Novo Orçamento Participativo'  } ,
@@ -136,6 +144,7 @@ const englishToTranslations = {
     pt:'Os usuários podem escolher entre os itens de orçamento que você sugere aqui ou adicionar seus próprios itens de orçamento.'  } ,
   'New budget item': { es:'Nuevo elemento de presupuesto' , cn:'新的预算项目' , nl:'Nieuwe begrotingspost' , fr:'Nouveau poste budgétaire' , 
     pt:'Novo item de orçamento'  } ,
+  'Suggest budget item': {es:'Sugerir partida presupuestaria', cn:'建议预算项目', nl:'Budgetartikel voorstellen', fr:'Proposer un poste budgétaire', pt:'Sugerir item de orçamento'} ,
   'Type your budget item title, or choose a suggested title': { 
     es:'Escriba el título de su elemento de presupuesto o elija un título sugerido' ,
     cn:'输入您的预算项目标题，或选择建议的标题' , 
@@ -178,6 +187,14 @@ const englishToTranslations = {
 
 
   // Auto-complete
+  'Let particpants write-in their own answers, but still condense results to a few best answers.' : {
+   es:'Deje que los participantes escriban sus propias respuestas, pero aun así condense los resultados en algunas de las mejores respuestas.' ,
+   cn:'让参与者写下自己的答案，但仍将结果浓缩为几个最佳答案。' ,
+   nl:'Laat deelnemers hun eigen antwoorden opschrijven, maar toch de resultaten condenseren tot een paar beste antwoorden.' ,
+   fr:'Laissez les participants écrire leurs propres réponses, tout en condensant les résultats en quelques meilleures réponses.' ,
+   pt:'Deixe os participantes escreverem suas próprias respostas, mas ainda assim condense os resultados em algumas das melhores respostas.'
+  } ,
+
   'New Auto-complete Survey': { 
     es:'Nueva Encuesta de Autocompletar' , 
     cn:'新的自动完成的问卷调查' , 
@@ -192,6 +209,8 @@ const englishToTranslations = {
     pt:'Preocupe-se menos se você está fornecendo as opções corretas de múltipla escolha, permitindo que os participantes adicionem suas próprias opções. Mas ainda assim obter convergência útil para algumas das melhores respostas.'  } ,
   'Question is too short.': { es:'La pregunta es demasiado corta.' , cn:'问题太短。' , nl:'Vraag is te kort.' , fr:'La question est trop courte.' , 
     pt:'A pergunta é muito curta.'  } ,
+  "Question is too long" : {  es:"La pregunta es demasiado larga." ,  cn:"问题太长" ,
+    nl:"Vraag is te lang" ,   fr:"La question est trop longue" ,      pt:"A pergunta é muito longa"   } ,
   'Saved question': { es:'Pregunta guardada' , cn:'保存的问题' , nl:'Opgeslagen vraag' , fr:'Question enregistrée' , pt:'Pergunta salva' } ,
   'Edit survey': { es:'Editar encuesta' , cn:'编辑问卷调查' , nl:'Enquête bewerken' , fr:"Modifier l'enquête" , pt:'Editar pesquisa' } ,
   'Edit Survey': { es:'Editar Encuesta' , cn:'编辑问卷调查' , nl:'Enquête Bewerken' , fr:"Modifier L'enquête" , pt:'Editar Pesquisa' } ,
@@ -227,6 +246,8 @@ const englishToTranslations = {
     pt:'A razão é muito curta.'  } ,
   'Reason is too short': { es:'La razón es demasiado corta' , cn:'所列的理由太短了' , nl:'Reden is te kort' , fr:'La raison est trop courte' , 
     pt:'A razão é muito curta'  } ,
+  'Reason is too long': {   es:'La razón es demasiado larga.',  cn:'理由太长', 
+    nl:'Reden is te lang',  fr:'La raison est trop longue',     pt:'A razão é muito longa' } ,
   'Answer is too short': { 
     es:'La respuesta es demasiado corta' , cn:'答案太短' , nl:'Antwoord is te kort' , fr:'La réponse est trop courte' , 
     pt:'A resposta é muito curta'  } ,
@@ -259,7 +280,7 @@ const englishToTranslations = {
 
 
   // Proposal pro/con
-  'New Proposal': { es:'' , cn:'新的提案' , nl:'Nieuw voorstel' , fr:'Nouvelle proposition' , pt:'Nova proposta' } ,
+  "New Proposal": { es:'Nueva propuesta' , cn:'新的提案' , nl:'Nieuw voorstel' , fr:'Nouvelle proposition' , pt:'Nova proposta' } ,
   "Using Converj, a leader can get feedback on their proposal, and participants can point out the pro's and con's of the proposal.": {
     es:'Con Converj, un líder puede obtener comentarios sobre su propuesta y los participantes pueden señalar los pros y los contras de la propuesta.' ,
     cn:'使用 Converj，领导者可以获得对其提案的反馈，同时参与者也可以指出提案的优缺点。' ,
@@ -292,9 +313,13 @@ const englishToTranslations = {
     nl:'Meer details van mijn voorstel...' , 
     fr:'Plus de détails sur ma proposition...' , 
     pt:'Mais detalhes da minha proposta...'  } ,
-  'Proposal is too short': {
-    es:'La propuesta es demasiado corta' , cn:'所列提案太短' , nl:'Voorstel is te kort' , fr:'La proposition est trop courte' , 
-    pt:'A proposta é muito curta'  } ,
+
+  'Proposal is too short': {    es:'La propuesta es demasiado corta' ,  cn:'所列提案太短' , 
+    nl:'Voorstel is te kort' ,  fr:'La proposition est trop courte' ,   pt:'A proposta é muito curta'  } ,
+
+  "Proposal is too long" : {        es:"La propuesta es demasiado larga." ,   cn:"提案太长" ,
+   nl:"Het voorstel is te lang" ,   fr:"La proposition est trop longue" ,     pt:"A proposta é muito longa"  } ,
+
   'Proposal': { es:'Propuesta' , cn:'提案' , nl:'Voorstel' , fr:'Proposition' , pt:'Proposta' } ,
   'Identical proposal already exists': { 
     es:'Ya existe una propuesta idéntica' , cn:'相同的提案已经存在' , nl:'Er bestaat al een identiek voorstel' , 
@@ -371,6 +396,14 @@ const englishToTranslations = {
 
 
   // Request proposals
+  "Send your group a request for proposals, where participants can propose solutions, and evaluate the pro's and con's of each other's solutions. Converj will summarize the best supported solutions." : {
+   es:'Envíe a su grupo una solicitud de propuestas, donde los participantes puedan proponer soluciones y evaluar los pros y los contras de las soluciones de cada uno. Convertj resumirá las mejores soluciones compatibles.' ,
+   cn:'向您的小组发送提案请求，参与者可以提出解决方案，并评估彼此解决方案的优缺点。 Converj 将总结最佳支持的解决方案。' ,
+   nl:'Stuur uw groep een verzoek om voorstellen, waar deelnemers oplossingen kunnen voorstellen en de voor- en nadelen van elkaars oplossingen kunnen evalueren. Converj zal de best ondersteunde oplossingen samenvatten.' ,
+   fr:'Envoyez à votre groupe une demande de propositions, dans laquelle les participants peuvent proposer des solutions et évaluer les avantages et les inconvénients des solutions de chacun. Converj résumera les meilleures solutions prises en charge.' ,
+   pt:'Envie ao seu grupo uma solicitação de propostas, onde os participantes poderão propor soluções e avaliar os prós e os contras das soluções uns dos outros. Converj irá resumir as melhores soluções suportadas.'
+  } ,
+
   'New Request For Proposals': { es:'Nueva Solicitud de Propuestas' , cn:'新征求建议书' , nl:'Nieuw verzoek om voorstellen' , 
     fr:'Nouvelle demande de propositions' , pt:'Nova Solicitação de Propostas'  } ,
   "Using Converj, a leader can send a request for proposals, to a group of participants. Participants can make proposals, and point out the pro's and con's of proposals.": { 
@@ -447,188 +480,556 @@ const englishToTranslations = {
 
 
 // Multi-question survey
-'Survey': {'es': 'Encuesta', 'cn': '民意调查', 'nl': 'Vragenlijst', 'fr': 'Enquête', 'pt': 'Enquete'} ,
+'Survey': { es:'Encuesta', cn:'民意调查', nl:'Vragenlijst', fr:'Enquête', pt:'Enquete' } ,
 
-'Administrate': {'es': 'Administrar', 'cn': '管理', 'nl': 'Beheer', 'fr': 'Administrer', 'pt': 'Administrar'} ,
+'Administrate': { es:'Administrar', cn:'管理', nl:'Beheer', fr:'Administrer', pt:'Administrar' } ,
 
-'Result': {'es': 'Resultado', 'cn': '结果', 'nl': 'Resultaat', 'fr': 'Résultat', 'pt': 'Resultado'} ,
+"Survey description is too short" : {                   es:"La descripción de la encuesta es demasiado corta." ,
+   cn:"调查描述太短" ,                                  nl:"De beschrijving van het onderzoek is te kort" ,
+   fr:"La description de l'enquête est trop courte" ,   pt:"A descrição da pesquisa é muito curta"   } ,
 
-'Vote': {'es': 'Votar', 'cn': '投票', 'nl': 'Stemmen', 'fr': 'Vote', 'pt': 'Voto'} ,
+"Survey description is too long" : {                    es:"La descripción de la encuesta es demasiado larga." ,
+   cn:"调查描述太长" ,                                  nl:"De enquêtebeschrijving is te lang" ,
+   fr:"La description de l'enquête est trop longue" ,   pt:"A descrição da pesquisa é muito longa"   } ,
 
-'Pro': {'es': 'A favor', 'cn': '论证', 'nl': 'Voor', 'fr': 'Pour', 'pt': 'Para'} ,
+"Failed to freeze survey" : {        es:"No se pudo congelar la encuesta" , 
+   cn:"冻结调查失败" ,               nl:"Het bevriezen van de enquête is mislukt" , 
+   fr:"Échec du gel de l'enquête" ,  pt:"Falha ao congelar a pesquisa"   } ,
 
-'Con': {'es': 'Contra', 'cn': '反对的论点', 'nl': 'Tegen', 'fr': 'Contre', 'pt': 'Contra'} ,
+"Failed to unfreeze survey" : {         es:"No se pudo descongelar la encuesta" ,
+   cn:"无法解冻调查" ,                  nl:"Kan de bevriezing van de enquête niet opheffen" ,
+   fr:"Échec du dégel de l'enquête" ,   pt:"Falha ao descongelar a pesquisa"   } ,
 
-'Position': {'es': 'Posición', 'cn': '位置', 'nl': 'Positie', 'fr': 'Position', 'pt': 'Posição'} ,
+"Survey is frozen" : {         es:"La encuesta está congelada" ,  cn:"调查被冻结" ,
+   nl:"Enquête is bevroren" ,  fr:"L'enquête est gelée" ,         pt:"A pesquisa está congelada"  } ,
 
-'Type': {'es': 'Tipo', 'cn': '类型', 'nl': 'Soort', 'fr': 'Type', 'pt': 'Tipo'} ,
+'Result': { es:'Resultado', cn:'结果', nl:'Resultaat', fr:'Résultat', pt:'Resultado' } ,
 
-'Instructions': {'es': 'Instrucciones', 'cn': '指示', 'nl': 'Instructies', 'fr': 'Instructions', 'pt': 'Instruções'} ,
+'Vote': {es:'Votar', cn:'投票', nl:'Stemmen', fr:'Vote', pt:'Voto'} ,
+
+'Pro': {es:'A favor', cn:'论证', nl:'Voor', fr:'Pour', pt:'Para'} ,
+
+'Con': {es:'Contra', cn:'反对的论点', nl:'Tegen', fr:'Contre', pt:'Contra'} ,
+
+'Position': {es:'Posición', cn:'位置', nl:'Positie', fr:'Position', pt:'Posição'} ,
+
+'Type': {es:'Tipo', cn:'类型', nl:'Soort', fr:'Type', pt:'Tipo'} ,
+
+'Instructions': {es:'Instrucciones', cn:'指示', nl:'Instructies', fr:'Instructions', pt:'Instruções'} ,
+
+
+"Question created" : {    es:"Pregunta creada" ,   cn:"问题已创建" ,
+   nl:"Vraag gemaakt" ,   fr:"Question créée" ,    pt:"Pergunta criada"   } ,
+
+"Saved question type" : {        es:"Tipo de pregunta guardada" ,     cn:"已保存的问题类型" ,
+   nl:"Opgeslagen vraagtype" ,   fr:"Type de question enregistré" ,   pt:"Tipo de pergunta salva"   } ,
+
+"Moving question..." : {       es:"Pregunta conmovedora..." ,   cn:"移动问题..." ,
+   nl:"Bewegende vraag..." ,   fr:"Question émouvante..." ,     pt:"Pergunta em movimento..."   } ,
+
+"Saved question order" : {           es:"Orden de preguntas guardadas" ,     cn:"已保存的问题顺序" ,
+   nl:"Vraagvolgorde opgeslagen" ,   fr:"Ordre des questions enregistré" ,   pt:"Ordem das perguntas salva"   } ,
+
+"Invalid link" : {           es:"Enlace no válido" ,   cn:"无效的链接" ,
+   nl:"Ongeldige link" ,   fr:"Lien invalide" ,      pt:"Link inválido"   } ,
 
 'Add or find reason to agree or disagree': {
-    'es': 'Agregue o encuentre motivos para estar de acuerdo o en desacuerdo', 
-    'cn': '添加或找到同意或不同意的理由', 
-    'nl': 'Voeg een reden toe of zoek een reden om het eens of oneens te zijn',
-    'fr': "Ajouter ou trouver des raisons d'être d'accord ou en désaccord",
-    'pt': 'Adicione ou encontre motivos para concordar ou discordar'
+    es:'Agregue o encuentre motivos para estar de acuerdo o en desacuerdo', 
+    cn:'添加或找到同意或不同意的理由', 
+    nl:'Voeg een reden toe of zoek een reden om het eens of oneens te zijn',
+    fr:"Ajouter ou trouver des raisons d'être d'accord ou en désaccord",
+    pt:'Adicione ou encontre motivos para concordar ou discordar'
   } ,
 
-'Allocated': {'es': 'Asignado', 'cn': '已分配', 'nl': 'Toegewezen', 'fr': 'Alloué', 'pt': 'Alocado'} ,
+'Allocated': {es:'Asignado', cn:'已分配', nl:'Toegewezen', fr:'Alloué', pt:'Alocado'} ,
 
-'Option': {'es': 'Opción', 'cn': '选项', 'nl': 'Keuze', 'fr': 'Option', 'pt': 'Opção'} ,
+'Option': {es:'Opción', cn:'选项', nl:'Keuze', fr:'Option', pt:'Opção'} ,
 
-'Rating': {'es': 'Clasificación', 'cn': '评分', 'nl': 'Beoordeling', 'fr': 'Notation', 'pt': 'Avaliação'} ,
+'Rating': {es:'Calificación', cn:'评分', nl:'Beoordeling', fr:'Notation', pt:'Avaliação'} ,
 
-'Ranking': {'es': 'Clasificación', 'cn': '排行', 'nl': 'Ranglijst', 'fr': 'Classement', 'pt': 'Classificação'} ,
+'Ranking': {es:'Clasificación', cn:'排行', nl:'Ranglijst', fr:'Classement', pt:'Classificação'} ,
 
-'Yes or No': {'es': 'Sí o no', 'cn': '是还是不是', 'nl': 'Ja of nee', 'fr': 'Oui ou non', 'pt': 'Sim ou não'} ,
+'Yes or No': {es:'Sí o no', cn:'是还是不是', nl:'Ja of nee', fr:'Oui ou non', pt:'Sim ou não'} ,
 
-'Answer and reasons': {'es': 'respuesta y razones', 'cn': '答案及理由', 'nl': 'Antwoord en redenen', 'fr': 'Réponse et raisons',
-    'pt': 'Resposta e razões'} ,
+'Answer and reasons': {es:'respuesta y razones', cn:'答案及理由', nl:'Antwoord en redenen', fr:'Réponse et raisons',
+    pt:'Resposta e razões'} ,
 
-'Checklist': {'es': 'Lista de Verificación', 'cn': '清单', 'nl': 'Controlelijst', 'fr': 'Liste de contrôle', 'pt': 'Lista de controle'} ,
+'Checklist': {es:'Lista de Verificación', cn:'清单', nl:'Controlelijst', fr:'Liste de contrôle', pt:'Lista de controle'} ,
 
-'Total budget amount': {'es': 'Monto total del presupuesto', 'cn': '预算总额', 'nl': 'Totaal budgetbedrag',
-    'fr': 'Montant total du budget', 'pt': 'Valor total do orçamento'} ,
+"Saving question type..." : {                        es:"Guardando tipo de pregunta..." ,
+   cn:"正在保存问题类型..." ,                     nl:"Vraagtype opslaan..." ,
+   fr:"Enregistrement du type de question..." ,   pt:"Salvando tipo de pergunta..."   } ,
 
-'Suggestions': {'es': 'Sugerencias', 'cn': '建议', 'nl': 'Suggesties', 'fr': 'Suggestions', 'pt': 'Sugestões'} ,
+"Saved reason requirement" : {       es:"Requisito de motivo guardado" ,   cn:"保存原因要求" ,
+   nl:"Opgeslagen redenvereiste" ,   fr:"Exigence de motif enregistré" ,   pt:"Requisito de motivo salvo"   } ,
 
-'Add suggestion': {'es': 'Agregar sugerencia', 'cn': '添加建议', 'nl': 'Suggestie toevoegen', 'fr': 'Ajouter une suggestion',
-    'pt': 'Adicionar sugestão'} ,
 
-'Write-in': {'es': 'Escribir en', 'cn': '写进', 'nl': 'Inschrijven', 'fr': 'Inscrire', 'pt': 'Escrever em'} ,
+"Image" : { es:"Imagen" , cn:"图像" , nl:"Afbeelding" , fr:"Image" , pt:"Imagem" } ,
 
-'Total budget amount': {'es': 'Monto total del presupuesto', 'cn': '预算总额', 'nl': 'Totaal budgetbedrag',
-    'fr': 'Montant total du budget', 'pt': 'Valor total do orçamento'} ,
+"Save image" : { es:"Guardar imagen" , cn:"保存图片" , nl:"Afbeelding opslaan" , fr:"Enregistrer l'image" , pt:"Salvar imagem" } ,
 
-'Minimum rating': {'es': 'Calificación mínima', 'cn': '最低评级', 'nl': 'Minimale beoordeling', 'fr': 'Note minimale',
-    'pt': 'Classificação mínima'} ,
+"Remove image" : { es:"Quita la imagen" , cn:"删除图像" , nl:"Afbeelding verwijderen" , fr:"Supprimer l'image" , pt:"Remover imagem" } ,
 
-'Maximum rating': {'es': 'Calificación máxima', 'cn': '最大额定值', 'nl': 'Maximale beoordeling', 'fr': 'Note maximale',
-    'pt': 'Classificação máxima'} ,
+"Choose a JPEG or PNG up to 500 x 1000 pixels" : {                es:"Elija un JPEG o PNG de hasta 500 x 1000 píxeles" ,
+   cn:"选择最大 500 x 1000 像素的 JPEG 或 PNG" ,                  nl:"Kies een JPEG of PNG van maximaal 500 x 1000 pixels" ,
+   fr:"Choisissez un JPEG ou un PNG jusqu'à 500 x 1000 pixels" ,  pt:"Escolha um JPEG ou PNG de até 500 x 1000 pixels"  } ,
 
-'Add option': {'es': 'Agregar opción', 'cn': '添加选项', 'nl': 'Optie toevoegen', 'fr': 'Ajouter une option', 'pt': 'Adicionar opção'} ,
+"No image file is chosen" : {                es:"No se elige ningún archivo de imagen." ,
+   cn:"未选择图像文件" ,                     nl:"Er is geen afbeeldingsbestand gekozen" ,
+   fr:"Aucun fichier image n'est choisi" ,   pt:"Nenhum arquivo de imagem foi escolhido"   } ,
 
-'Rate': {'es': 'Calificar', 'cn': '打分', 'nl': 'Beoordelen', 'fr': 'Évaluer', 'pt': 'Avaliar'} ,
+"Image file could not be read" : {              es:"El archivo de imagen no se pudo leer" ,
+   cn:"无法读取图像文件" ,                      nl:"Beeldbestand kon niet worden gelezen" ,
+   fr:"Le fichier image n'a pas pu être lu" ,   pt:"Não foi possível ler o arquivo de imagem"  } ,
 
-'Rank': {'es': 'Para clasificar', 'cn': '排名', 'nl': 'Naar rang', 'fr': 'Évaluer', 'pt': 'Classificar'} ,
+"Image file is too large" : {                   es:"El archivo de imagen es demasiado grande" ,
+   cn:"图像文件太大" ,                          nl:"Afbeeldingsbestand is te groot" ,
+   fr:"Le fichier image est trop volumineux" ,  pt:"O arquivo de imagem é muito grande"   } ,
 
-'Save pro': {'es': 'Guardar motivo para', 'cn': '保存原因', 'nl': 'Bewaar reden voor', 'fr': 'Enregistrer la raison pour',
- 'pt': 'Salvar motivo para'} ,
+"Image has too many pixels" : {             es:"La imagen tiene demasiados píxeles." ,   cn:"图像像素太多" ,                      
+   nl:"Afbeelding bevat te veel pixels" ,   fr:"L'image comporte trop de pixels" ,       pt:"A imagem tem muitos pixels"  } ,
 
-'Save con': {'es': 'Guardar motivo en contra', 'cn': '保存反对理由', 'nl': 'Spaar de rede tegen', 'fr': 'Gardez raison contre',
- 'pt': 'Salve a razão contra'} ,
+"Image is too wide" : {            es:"La imagen es demasiado ancha." ,   cn:"图像太宽" ,
+   nl:"Afbeelding is te breed" ,   fr:"L'image est trop large" ,          pt:"A imagem é muito larga"   } ,
 
-'Total used': {'es': 'Total usado', 'cn': '已使用总量', 'nl': 'Totaal gebruikt', 'fr': 'Total utilisé', 'pt': 'Total usado'} ,
+"Image is too tall" : {           es:"La imagen es demasiado alta." ,   cn:"图片太高" ,
+   nl:"Afbeelding is te hoog" ,   fr:"L'image est trop grande" ,        pt:"A imagem é muito alta"   } ,
 
-'Yes': {'es': 'Sí', 'cn': '是的', 'nl': 'Ja', 'fr': 'Oui', 'pt': 'Sim'} ,
+"Image chosen. Upload it?" : {         es:"Imagen elegida. ¿Subirlo?" ,
+   cn:"选定的图像。上传吗？" ,         nl:"Afbeelding gekozen. Upload het?" ,
+   fr:"Image choisie. Télécharger?" ,  pt:"Imagem escolhida. Carregar?"  } ,
 
-'Add budget item': {'es': 'Agregar partida presupuestaria', 'cn': '添加预算项目', 'nl': 'Budgetartikel toevoegen', 'fr': 'Ajouter un poste budgétaire', 'pt': 'Adicionar item de orçamento'} ,
+"Delete this image?" : {            es:"¿Eliminar esta imagen?" ,
+   cn:"删除此图像？" ,              nl:"Deze afbeelding verwijderen?" ,
+   fr:"Supprimer cette image ?" ,   pt:"Excluir esta imagem?"   } ,
 
-'Delete': {'es': 'Borrar', 'cn': '删除', 'nl': 'Verwijderen', 'fr': 'Supprimer', 'pt': 'Excluir'} ,
+"Saving image..." : {             es:"Guardando imagen..." ,            cn:"正在保存图像..." ,
+   nl:"Afbeelding opslaan..." ,   fr:"Enregistrement de l'image..." ,   pt:"Salvando imagem..."   } ,
 
-'Delete this question?': {'es': '¿Eliminar esta pregunta?', 'cn': '删除这个问题吗？', 'nl': 'Deze vraag verwijderen?', 'fr': 'Supprimer cette question?', 'pt': 'Excluir esta pergunta?'} ,
+"Failed to change image" : {             es:"No se pudo cambiar la imagen" ,   cn:"更改图片失败" ,
+   nl:"Kan afbeelding niet wijzigen" ,   fr:"Échec du changement d'image" ,    pt:"Falha ao alterar a imagem"   } ,
 
-'Administrate survey': {'es': 'Administrar encuesta', 'cn': '管理调查', 'nl': 'Enquête beheren', 'fr': "Administrer l'enquête", 'pt': 'Administrar pesquisa'} ,
+"Saved image" : {             es:"Imagen guardada" ,
+   cn:"保存的图像" ,          nl:"Opgeslagen afbeelding" ,
+   fr:"Image enregistrée" ,   pt:"Imagem salva"   } ,
 
-'View survey': {'es': 'Ver encuesta', 'cn': '查看调查', 'nl': 'Bekijk enquête', 'fr': "Voir l'enquête", 'pt': 'Ver pesquisa'} ,
+"Removing image..." : {               es:"Eliminando imagen..." ,        cn:"正在删除图像..." ,             
+   nl:"Afbeelding verwijderen..." ,   fr:"Suppression de l'image..." ,   pt:"Removendo imagem..."   } ,
 
-'Edit question': {'es': 'Editar pregunta', 'cn': '编辑问题', 'nl': 'Vraag bewerken', 'fr': 'Modifier la question', 'pt': 'Editar pergunta'} ,
+"Removed image" : {               es:"Imagen eliminada" ,   cn:"已删除图像" ,        
+   nl:"Afbeelding verwijderd" ,   fr:"Image supprimée" ,    pt:"Imagem removida"   } ,
 
-'Delete question': {'es': 'Eliminar pregunta', 'cn': '删除问题', 'nl': 'Vraag verwijderen', 'fr': 'Supprimer la question', 'pt': 'Excluir pergunta'} ,
 
-'View question': {'es': 'Ver pregunta', 'cn': '查看问题', 'nl': 'Vraag bekijken', 'fr': 'Voir la question', 'pt': 'Ver pergunta'} ,
+"Saving changes..." : {                         es:"Guardando cambios..." , 
+   cn:"正在保存更改..." ,                    nl:"Wijzigingen opslaan..." ,
+   fr:"Enregistrer les modifications..." ,   pt:"Salvando alterações..." } ,
 
-'Question results': {'es': 'Resultados de la pregunta', 'cn': '提问结果', 'nl': 'Vraagresultaten', 'fr': 'Résultats des questions', 'pt': 'Resultados da pergunta'} ,
+"Cannot edit survey created by someone else" : {
+   es:"No se puede editar la encuesta creada por otra persona" ,
+   cn:"无法编辑其他人创建的调查" ,
+   nl:"Kan de enquête die door iemand anders is gemaakt niet bewerken" ,
+   fr:"Impossible de modifier l'enquête créée par quelqu'un d'autre" ,
+   pt:"Não é possível editar a pesquisa criada por outra pessoa" ,
+  } ,
 
-'Retrieved reasons': {'es': 'Razones recuperadas', 'cn': '检索到的原因', 'nl': 'Opgehaalde redenen', 'fr': 'Raisons récupérées', 'pt': 'Razões recuperadas'} ,
+"Cannot edit question created by someone else" : {
+   es:"No se puede editar la pregunta creada por otra persona" ,
+   cn:"无法编辑其他人创建的问题" ,
+   nl:"Vraag die door iemand anders is gemaakt, kan niet worden bewerkt" ,
+   fr:"Impossible de modifier la question créée par quelqu'un d'autre" ,
+   pt:"Não é possível editar a pergunta criada por outra pessoa" ,
+  } ,
 
-'Reason is too long': {'es': 'La razón es demasiado larga.', 'cn': '理由太长', 'nl': 'Reden is te lang', 'fr': 'La raison est trop longue', 'pt': 'A razão é muito longa'} ,
+"Cannot edit question that already has answers" : {
+   es:"No se puede editar una pregunta que ya tiene respuestas" ,
+   cn:"无法编辑已有答案的问题" ,
+   nl:"Vraag waarop al antwoorden staan, kan niet worden bewerkt" ,
+   fr:"Impossible de modifier une question qui a déjà des réponses" ,
+   pt:"Não é possível editar perguntas que já tenham respostas" ,
+  } ,
 
-'Option created': {'es': 'Opción creada', 'cn': '选项已创建', 'nl': 'Optie gemaakt', 'fr': 'Option créée', 'pt': 'Opção criada'} ,
+'Suggestions': { es:'Sugerencias', cn:'建议', nl:'Suggesties', fr:'Suggestions', pt:'Sugestões' } ,
 
-'More results': {'es': 'Más resultados', 'cn': '更多结果', 'nl': 'Meer resultaten', 'fr': 'Plus de résultats', 'pt': 'Mais resultados'} ,
+'Add suggestion': { es:'Agregar sugerencia', cn:'添加建议', nl:'Suggestie toevoegen', fr:'Ajouter une suggestion',
+    pt:'Adicionar sugestão' } ,
 
-'No more results yet': {'es': 'Aún no hay más resultados', 'cn': '还没有更多结果', 'nl': 'Nog geen resultaten meer', 'fr': 'Pas encore de résultats', 'pt': 'Ainda não há mais resultados'} ,
+'Write-in': { es:'Escribir en', cn:'写进', nl:'Inschrijven', fr:'Inscrire', pt:'Escrever em' } ,
 
-'Retrieved results': {'es': 'Resultados recuperados', 'cn': '检索结果', 'nl': 'Resultaten opgehaald', 'fr': 'Résultats récupérés', 'pt': 'Resultados recuperados'} ,
 
-'Enter your budget title here': {'es': 'Ingrese el título de su presupuesto aquí', 'cn': '在此输入您的预算标题', 'nl': 'Voer hier uw budgettitel in', 'fr': 'Entrez le titre de votre budget ici', 'pt': 'Insira o título do seu orçamento aqui'} ,
+'Minimum rating': {es:'Calificación mínima', cn:'最低评级', nl:'Minimale beoordeling', fr:'Note minimale',
+    pt:'Classificação mínima'} ,
 
-'Enter survey introduction here.': {'es': 'Ingrese la introducción de la encuesta aquí.', 'cn': '在此输入调查简介。', 'nl': 'Voer hier de introductie van de enquête in.', 'fr': 'Entrez ici l’introduction de l’enquête.', 'pt': 'Insira a introdução da pesquisa aqui.'} ,
+'Maximum rating': {es:'Calificación máxima', cn:'最大额定值', nl:'Maximale beoordeling', fr:'Note maximale',
+    pt:'Classificação máxima'} ,
 
-'Enter your survey title here': {'es': 'Ingrese el título de su encuesta aquí', 'cn': '在此输入您的调查标题', 'nl': 'Voer hier uw enquêtetitel in', 'fr': 'Entrez le titre de votre enquête ici', 'pt': 'Insira o título da sua pesquisa aqui'} ,
+"Saved rating limit" : {                  es:"Límite de calificación guardada" ,   cn:"已保存评级限制" ,
+   nl:"Opgeslagen beoordelingslimiet" ,   fr:"Limite de notes enregistrée" ,       pt:"Limite de classificação salva"   } ,
 
-'Enter total budget amount': {'es': 'Introduzca el importe total del presupuesto', 'cn': '输入预算总额', 'nl': 'Voer het totale budgetbedrag in', 'fr': 'Saisissez le montant total du budget', 'pt': 'Insira o valor total do orçamento'} ,
 
-'Enter budget introduction': {'es': 'Introduzca la introducción del presupuesto', 'cn': '输入预算介绍', 'nl': 'Voer de budgetintroductie in', 'fr': "Entrez l'introduction du budget", 'pt': 'Insira a introdução do orçamento'} ,
+'Add option': { es:'Agregar opción', cn:'添加选项', nl:'Optie toevoegen', fr:'Ajouter une option', pt:'Adicionar opção' } ,
 
-'Enter the content of your proposal here': {'es': 'Introduce aquí el contenido de tu propuesta', 'cn': '在此输入您的提案内容', 'nl': 'Vul hier de inhoud van uw voorstel in', 'fr': 'Entrez ici le contenu de votre proposition', 'pt': 'Insira aqui o conteúdo da sua proposta'} ,
+"Option is too short" : {    es:"La opción es demasiado corta" ,   cn:"选项太短" ,
+   nl:"Optie is te kort" ,   fr:"L'option est trop courte" ,       pt:"A opção é muito curta"   } ,
 
-'Enter your proposal title here': {'es': 'Ingrese el título de su propuesta aquí', 'cn': '在此输入您的提案标题', 'nl': 'Voer hier de titel van uw voorstel in', 'fr': 'Entrez le titre de votre proposition ici', 'pt': 'Insira aqui o título da sua proposta'} ,
+"Option is too long" : {     es:"La opción es demasiado larga" ,   cn:"选项太长" ,
+   nl:"Optie is te lang" ,   fr:"L'option est trop longue" ,       pt:"A opção é muito longa"   } ,
 
-'Enter the content of your request here': {'es': 'Introduzca aquí el contenido de su solicitud', 'cn': '在此输入您的请求内容', 'nl': 'Vul hier de inhoud van uw verzoek in', 'fr': 'Saisissez ici le contenu de votre demande', 'pt': 'Insira aqui o conteúdo da sua solicitação'} ,
+"Question has too many options" : {    es:"La pregunta tiene demasiadas opciones." ,   cn:"问题有太多选项" ,             
+   nl:"Vraag heeft te veel opties" ,   fr:"La question a trop d'options" ,             pt:"A pergunta tem muitas opções"  } ,
 
-'What is the best way to...': {'es': '¿Cuál es la mejor manera de...?', 'cn': '最好的方法是什么...', 'nl': 'Wat is de beste manier om...', 'fr': 'Quelle est la meilleure façon de...', 'pt': 'Qual é a melhor maneira de...'} ,
+"Duplicate option" : {    es:"Opción duplicada" ,        cn:"重复选项" ,
+   nl:"Dubbele optie" ,   fr:"Option de duplication" ,   pt:"Opção duplicada"   } ,
 
-'More instructions or information...': {'es': 'Más instrucciones o información...', 'cn': '更多说明或信息...', 'nl': 'Meer instructies of informatie...', 'fr': "Plus d'instructions ou d'informations...", 'pt': 'Mais instruções ou informações...'} ,
+"Cannot edit option created by someone else" : {
+   es:"No se puede editar la opción creada por otra persona" ,
+   cn:"无法编辑其他人创建的选项" ,
+   nl:"Kan de optie die door iemand anders is gemaakt niet bewerken" ,
+   fr:"Impossible de modifier l'option créée par quelqu'un d'autre" ,
+   pt:"Não é possível editar a opção criada por outra pessoa"   } ,
 
-'Question title...': {'es': 'Título de la pregunta...', 'cn': '问题标题...', 'nl': 'Vraag Titel...', 'fr': 'Titre de question...', 'pt': 'Título da questão...'} ,
+"Cannot edit option that already has answers" : {
+   es:"No se puede editar la opción que ya tiene respuestas" ,
+   cn:"无法编辑已有答案的选项" ,
+   nl:"Kan de optie die al antwoorden bevat niet bewerken" ,
+   fr:"Impossible de modifier une option qui contient déjà des réponses" ,
+   pt:"Não é possível editar a opção que já possui respostas"   } ,
 
-'Best...': {'es': 'Mejor...', 'cn': '最好的...', 'nl': 'Best...', 'fr': 'Meilleur...', 'pt': 'Melhor...'} ,
+"Cannot edit option that already has votes" : {
+   es:"No se puede editar la opción que ya tiene votos" ,
+   cn:"无法编辑已投票的选项" ,
+   nl:"Kan de optie die al stemmen heeft niet bewerken" ,
+   fr:"Impossible de modifier une option qui comporte déjà des votes" ,
+   pt:"Não é possível editar a opção que já possui votos"   } ,
 
-'Worst...': {'es': 'El peor...', 'cn': '最糟糕的...', 'nl': 'Slechtst...', 'fr': 'Pire...', 'pt': 'Pior...'} ,
+"Saved option" : {  es:"Opción guardada" , cn:"已保存的选项" , nl:"Opgeslagen optie" , fr:"Option enregistrée" , pt:"Opção salva"  } ,
 
-'More information': {'es': 'Más información', 'cn': '更多信息', 'nl': 'Meer informatie', 'fr': "Plus d'information", 'pt': 'Mais Informações'} ,
+"Moving..." : {  es:"Moviente..." , cn:"移动..." , nl:"In beweging..." , fr:"En mouvement..." , pt:"Movendo..."  } ,
 
-'Background information about survey...': {'es': 'Información general sobre la encuesta...', 'cn': '有关调查的背景信息...', 'nl': 'Achtergrondinformatie over enquête...', 'fr': "Informations générales sur l'enquête...", 'pt': 'Informações básicas sobre a pesquisa...'} ,
+"Moved option" : {  es:"Opción movida" , cn:"移动选项" , nl:"Verplaatste optie" , fr:"Option déplacée" , pt:"Opção movida"  } ,
 
-'Budget Setup': {'es': 'Configuración del presupuesto', 'cn': '预算设置', 'nl': 'Budgetinstellingen', 'fr': 'Configuration du budget', 'pt': 'Configuração do orçamento'} ,
+"Deleting..." : {  es:"Eliminando..." ,  cn:"正在删除..." ,  nl:"Verwijderen..." ,  fr:"Suppression..." ,  pt:"Excluindo..."  } ,
 
-'Auto-complete Survey Results': {'es': 'Resultados de la encuesta de autocompletar', 'cn': '自动完成调查结果', 'nl': 'Enquêteresultaten automatisch aanvullen', 'fr': "Résultats de l'enquête à saisie semi-automatique", 'pt': 'Resultados da pesquisa de preenchimento automático'} ,
+"Deleted option" : {  es:"Opción eliminada" , cn:"删除选项" , nl:"Verwijderde optie" , fr:"Option supprimée" , pt:"Opção excluída"  } ,
 
-'View Auto-complete Survey': {'es': 'Ver encuesta de autocompletar', 'cn': '查看自动完成调查', 'nl': 'Bekijk de enquête voor automatisch aanvullen', 'fr': "Afficher l'enquête à saisie semi-automatique", 'pt': 'Ver pesquisa de preenchimento automático'} ,
 
-'Edit Auto-complete Survey': {'es': 'Editar encuesta de autocompletar', 'cn': '编辑自动完成调查', 'nl': 'Enquête automatisch aanvullen bewerken', 'fr': "Modifier l'enquête à saisie semi-automatique", 'pt': 'Editar pesquisa de preenchimento automático'} ,
+'Rate': { es:'Calificar', cn:'打分', nl:'Beoordelen', fr:'Évaluer', pt:'Avaliar' } ,
 
-'Request For Proposals': {'es': 'Solicitud de propuestas', 'cn': '征求建议书', 'nl': 'Verzoek om voorstellen', 'fr': 'Demande de propositions', 'pt': 'Pedido de propostas'} ,
+"Saving rating..." : {             es:"Guardando calificación..." ,   cn:"正在保存评分..." ,
+   nl:"Beoordeling opslaan..." ,   fr:"Sauvegarde de la note..." ,    pt:"Salvando classificação..."   } ,
 
-'Continue': {'es': 'Continuar', 'cn': '继续', 'nl': 'Doorgaan', 'fr': 'Continuer', 'pt': 'Continuar'} ,
+"Saved rating" : {                 es:"Calificación guardada" ,   cn:"已保存评级" ,
+   nl:"Opgeslagen beoordeling" ,   fr:"Note enregistrée" ,        pt:"Avaliação salva"   } ,
 
-'Request for Problems': {'es': 'Solicitud de problemas', 'cn': '问题请求', 'nl': 'Verzoek om problemen', 'fr': 'Demande de problèmes', 'pt': 'Solicitação de problemas'} ,
 
-'Require reasons': {'es': 'Requerir razones', 'cn': '需要理由', 'nl': 'Vereist redenen', 'fr': 'Exiger des raisons', 'pt': 'Exigir motivos'} ,
+'Rank': { es:'Rango', cn:'排名', nl:'Rang', fr:'Rang', pt:'Classificação' } ,
 
-'Label': {'es': 'Etiqueta', 'cn': '标签', 'nl': 'Etiket', 'fr': 'Étiquette', 'pt': 'Rótulo'} ,
+"Saving ranking..." : {        es:"Guardando clasificación..." ,    cn:"正在保存排名..." ,
+   nl:"Positie opslaan..." ,   fr:"Sauvegarde du classement..." ,   pt:"Salvando classificação..."   } ,
 
-'Add or find solution': {'es': 'Agregar o encontrar solución', 'cn': '添加或查找解决方案', 'nl': 'Oplossing toevoegen of vinden', 'fr': 'Ajouter ou trouver une solution', 'pt': 'Adicione ou encontre solução'} ,
+"Saved ranking" : {              es:"Clasificación guardada" ,   cn:"已保存排名" ,
+   nl:"Opgeslagen ranglijst" ,   fr:"Classement enregistré" ,    pt:"Classificação salva"   } ,
 
-'Problem': {'es': 'Problema', 'cn': '问题', 'nl': 'Probleem', 'fr': 'Problème', 'pt': 'Problema'} ,
 
-'Add or find problem': {'es': 'Agregar o encontrar problema', 'cn': '添加或查找问题', 'nl': 'Voeg een probleem toe of zoek het op', 'fr': 'Ajouter ou trouver un problème', 'pt': 'Adicionar ou encontrar problema'} ,
+"Saving checkmark..." : {    es:"Guardando marca de verificación..." ,  cn:"正在保存复选标记..." ,
+   nl:"Vinkje opslaan..." ,  fr:"Coche d'enregistrement..." ,           pt:"Salvando marca de seleção..."  } ,
 
-'Enter your request title here': {'es': 'Introduzca aquí el título de su solicitud', 'cn': '在此输入您的请求标题', 'nl': 'Voer hier de titel van uw verzoek in', 'fr': 'Entrez ici le titre de votre demande', 'pt': 'Insira o título da sua solicitação aqui'} ,
+"Saved checkmark" : {         es:"Marca de verificación guardada" ,   cn:"已保存复选标记" ,
+   nl:"Vinkje opgeslagen" ,   fr:"Coche enregistrée" ,                pt:"Marca de seleção salva"   } ,
 
-'Suggestion': {'es': 'Sugerencia', 'cn': '建议', 'nl': 'Suggestie', 'fr': 'Suggestion', 'pt': 'Sugestão'} ,
 
-'Survey details': {'es': 'Detalles de la encuesta', 'cn': '调查详情', 'nl': 'Enquêtedetails', 'fr': "Détails de l'enquête", 'pt': 'Detalhes da pesquisa'} ,
+"Clicking this suggestion will replace your answer." : {
+   es:"Al hacer clic en esta sugerencia se reemplazará tu respuesta." ,
+   cn:"单击此建议将替换您的答案。" ,
+   nl:"Als u op deze suggestie klikt, wordt uw antwoord vervangen." ,
+   fr:"Cliquer sur cette suggestion remplacera votre réponse." ,
+   pt:"Clicar nesta sugestão substituirá sua resposta."   } ,
 
-'Freeze user input': {'es': 'Congelar la entrada del usuario', 'cn': '冻结用户输入', 'nl': 'Gebruikersinvoer bevriezen', 'fr': "Geler la saisie de l'utilisateur", 'pt': 'Congelar entrada do usuário'} ,
+"Saving answer..." : {          es:"Guardando respuesta..." ,        cn:"正在保存答案..." ,
+   nl:"Antwoord opslaan..." ,   fr:"Sauvegarde de la réponse..." ,   pt:"Salvando resposta..."   } ,
 
-'Survey Introduction': {'es': 'Introducción a la encuesta', 'cn': '调查简介', 'nl': 'Enquête Introductie', 'fr': "Introduction à l'enquête", 'pt': 'Introdução à pesquisa'} ,
+"Retrieving results..." : {       es:"Recuperando resultados..." ,       cn:"正在检索结果..." ,
+   nl:"Resultaten ophalen..." ,   fr:"Récupération des résultats..." ,   pt:"Recuperando resultados..."   } ,
 
-'Survey Title': {'es': 'Título de la encuesta', 'cn': '调查标题', 'nl': 'Enquêtetitel', 'fr': "Titre de l'enquête", 'pt': 'Título da pesquisa'} ,
 
-'Specialized survey types': {'es': 'Tipos de encuestas especializadas', 'cn': '专业调查类型', 'nl': 'Gespecialiseerde enquêtetypen', 'fr': "Types d'enquêtes spécialisées", 'pt': 'Tipos de pesquisas especializadas'} ,
+"Created list item" : {       es:"Elemento de lista creado" ,   cn:"已创建列表项" ,
+   nl:"Lijstitem gemaakt" ,   fr:"Élément de liste créé" ,      pt:"Item de lista criado"   } ,
 
+"Saving list item..." : {        es:"Guardando elemento de la lista..." ,      cn:"正在保存列表项..." ,
+   nl:"Lijstitem opslaan..." ,   fr:"Élément de la liste de sauvegarde..." ,   pt:"Salvando item da lista..."  } ,
 
-"Create a free survey, where participants express both their opinions and their reasons. Participants can also learn from each other's reasons.": {'es': 'Crea una encuesta gratuita, donde los participantes expresen tanto sus opiniones como sus motivos. Los participantes también pueden aprender de las razones de los demás.', 'cn': '创建一个免费的调查，让参与者表达他们的意见和理由。参与者还可以互相学习原因。', 'nl': 'Creëer een gratis enquête, waarin deelnemers zowel hun mening als hun redenen kenbaar maken. Deelnemers kunnen ook van elkaars beweegredenen leren.', 'fr': 'Créez une enquête gratuite, dans laquelle les participants expriment à la fois leurs opinions et leurs raisons. Les participants peuvent également apprendre des raisons de chacun.', 'pt': 'Crie uma pesquisa gratuita, onde os participantes expressam suas opiniões e motivos. Os participantes também podem aprender com as razões uns dos outros.'} ,
+"Item already exists" : {      es:"El artículo ya existe" ,   cn:"项目已存在" ,
+   nl:"Artikel bestaat al" ,   fr:"L'article existe déjà" ,   pt:"O item já existe"   } ,
 
-'Start here': {'es': 'Empieza aqui', 'cn': '从这里开始', 'nl': 'Begin hier', 'fr': 'Commencer ici', 'pt': 'Começa aqui'} ,
+"Saved list item. Remaining items allowed:" : {
+   es:"Elemento de lista guardado. Artículos restantes permitidos:" ,
+   cn:"已保存的列表项。允许的剩余项目：" ,
+   nl:"Opgeslagen lijstitem. Overige toegestane items:" ,
+   fr:"Élément de liste enregistré. Articles restants autorisés :" ,
+   pt:"Item de lista salvo. Restantes itens permitidos:" ,
+} ,
 
-'Deliberative Form': {'es': 'Forma deliberativa', 'cn': '审议形式', 'nl': 'Deliberatieve vorm', 'fr': 'Forme délibérative', 'pt': 'Formulário Deliberativo'} ,
+"Delete list item?" : {            es:"¿Eliminar elemento de la lista?" ,   cn:"删除列表项？" ,
+   nl:"Lijstitem verwijderen?" ,   fr:"Supprimer un élément de liste ?" ,   pt:"Excluir item da lista?"   } ,
 
-'Ask a series of survey questions.': {'es': 'Haga una serie de preguntas de encuesta.', 'cn': '提出一系列调查问题。', 'nl': 'Stel een reeks enquêtevragen.', 'fr': 'Posez une série de questions d’enquête.', 'pt': 'Faça uma série de perguntas de pesquisa.'} ,
+"Deleting list item..." : {          es:"Eliminando elemento de la lista..." ,     cn:"正在删除列表项..." ,
+   nl:"Lijstitem verwijderen..." ,   fr:"Suppression d'un élément de liste..." ,   pt:"Excluindo item da lista..."  } ,
+
+"Deleted list item" : {          es:"Elemento de lista eliminada" ,   cn:"已删除的列表项" ,
+   nl:"Lijstitem verwijderd" ,   fr:"Élément de liste supprimé" ,     pt:"Item de lista excluído"   } ,
+
+
+'Total budget amount': { es:'Monto total del presupuesto', cn:'预算总额', nl:'Totaal budgetbedrag',
+    fr:'Montant total du budget', pt:'Valor total do orçamento' } ,
+
+"Total budget amount is required" : {             es:"Se requiere el monto total del presupuesto" ,
+   cn:"总预算金额为必填项" ,                      nl:"Het totale budgetbedrag is vereist" ,
+   fr:"Le montant total du budget est requis" ,   pt:"O valor total do orçamento é obrigatório"  } ,
+
+"Saving total budget amount..." : {                  es:"Ahorrando importe total del presupuesto..." ,
+   cn:"节省总预算金额..." ,                          nl:"Totaal budgetbedrag opslaan..." ,
+   fr:"Économiser le montant total du budget..." ,   pt:"Economizando o valor total do orçamento..."  } ,
+
+"Saved total budget amount" : {               es:"Monto total del presupuesto guardado" ,
+   cn:"节省的总预算金额" ,                    nl:"Totaal budgetbedrag opgeslagen" ,
+   fr:"Montant du budget total enregistré" ,  pt:"Valor total do orçamento salvo"   } ,
+
+'Total used': { es:'Total usado', cn:'已使用总量', nl:'Totaal gebruikt', fr:'Total utilisé', pt:'Total usado' } ,
+
+'Yes': { es:'Sí', cn:'是的', nl:'Ja', fr:'Oui', pt:'Sim' } ,
+
+'Add budget item': {              es:'Agregar partida presupuestaria' ,  cn:'添加预算项目', 
+   nl:'Budgetartikel toevoegen' , fr:'Ajouter un poste budgétaire',      pt:'Adicionar item de orçamento'  } ,
+
+"Adding budget item..." : {                es:"Agregando partida presupuestaria..." ,   cn:"添加预算项目..." ,
+   nl:"Begrotingsartikel toevoegen..." ,   fr:"Ajout d'un poste budgétaire..." ,        pt:"Adicionando item de orçamento..."  } ,
+
+"Created budget item" : {            es:"Partida presupuestaria creada" ,   cn:"已创建预算项目" ,   
+   nl:"Budgetartikel aangemaakt" ,   fr:"Poste budgétaire créé" ,           pt:"Item de orçamento criado"   } ,
+
+"Saving budget item..." : {                  es:"Guardando partida presupuestaria..." ,   
+   cn:"节省预算项目..." ,                    nl:"Budgetartikel opslaan..." , 
+   fr:"Sauvegarde du poste budgétaire..." ,  pt:"Salvando item do orçamento..."  } ,
+
+"Saved budget item. Budget remaining:" : {               es:"Partida presupuestaria guardada. Presupuesto restante:" ,
+   cn:"已保存的预算项目。剩余预算：" ,                   nl:"Bewaarde budgetpost. Resterend budget:" ,
+   fr:"Poste budgétaire enregistré. Budget restant:" ,   pt:"Item de orçamento salvo. Orçamento restante:"   } ,
+
+"Deleting budget item..." : {                    es:"Eliminando partida presupuestaria..." ,
+   cn:"正在删除预算项目..." ,                    nl:"Begrotingsartikel verwijderen..." ,
+   fr:"Suppression d'un poste budgétaire..." ,   pt:"Excluindo item do orçamento..."   } ,
+
+"Deleted budget item" : {         es:"Partida presupuestaria eliminada" ,  cn:"已删除的预算项目" ,
+   nl:"Budgetpost verwijderd" ,   fr:"Poste budgétaire supprimé" ,         pt:"Item de orçamento excluído"   } ,
+
+
+'Save pro': { es:'Guardar motivo para', cn:'保存原因', nl:'Bewaar reden voor', fr:'Enregistrer la raison pour',
+   pt:'Salvar motivo para' } ,
+
+'Save con': { es:'Guardar motivo en contra', cn:'保存反对理由', nl:'Spaar de rede tegen', fr:'Gardez raison contre',
+   pt:'Salve a razão contra' } ,
+
+"Saving reason..." : {         es:"Razón de ahorro..." ,       cn:"保存原因..." ,
+   nl:"Reden voor sparen..." , fr:"Raison de sauvegarde..." ,  pt:"Salvando a razão..."  } ,
+
+"Cannot edit reason that already has votes" : {
+   es:"No se puede editar el motivo que ya tiene votos" ,
+   cn:"无法编辑已投票的原因" ,
+   nl:"Kan de reden die al stemmen heeft, niet bewerken" ,
+   fr:"Impossible de modifier le motif pour lequel il y a déjà des votes" ,
+   pt:"Não é possível editar o motivo que já possui votos"  } ,
+
+"Reason saved" : { es:"Razón guardada" , cn:"已保存原因" , nl:"Reden opgeslagen" , fr:"Raison enregistrée" , pt:"Motivo salvo" } ,
+
+"Upvote" : {  es:"Votar a favor" , cn:"点赞" , nl:"Stem omhoog" , fr:"Vote positif" , pt:"Voto positivo"  } ,
+
+"Saving vote..." : { es:"Voto salvador..." , cn:"保存投票..." , nl:"Stem opslaan..." , fr:"Sauvegarder le vote..." , pt:"Salvando voto..."  } ,
+
+"Vote not changed" : { es:"Voto no cambiado" , cn:"投票未改变" , nl:"Stem niet gewijzigd" , fr:"Le vote n'a pas changé" , 
+   pt:"Voto não alterado" } ,
+
+"Saved vote. Limit is 1 vote per proposal." : {
+   es:"Voto guardado. El límite es 1 voto por propuesta." ,
+   cn:"已保存投票。每个提案限制为 1 票。" ,
+   nl:"Stem opgeslagen. De limiet is 1 stem per voorstel." ,
+   fr:"Vote enregistré. La limite est de 1 vote par proposition." ,
+   pt:"Voto salvo. O limite é de 1 voto por proposta."  } ,
+
+"Saved. 1 vote available." : {              es:"Salvado. 1 voto disponible." ,      cn:"已保存。 1 票可用。" ,
+   nl:"Opgeslagen. 1 stem beschikbaar." ,   fr:"Enregistré. 1 vote disponible." ,   pt:"Salvou. 1 voto disponível."   } ,
+
+
+"Solution is too short" : {      es:"La solución es demasiado corta." ,   cn:"解决方案太短" ,
+   nl:"Oplossing is te kort" ,   fr:"La solution est trop courte" ,       pt:"A solução é muito curta"   } ,
+
+"Solution is too long" : {       es:"La solución es demasiado larga." ,   cn:"解决方案太长" ,
+   nl:"Oplossing is te lang" ,   fr:"La solution est trop longue" ,       pt:"A solução é muito longa"   } ,
+
+"Saving solution..." : {   es:"Guardo la solución..." ,   cn:"我正在保存解决方案..." ,
+   nl:"Bewaar de oplossing..." ,    fr:"Garde la solution..." ,    pt:"Salvando a solução..."   } ,
+
+"Cannot edit proposal that already has responses" : {
+   es:"No se puede editar la propuesta que ya tiene respuestas" ,
+   cn:"无法编辑已有回复的提案" ,
+   nl:"Kan voorstel dat al reacties bevat, niet bewerken" ,
+   fr:"Impossible de modifier une proposition contenant déjà des réponses" ,
+   pt:"Não é possível editar a proposta que já possui respostas"   } ,
+
+"Saved solution" : {             es:"Solución guardada" ,      cn:"已保存的解决方案" ,
+   nl:"Opgeslagen oplossing" ,   fr:"Solution enregistrée" ,   pt:"Solução salva"   } ,
+
+
+"Problem is too short" : {          es:"El problema es demasiado corto." ,   cn:"问题太短" ,
+   nl:"Het probleem is te kort" ,   fr:"Le problème est trop court" ,        pt:"O problema é muito curto"   } ,
+
+"Problem is too long" : {              es:"El problema es demasiado largo." ,   cn:"问题太长" ,
+   nl:"Het probleem duurt te lang" ,   fr:"Le problème est trop long" ,         pt:"O problema é muito longo"   } ,
+
+"Saving problem..." : {             es:"Problema al guardar..." ,      cn:"保存问题..." ,
+   nl:"Probleem met opslaan..." ,   fr:"Problème de sauvegarde..." ,   pt:"Salvando problema..."   } ,
+
+"Cannot edit problem that already has responses" : {
+   es:"No se puede editar el problema que ya tiene respuestas" ,
+   cn:"无法编辑已有响应的问题" ,
+   nl:"Kan het probleem niet bewerken dat al reacties bevat" ,
+   fr:"Impossible de modifier un problème pour lequel il existe déjà des réponses" ,
+   pt:"Não é possível editar o problema que já possui respostas"   } ,
+
+"Saved problem" : {             es:"Problema guardado" ,     cn:"已保存的问题" ,
+   nl:"Opgeslagen probleem" ,   fr:"Problème enregistré" ,   pt:"Problema salvo"   } ,
+
+
+'Delete': {es:'Borrar', cn:'删除', nl:'Verwijderen', fr:'Supprimer', pt:'Excluir'} ,
+
+'Delete this question?': {es:'¿Eliminar esta pregunta?', cn:'删除这个问题吗？', nl:'Deze vraag verwijderen?', fr:'Supprimer cette question?', pt:'Excluir esta pergunta?'} ,
+
+'Administrate survey': {es:'Administrar encuesta', cn:'管理调查', nl:'Enquête beheren', fr:"Administrer l'enquête", pt:'Administrar pesquisa'} ,
+
+'View survey': {es:'Ver encuesta', cn:'查看调查', nl:'Bekijk enquête', fr:"Voir l'enquête", pt:'Ver pesquisa'} ,
+
+'Edit question': {es:'Editar pregunta', cn:'编辑问题', nl:'Vraag bewerken', fr:'Modifier la question', pt:'Editar pergunta'} ,
+
+'Delete question': {es:'Eliminar pregunta', cn:'删除问题', nl:'Vraag verwijderen', fr:'Supprimer la question', pt:'Excluir pergunta'} ,
+
+'View question': {es:'Ver pregunta', cn:'查看问题', nl:'Vraag bekijken', fr:'Voir la question', pt:'Ver pergunta'} ,
+
+'Question results': {es:'Resultados de la pregunta', cn:'提问结果', nl:'Vraagresultaten', fr:'Résultats des questions', pt:'Resultados da pergunta'} ,
+
+"Retrieving reasons..." : { es:"Recuperando motivos..." , cn:"正在检索原因..." , nl:"Redenen ophalen..." , fr:"Récupération des raisons..." , pt:"Recuperando motivos..." } ,
+
+'Retrieved reasons': {es:'Razones recuperadas', cn:'检索到的原因', nl:'Opgehaalde redenen', fr:'Raisons récupérées', pt:'Razões recuperadas'} ,
+
+'Option created': {es:'Opción creada', cn:'选项已创建', nl:'Optie gemaakt', fr:'Option créée', pt:'Opção criada'} ,
+
+'More results': {es:'Más resultados', cn:'更多结果', nl:'Meer resultaten', fr:'Plus de résultats', pt:'Mais resultados'} ,
+
+'No more results yet': {es:'Aún no hay más resultados', cn:'还没有更多结果', nl:'Nog geen resultaten meer', fr:'Pas encore de résultats', pt:'Ainda não há mais resultados'} ,
+
+'Retrieved results': {es:'Resultados recuperados', cn:'检索结果', nl:'Resultaten opgehaald', fr:'Résultats récupérés', pt:'Resultados recuperados'} ,
+
+'Enter your budget title here': {es:'Ingrese el título de su presupuesto aquí', cn:'在此输入您的预算标题', nl:'Voer hier uw budgettitel in', fr:'Entrez le titre de votre budget ici', pt:'Insira o título do seu orçamento aqui'} ,
+
+'Enter survey introduction here.': {es:'Ingrese la introducción de la encuesta aquí.', cn:'在此输入调查简介。', nl:'Voer hier de introductie van de enquête in.', fr:'Entrez ici l’introduction de l’enquête.', pt:'Insira a introdução da pesquisa aqui.'} ,
+
+'Enter your survey title here': {es:'Ingrese el título de su encuesta aquí', cn:'在此输入您的调查标题', nl:'Voer hier uw enquêtetitel in', fr:'Entrez le titre de votre enquête ici', pt:'Insira o título da sua pesquisa aqui'} ,
+
+'Enter total budget amount': {es:'Introduzca el importe total del presupuesto', cn:'输入预算总额', nl:'Voer het totale budgetbedrag in', fr:'Saisissez le montant total du budget', pt:'Insira o valor total do orçamento'} ,
+
+'Enter budget introduction': {es:'Introduzca la introducción del presupuesto', cn:'输入预算介绍', nl:'Voer de budgetintroductie in', fr:"Entrez l'introduction du budget", pt:'Insira a introdução do orçamento'} ,
+
+'Enter the content of your proposal here': {es:'Introduce aquí el contenido de tu propuesta', cn:'在此输入您的提案内容', nl:'Vul hier de inhoud van uw voorstel in', fr:'Entrez ici le contenu de votre proposition', pt:'Insira aqui o conteúdo da sua proposta'} ,
+
+'Enter your proposal title here': {es:'Ingrese el título de su propuesta aquí', cn:'在此输入您的提案标题', nl:'Voer hier de titel van uw voorstel in', fr:'Entrez le titre de votre proposition ici', pt:'Insira aqui o título da sua proposta'} ,
+
+'Enter the content of your request here': {es:'Introduzca aquí el contenido de su solicitud', cn:'在此输入您的请求内容', nl:'Vul hier de inhoud van uw verzoek in', fr:'Saisissez ici le contenu de votre demande', pt:'Insira aqui o conteúdo da sua solicitação'} ,
+
+'What is the best way to...': {es:'¿Cuál es la mejor manera de...?', cn:'最好的方法是什么...', nl:'Wat is de beste manier om...', fr:'Quelle est la meilleure façon de...', pt:'Qual é a melhor maneira de...'} ,
+
+'More instructions or information...': {es:'Más instrucciones o información...', cn:'更多说明或信息...', nl:'Meer instructies of informatie...', fr:"Plus d'instructions ou d'informations...", pt:'Mais instruções ou informações...'} ,
+
+'Question title...': {es:'Título de la pregunta...', cn:'问题标题...', nl:'Vraag Titel...', fr:'Titre de question...', pt:'Título da questão...'} ,
+
+'Best...': {es:'Mejor...', cn:'最好的...', nl:'Best...', fr:'Meilleur...', pt:'Melhor...'} ,
+
+'Worst...': {es:'El peor...', cn:'最糟糕的...', nl:'Slechtst...', fr:'Pire...', pt:'Pior...'} ,
+
+'More information': {es:'Más información', cn:'更多信息', nl:'Meer informatie', fr:"Plus d'information", pt:'Mais Informações'} ,
+
+'Background information about survey...': {es:'Información general sobre la encuesta...', cn:'有关调查的背景信息...', nl:'Achtergrondinformatie over enquête...', fr:"Informations générales sur l'enquête...", pt:'Informações básicas sobre a pesquisa...'} ,
+
+'Budget Setup': {es:'Configuración del presupuesto', cn:'预算设置', nl:'Budgetinstellingen', fr:'Configuration du budget', pt:'Configuração do orçamento'} ,
+
+'Auto-complete Survey Results': {es:'Resultados de la encuesta de autocompletar', cn:'自动完成调查结果', nl:'Enquêteresultaten automatisch aanvullen', fr:"Résultats de l'enquête à saisie semi-automatique", pt:'Resultados da pesquisa de preenchimento automático'} ,
+
+'View Auto-complete Survey': {es:'Ver encuesta de autocompletar', cn:'查看自动完成调查', nl:'Bekijk de enquête voor automatisch aanvullen', fr:"Afficher l'enquête à saisie semi-automatique", pt:'Ver pesquisa de preenchimento automático'} ,
+
+'Edit Auto-complete Survey': {es:'Editar encuesta de autocompletar', cn:'编辑自动完成调查', nl:'Enquête automatisch aanvullen bewerken', fr:"Modifier l'enquête à saisie semi-automatique", pt:'Editar pesquisa de preenchimento automático'} ,
+
+'Request For Proposals': {es:'Solicitud de propuestas', cn:'征求建议书', nl:'Verzoek om voorstellen', fr:'Demande de propositions', pt:'Pedido de propostas'} ,
+
+'Continue': {es:'Continuar', cn:'继续', nl:'Doorgaan', fr:'Continuer', pt:'Continuar'} ,
+
+'Request for Problems': {es:'Solicitud de problemas', cn:'问题请求', nl:'Verzoek om problemen', fr:'Demande de problèmes', pt:'Solicitação de problemas'} ,
+
+'Require reasons': {es:'Requerir razones', cn:'需要理由', nl:'Vereist redenen', fr:'Exiger des raisons', pt:'Exigir motivos'} ,
+
+'Label': {es:'Etiqueta', cn:'标签', nl:'Etiket', fr:'Étiquette', pt:'Rótulo'} ,
+
+'Solution': {es:'Solución', cn:'解决方案', nl:'Oplossing', fr:'Solution', pt:'Solução'} ,
+
+'Add or find solution': {es:'Agregar o encontrar solución', cn:'添加或查找解决方案', nl:'Oplossing toevoegen of vinden', fr:'Ajouter ou trouver une solution', pt:'Adicione ou encontre solução'} ,
+
+'Problem': {es:'Problema', cn:'问题', nl:'Probleem', fr:'Problème', pt:'Problema'} ,
+
+'Add or find problem': {es:'Agregar o encontrar problema', cn:'添加或查找问题', nl:'Voeg een probleem toe of zoek het op', fr:'Ajouter ou trouver un problème', pt:'Adicionar ou encontrar problema'} ,
+
+'Enter your request title here': {es:'Introduzca aquí el título de su solicitud', cn:'在此输入您的请求标题', nl:'Voer hier de titel van uw verzoek in', fr:'Entrez ici le titre de votre demande', pt:'Insira o título da sua solicitação aqui'} ,
+
+'Suggestion': {es:'Sugerencia', cn:'建议', nl:'Suggestie', fr:'Suggestion', pt:'Sugestão'} ,
+
+'Survey details': {es:'Detalles de la encuesta', cn:'调查详情', nl:'Enquêtedetails', fr:"Détails de l'enquête", pt:'Detalhes da pesquisa'} ,
+
+'Freeze user input': {es:'Congelar la entrada del usuario', cn:'冻结用户输入', nl:'Gebruikersinvoer bevriezen', fr:"Geler la saisie de l'utilisateur", pt:'Congelar entrada do usuário'} ,
+
+'Survey Introduction': {es:'Introducción a la encuesta', cn:'调查简介', nl:'Enquête Introductie', fr:"Introduction à l'enquête", pt:'Introdução à pesquisa'} ,
+
+'Survey Title': {es:'Título de la encuesta', cn:'调查标题', nl:'Enquêtetitel', fr:"Titre de l'enquête", pt:'Título da pesquisa'} ,
+
+'Specialized survey types': {es:'Tipos de encuestas especializadas', cn:'专业调查类型', nl:'Gespecialiseerde enquêtetypen', fr:"Types d'enquêtes spécialisées", pt:'Tipos de pesquisas especializadas'} ,
+
+
+"Create a free survey, where participants express both their opinions and their reasons. Participants can also learn from each other's reasons.": {es:'Crea una encuesta gratuita, donde los participantes expresen tanto sus opiniones como sus motivos. Los participantes también pueden aprender de las razones de los demás.', cn:'创建一个免费的调查，让参与者表达他们的意见和理由。参与者还可以互相学习原因。', nl:'Creëer een gratis enquête, waarin deelnemers zowel hun mening als hun redenen kenbaar maken. Deelnemers kunnen ook van elkaars beweegredenen leren.', fr:'Créez une enquête gratuite, dans laquelle les participants expriment à la fois leurs opinions et leurs raisons. Les participants peuvent également apprendre des raisons de chacun.', pt:'Crie uma pesquisa gratuita, onde os participantes expressam suas opiniões e motivos. Os participantes também podem aprender com as razões uns dos outros.'} ,
+
+'Start here': {es:'Empieza aqui', cn:'从这里开始', nl:'Begin hier', fr:'Commencer ici', pt:'Começa aqui'} ,
+
+'Deliberative Form': {es:'Forma deliberativa', cn:'审议形式', nl:'Deliberatieve vorm', fr:'Forme délibérative', pt:'Formulário Deliberativo'} ,
+
+'Ask a series of survey questions.': {es:'Haga una serie de preguntas de encuesta.', cn:'提出一系列调查问题。', nl:'Stel een reeks enquêtevragen.', fr:'Posez une série de questions d’enquête.', pt:'Faça uma série de perguntas de pesquisa.'} ,
+
+'Add or find proposal': {es:'Agregar o buscar propuesta', cn:'添加或查找提案', nl:'Voorstel toevoegen of zoeken', fr:'Ajouter ou rechercher une proposition', pt:'Adicionar ou encontrar proposta'} ,
+
+'Reasons': {es:'Razones', cn:'原因', nl:'Redenen', fr:'Les raisons', pt:'Razões'} ,
+
+'Item name': {es:'Nombre del árticulo', cn:'项目名', nl:'Itemnaam', fr:"Nom de l'article", pt:'Nome do item'} ,
+
+'Identical problem already exists': {es:'El mismo problema ya existe', cn:'相同的问题已经存在', nl:'Er bestaat al een identiek probleem', fr:'Un problème identique existe déjà', pt:'Problema idêntico já existe'} ,
+
+'Showing suggestions': {es:'Mostrando sugerencias', cn:'显示建议', nl:'Suggesties weergeven', fr:'Afficher les suggestions', pt:'Mostrando sugestões'} ,
+
+'Showing matches': {es:'Mostrando coincidencias', cn:'显示比赛', nl:'Overeenkomsten weergeven', fr:'Afficher les correspondances', pt:'Mostrando correspondências'} ,
+
+'List': {es:'Lista', cn:'列表', nl:'Lijst', fr:'Liste', pt:'Lista'} ,
+
+'List Item': {es:'Elemento de lista', cn:'项目清单', nl:'Lijstitem', fr:'Élément de liste', pt:'Item da lista'} ,
+
+'Add list item': {es:'Agregar elemento de lista', cn:'添加列表项', nl:'Lijstitem toevoegen', fr:'Ajouter un élément de liste', 
+  pt:'Adicionar item da lista'} ,
+
+'Item': {es:'Artículo', cn:'物品', nl:'Item', fr:'Article', pt:'Item'} ,
+
+'Total items': {es:'Articulos totales', cn:'总项目', nl:'Totaal artikelen', fr:'Articles au total', pt:'Total de Itens'} ,
+
+'Maximum items': {es:'Artículos máximos', cn:'最大物品数', nl:'Maximale artikelen', fr:"Nombre maximum d'articles", 
+  pt:'Máximo de itens'} ,
 
 
 

@@ -8,7 +8,7 @@
 
         function
     RankingOptionDisplay( displayId ){
-        ElementWrap.call( this );  // Inherit member data
+        QuestionOptionBase.call( this );  // Inherit member data
 
         // User-interface state variables (not persistent)
         let thisCopy = this;
@@ -17,6 +17,10 @@
         // Create html element, store it in this.element
         this.createFromHtml( displayId, '\n\n' + [
             ' <div class=RankingOptionDisplay id=Option> ',
+            //  Message
+            '   <div class=MessageWrap> ',
+            '       <div class="Message" id=optionMessage aria-live=polite></div> ',
+            '   </div> ',
             //  Edit
             '   <div class=Edit> ',
             '       <div class=EditRow> ',
@@ -26,6 +30,7 @@
             '           </div><div class=OptionDeleteButtonCell> ',
             '               <button class=OptionDeleteButton title="Delete" onclick=handleDeleteClick> X </button> ',
             '           </div> ',
+                        this.htmlForOptionImageEdit() ,
             '       </div> ',
             '   </div> ',
             //  View
@@ -42,6 +47,7 @@
             '           ></textarea/> ',
             '       </div> ',
             '       <button class="RankingIncrementButton DownButton" id=RankingDownButton onclick=rankingDownClick onfocus=onReasonInputFocus onblur=onReasonInputBlur> &darr; </button> ',
+                    this.htmlForOptionImageView() ,
             '   </div> ',
             //  Result
             '   <div class=Result> ',
@@ -57,14 +63,10 @@
             '           </div> ',
             '       </details> ',
             '   </div> ',
-            //  Message
-            '   <div class=MessageWrap> ',
-            '       <div class="Message" id=optionMessage aria-live=polite></div> ',
-            '   </div> ',
             ' </div> '
         ].join('\n') );
     }
-    RankingOptionDisplay.prototype = Object.create( ElementWrap.prototype );  // Inherit methods
+    RankingOptionDisplay.prototype = Object.create( QuestionOptionBase.prototype );  // Inherit methods
 
         RankingOptionDisplay.prototype.
     setInitialData = RatingOptionDisplay.prototype.setInitialData;
@@ -80,6 +82,7 @@
 
         this.messagesUpdated();
         this.attributesUpdated();
+        this.imagesUpdated();
 
         // Edit
         this.setProperty( 'OptionContentInput', 'defaultValue', this.option.title );
@@ -125,9 +128,10 @@
         this.setInnerHtml( 'OptionResultRank', this.index + 1 );
         this.setInnerHtml( 'OptionResultContent', this.option.title );
 
-        // Subdisplays for results
+        // Subdisplays for rank results
         let thisCopy = this;
         this.resultDisplays.data = ( this.results )?  this.results.filter( r => r.votes && (0 < r.votes) ).sort( (a,b) => a.rating - b.rating )  :  [];
+        this.resultDisplays.data = this.resultDisplays.data.filter( r => (0 < r.rating) );
         this.resultDisplays.data.forEach(  r => { r.key = String(r.rating) }  );  // Ensure each data has a key string
         this.updateSubdisplays( this.resultDisplays, this.getSubElement('OptionRankingResults') ,
             ( optionRankResult ) => {
@@ -136,7 +140,9 @@
             }
         );
         let optionVotes = this.totalVotes();
-        if ( this.resultDisplays.displays ){   this.resultDisplays.displays.forEach(  (r,i) => { r.setData(thisCopy.resultDisplays.data[i], optionVotes); }  );   }
+        if ( this.resultDisplays.displays ){   this.resultDisplays.displays.forEach(  (r,i) => {
+            r.setData(thisCopy.resultDisplays.data[i], optionVotes);
+        }  );   }
     };
 
         RankingOptionDisplay.prototype.
@@ -377,27 +383,35 @@
         let thisCopy = this;
         let newOptionsArray = this.question.options.map( o => o.id );
         let newOptionsSet = new Set( newOptionsArray );
-        if (  ! this.optionsRandomOrder  ||  (this.optionsRandomOrder.length != newOptionsSet.size)  ||  ! this.optionsRandomOrder.every( o => newOptionsSet.has(o) )  ){
+        if ( (! this.optionsRandomOrder)  ||  (this.optionsRandomOrder.length != newOptionsSet.size)  ||  ! this.optionsRandomOrder.every(o => newOptionsSet.has(o)) ){
             console.log( 'RankingQuestionDisplay.dataUpdated() this.optionsRandomOrder != newOptionsSet' );
             this.optionsRandomOrder = shuffleArray( newOptionsArray );
-            this.optionIdToRandomIndex = new Map(  this.optionsRandomOrder.map( (o,i) => [o, i] )  );
+            this.optionIdToRandomIndex = new Map(  this.optionsRandomOrder.map( (o, i) => [o, i] )  );
         }
 
         if ( this.mode == VIEW ){
-            let optionsWithoutAnswer = this.options.data.filter(  o => 
-                (! thisCopy.answers) || (thisCopy.answers[o.id] == null) || (thisCopy.options.data.length < thisCopy.answers[o.id].content) );
-            let optionsWithoutAnswerRandOrder = optionsWithoutAnswer.sort( (a,b) => thisCopy.optionIdToRandomIndex.get(a.id) - thisCopy.optionIdToRandomIndex.get(b.id) );
-
-            // Ranked options may be sparse, so randomly slot unranked options into gaps
+            // Collect map{ rank -> optionId } for valid ranks
             let optionIdToData = new Map(  this.options.data.map( o => [o.id, o] )  );
-            let rankToOption = [ ];
+            let rankToOptionId = [ ];
+            let optionIdToRank = { };
             if ( this.answers ){
                 for ( optionId in this.answers ){
-                    rankToOption[ this.answers[optionId].content - 1 ] = optionId;
+                    // Check that rank is in bounds and not repeated
+                    let rank = this.answers[optionId].content - 1;
+                    if ( (0 <= rank) && (rank < this.options.data.length) && (! rankToOptionId[rank]) ){
+                        rankToOptionId[ rank ] = optionId;
+                        optionIdToRank[ optionId ] = rank;
+                    }
                 }
             }
+
+            // Randomly order unranked options, using stable order from optionIdToRandomIndex
+            let optionsWithoutAnswer = this.options.data.filter( o => !(o.id in optionIdToRank) );
+            let optionsWithoutAnswerRandOrder = optionsWithoutAnswer.sort( (a,b) => thisCopy.optionIdToRandomIndex.get(a.id) - thisCopy.optionIdToRandomIndex.get(b.id) );
+
+            // Order each option, filling unused ranks from shuffled unranked options
             for ( let r = 0;  r < this.options.data.length;  ++r ){
-                let rankedOptionId = rankToOption[ r ];
+                let rankedOptionId = rankToOptionId[ r ];
                 // Find valid answer-rank, or else remaining random option
                 this.options.data[ r ] = newOptionsSet.has( rankedOptionId )? optionIdToData.get( rankedOptionId ) : optionsWithoutAnswerRandOrder.pop();
             }
@@ -474,6 +488,7 @@
         let sendData = {  crumb:crumb , fingerprint:fingerprint  };
         let thisCopy = this;
         ajaxGet( sendData, url, function(error, status, receiveData){
+            console.log( 'RankingQuestionDisplay.retrieveResults() receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success ){
                 thisCopy.results = receiveData.options;
                 thisCopy.optionToRatingDistribution = receiveData.optionToRatingDistribution;
@@ -498,6 +513,7 @@
         };
         let thisCopy = this;
         ajaxPost( sendData, url, function(error, status, receiveData){
+            console.log( 'RankingQuestionDisplay.storeRankAndReason() error=', error, 'status=', status, 'receiveData=', receiveData );
             if ( ! error  &&  receiveData  &&  receiveData.success  &&  receiveData.answers ){
                 optionDisplay.message = { color:GREEN, text:'Saved ranking', ms:5000 };
                 optionDisplay.messagesUpdated();
@@ -512,6 +528,7 @@
                     if ( receiveData.message == TOO_LONG ){  message = 'Reason is too long';  optionDisplay.reasonValidity = message;  }
                     if ( receiveData.message == FROZEN ){  message = 'Survey is frozen';  }
                     if ( receiveData.message == UNCHANGED ){  message = null;  }
+                    if ( receiveData.message == INSULT ){  message = 'Reason is a personal insult';  }
                 }
                 optionDisplay.message = { color:RED, text:message };
                 optionDisplay.messagesUpdated();
