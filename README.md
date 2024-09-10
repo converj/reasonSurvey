@@ -4,4 +4,6 @@ When opinions conflict, voting alone does not bring opinions closer together. Co
 
 These survey tools have been designed to make it fast & easy for people to express their reasons, and to comprehend others' reasons. 
 
-Available as a free service at https://converj.net
+### Instances
+* Available as a free service at https://converj.net
+* Also available as a docker container for local installation using a private database at https://github.com/converj/reasonSurveyOnLocalDatabase
