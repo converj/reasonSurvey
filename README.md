@@ -4,4 +4,4 @@ When opinions conflict, voting alone does not bring opinions closer together. Co
 
 These survey tools have been designed to make it fast & easy for people to express their reasons, and to comprehend others' reasons. 
 
-Available as a free service at https://converj.us
+Available as a free service at https://converj.net
